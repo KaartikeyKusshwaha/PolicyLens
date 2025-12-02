@@ -19,10 +19,13 @@ class LLMService:
         self.max_tokens = settings.max_tokens
         
         if not settings.openai_api_key:
-            logger.warning("OpenAI API key not set. LLM calls will use fallback logic.")
+            logger.warning("API key not set. LLM calls will use fallback logic.")
             self.client = None
         else:
-            self.client = OpenAI(api_key=settings.openai_api_key)
+            self.client = OpenAI(
+                api_key=settings.openai_api_key,
+                base_url=settings.api_base_url
+            )
     
     def evaluate_transaction(
         self,
