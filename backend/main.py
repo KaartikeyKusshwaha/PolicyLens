@@ -101,8 +101,8 @@ app.add_middleware(
 )
 
 
-@app.get("/")
-async def root():
+@app.get("/api/health")
+async def health_check():
     """Health check endpoint"""
     storage_stats = storage_service.get_statistics() if storage_service else {}
     return {
@@ -410,20 +410,35 @@ async def list_feedback(limit: int = 50):
 # Mount static files (frontend build)
 frontend_dist = os.path.join(os.path.dirname(__file__), "..", "frontend", "dist")
 if os.path.exists(frontend_dist):
+    # Mount assets directory
     app.mount("/assets", StaticFiles(directory=os.path.join(frontend_dist, "assets")), name="assets")
     
-    @app.get("/{full_path:path}")
+    # Serve frontend - needs to be added AFTER all API routes
+    from fastapi.responses import HTMLResponse
+    
+    @app.get("/", response_class=HTMLResponse)
+    async def serve_root():
+        """Serve frontend root"""
+        index_path = os.path.join(frontend_dist, "index.html")
+        with open(index_path, "r", encoding="utf-8") as f:
+            return f.read()
+    
+    @app.get("/{full_path:path}", response_class=HTMLResponse)
     async def serve_frontend(full_path: str):
-        """Serve frontend for all non-API routes"""
+        """Serve frontend for all non-API routes (SPA routing)"""
         # Don't intercept API routes
-        if full_path.startswith("api/"):
+        if full_path.startswith("api"):
             raise HTTPException(status_code=404, detail="Not found")
         
-        # Serve index.html for all other routes (SPA routing)
+        # Check if it's a file request
+        file_path = os.path.join(frontend_dist, full_path)
+        if os.path.isfile(file_path):
+            return FileResponse(file_path)
+        
+        # For all other routes, serve index.html (SPA routing)
         index_path = os.path.join(frontend_dist, "index.html")
-        if os.path.exists(index_path):
-            return FileResponse(index_path)
-        raise HTTPException(status_code=404, detail="Frontend not found")
+        with open(index_path, "r", encoding="utf-8") as f:
+            return f.read()
 
 
 if __name__ == "__main__":
