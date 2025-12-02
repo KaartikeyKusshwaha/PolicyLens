@@ -4,7 +4,7 @@ from typing import Optional
 
 class Settings(BaseSettings):
     # API Configuration
-    openai_api_key: str = "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"
+    openai_api_key: str = "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"
     api_base_url: str = "https://openrouter.ai/api/v1"
     
     # Milvus Configuration
