@@ -10,14 +10,21 @@ logger = logging.getLogger(__name__)
 class MetricsService:
     """In-memory metrics tracking for monitoring"""
     
-    def __init__(self):
+    def __init__(self, demo_mode=False):
         self.lock = threading.Lock()
+        self.demo_mode = demo_mode
         
-        # Counters
-        self.total_evaluations = 0
-        self.total_queries = 0
-        self.total_policy_uploads = 0
-        self.total_feedback = 0
+        # Counters - initialize with demo data if in demo mode
+        if demo_mode:
+            self.total_evaluations = 3
+            self.total_queries = 0
+            self.total_policy_uploads = 3  # Show 3 demo policies as uploads
+            self.total_feedback = 0
+        else:
+            self.total_evaluations = 0
+            self.total_queries = 0
+            self.total_policy_uploads = 0
+            self.total_feedback = 0
         
         # Decision verdicts
         self.verdicts = defaultdict(int)  # FLAG, NEEDS_REVIEW, ACCEPTABLE
