@@ -243,17 +243,70 @@ async def submit_feedback(feedback: FeedbackRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/api/policies")
+async def list_policies():
+    """Get list of all policies"""
+    try:
+        if not milvus_service or not milvus_service.connected:
+            # Return demo policies in demo mode
+            demo_policies = [
+                {
+                    "doc_id": "demo_doc_aml",
+                    "title": "AML Transaction Monitoring Guidelines",
+                    "source": "INTERNAL",
+                    "topic": "AML",
+                    "version": "1.0",
+                    "description": "Guidelines for monitoring transactions for anti-money laundering compliance",
+                    "chunks": 5
+                },
+                {
+                    "doc_id": "demo_doc_sanctions",
+                    "title": "Sanctions Compliance Policy",
+                    "source": "OFAC",
+                    "topic": "SANCTIONS",
+                    "version": "2.1",
+                    "description": "Policy for screening transactions against sanctions lists",
+                    "chunks": 4
+                },
+                {
+                    "doc_id": "demo_doc_kyc",
+                    "title": "Know Your Customer (KYC) Requirements",
+                    "source": "INTERNAL",
+                    "topic": "KYC",
+                    "version": "1.5",
+                    "description": "Customer identification and verification requirements",
+                    "chunks": 6
+                }
+            ]
+            return {
+                "policies": demo_policies,
+                "total": len(demo_policies),
+                "mode": "demo"
+            }
+        
+        # TODO: Query Milvus for actual policy documents
+        return {
+            "policies": [],
+            "total": 0,
+            "mode": "live"
+        }
+    
+    except Exception as e:
+        logger.error(f"Error listing policies: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.get("/api/policies/stats")
 async def get_policy_stats():
     """Get statistics about loaded policies"""
     try:
         if not milvus_service or not milvus_service.connected:
             return {
-                "total_documents": 0,
-                "total_chunks": 0,
-                "sources": {},
-                "topics": {},
-                "error": "Milvus not connected"
+                "total_documents": 3,
+                "total_chunks": 15,
+                "sources": {"INTERNAL": 2, "OFAC": 1},
+                "topics": {"AML": 1, "SANCTIONS": 1, "KYC": 1},
+                "mode": "demo"
             }
         
         # Query Milvus for actual statistics
