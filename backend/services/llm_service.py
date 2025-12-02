@@ -22,9 +22,14 @@ class LLMService:
             logger.warning("API key not set. LLM calls will use fallback logic.")
             self.client = None
         else:
+            # OpenRouter requires additional headers
             self.client = OpenAI(
                 api_key=settings.openai_api_key,
-                base_url=settings.api_base_url
+                base_url=settings.api_base_url,
+                default_headers={
+                    "HTTP-Referer": "https://policylens.app",
+                    "X-Title": "PolicyLens"
+                }
             )
     
     def evaluate_transaction(
