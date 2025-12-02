@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Database, AlertCircle, CheckCircle } from 'lucide-react';
+import { FileText, Database, AlertCircle, CheckCircle, ChevronDown, ChevronUp, BookOpen } from 'lucide-react';
 import { policyService } from '../services/api';
 
 const Policies = () => {
@@ -7,6 +7,7 @@ const Policies = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [mode, setMode] = useState('');
+  const [expandedPolicy, setExpandedPolicy] = useState(null);
 
   useEffect(() => {
     fetchPolicies();
@@ -47,6 +48,19 @@ const Policies = () => {
       'REGULATORY': 'bg-pink-100 text-pink-800'
     };
     return colors[source] || 'bg-gray-100 text-gray-800';
+  };
+
+  const togglePolicy = (policyId) => {
+    setExpandedPolicy(expandedPolicy === policyId ? null : policyId);
+  };
+
+  const getPolicyContent = (policy) => {
+    const content = {
+      'demo_doc_aml': 'ANTI-MONEY LAUNDERING TRANSACTION MONITORING GUIDELINES\n\nVersion: 1.0\nSource: Internal Compliance Department\n\nTRANSACTION THRESHOLDS\n• Transactions exceeding USD 10,000 must be reported within 24 hours\n• Enhanced due diligence required for amounts above USD 50,000\n• Aggregated transactions totaling USD 25,000+ within 30 days require review\n\nRED FLAGS:\n1. Structuring: Multiple transactions below reporting thresholds\n2. High-Risk Jurisdictions: Transactions involving sanctioned countries\n3. Shell Companies: Payments without clear business purpose\n4. Cash-Intensive: Large cash deposits without explanation',
+      'demo_doc_sanctions': 'SANCTIONS COMPLIANCE POLICY\n\nVersion: 2.1\nSource: OFAC Compliance Unit\n\nPROHIBITED JURISDICTIONS:\n• Iran, North Korea, Syria, Crimea, Cuba\n\nAll transactions with these jurisdictions are PROHIBITED without regulatory approval.\n\nSCREENING REQUIREMENTS:\n✓ Screen all parties against OFAC SDN List\n✓ Check beneficial ownership structures\n✓ Verify correspondent banks\n✓ Daily reconciliation of processed transactions\n\nPENALTIES:\n• Civil: Up to $307,922 per violation\n• Criminal: Up to $1M and 20 years imprisonment',
+      'demo_doc_kyc': 'KNOW YOUR CUSTOMER (KYC) REQUIREMENTS\n\nVersion: 1.5\nSource: Internal Risk Management\n\nCUSTOMER IDENTIFICATION:\n• Full legal name and date of birth\n• Physical address (PO Box insufficient)\n• Government-issued photo ID\n• Tax identification number\n\nRISK CLASSIFICATION:\nLow Risk: Domestic individuals, transparent businesses\nMedium Risk: High-net-worth, cash-intensive businesses\nHigh Risk: PEPs, shell companies, high-risk jurisdictions\n\nONGOING MONITORING:\n• Low Risk: Annual review\n• Medium Risk: Semi-annual\n• High Risk: Quarterly or more'
+    };
+    return content[policy.doc_id] || 'Policy document content for ' + policy.title + ' would appear here.';
   };
 
   return (
@@ -116,39 +130,83 @@ const Policies = () => {
         ) : (
           <div className="space-y-4">
             {policies.map((policy) => (
-              <div key={policy.doc_id} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-3 mb-2">
-                      <CheckCircle className="w-5 h-5 text-green-600" />
-                      <h3 className="text-lg font-semibold text-gray-900">{policy.title}</h3>
+              <div key={policy.doc_id} className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-all">
+                <div 
+                  className="p-6 cursor-pointer hover:bg-gray-50 transition-colors"
+                  onClick={() => togglePolicy(policy.doc_id)}
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3 mb-2">
+                        <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
+                        <h3 className="text-lg font-semibold text-gray-900">{policy.title}</h3>
+                        <button 
+                          className="ml-auto p-1 hover:bg-gray-200 rounded transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            togglePolicy(policy.doc_id);
+                          }}
+                        >
+                          {expandedPolicy === policy.doc_id ? (
+                            <ChevronUp className="w-5 h-5 text-gray-600" />
+                          ) : (
+                            <ChevronDown className="w-5 h-5 text-gray-600" />
+                          )}
+                        </button>
+                      </div>
+                      {policy.description && (
+                        <p className="text-gray-600 text-sm mb-3">{policy.description}</p>
+                      )}
                     </div>
-                    {policy.description && (
-                      <p className="text-gray-600 text-sm mb-3">{policy.description}</p>
+                  </div>
+                  
+                  <div className="flex flex-wrap items-center gap-2 mb-3">
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${getTopicColor(policy.topic)}`}>
+                      {policy.topic}
+                    </span>
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${getSourceColor(policy.source)}`}>
+                      {policy.source}
+                    </span>
+                    <span className="px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                      v{policy.version}
+                    </span>
+                    {policy.chunks && (
+                      <span className="px-2 py-1 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                        {policy.chunks} chunks
+                      </span>
                     )}
+                  </div>
+                  
+                  <div className="flex items-center justify-between text-sm text-gray-500">
+                    <span>Document ID: {policy.doc_id}</span>
+                    <span className="flex items-center space-x-1 text-primary">
+                      <BookOpen className="w-4 h-4" />
+                      <span>Click to {expandedPolicy === policy.doc_id ? 'collapse' : 'read'}</span>
+                    </span>
                   </div>
                 </div>
                 
-                <div className="flex flex-wrap items-center gap-2 mb-3">
-                  <span className={`px-2 py-1 rounded text-xs font-medium ${getTopicColor(policy.topic)}`}>
-                    {policy.topic}
-                  </span>
-                  <span className={`px-2 py-1 rounded text-xs font-medium ${getSourceColor(policy.source)}`}>
-                    {policy.source}
-                  </span>
-                  <span className="px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-800">
-                    v{policy.version}
-                  </span>
-                  {policy.chunks && (
-                    <span className="px-2 py-1 rounded text-xs font-medium bg-purple-100 text-purple-800">
-                      {policy.chunks} chunks
-                    </span>
-                  )}
-                </div>
-                
-                <div className="flex items-center justify-between text-sm text-gray-500">
-                  <span>Document ID: {policy.doc_id}</span>
-                </div>
+                {expandedPolicy === policy.doc_id && (
+                  <div className="border-t border-gray-200 bg-gray-50 p-6">
+                    <div className="flex items-center space-x-2 mb-4">
+                      <FileText className="w-5 h-5 text-primary" />
+                      <h4 className="font-semibold text-gray-900">Policy Document</h4>
+                    </div>
+                    <div className="bg-white rounded-lg p-6 border border-gray-200">
+                      <pre className="whitespace-pre-wrap font-sans text-sm text-gray-700 leading-relaxed">
+                        {getPolicyContent(policy)}
+                      </pre>
+                    </div>
+                    <div className="mt-4 flex justify-end">
+                      <button
+                        onClick={() => setExpandedPolicy(null)}
+                        className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-200 rounded-lg transition-colors"
+                      >
+                        Close Document
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
