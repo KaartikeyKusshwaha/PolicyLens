@@ -71,7 +71,9 @@ async def lifespan(app: FastAPI):
     storage_service = StorageService()
     logger.info("✓ Storage service initialized")
     
-    metrics_service = MetricsService()
+    # Initialize metrics with demo mode flag
+    demo_mode = not (milvus_service and milvus_service.connected)
+    metrics_service = MetricsService(demo_mode=demo_mode)
     logger.info("✓ Metrics service initialized")
     
     logger.info("🚀 PolicyLens API ready!")
