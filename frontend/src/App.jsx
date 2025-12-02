@@ -6,6 +6,9 @@ import EvaluateTransaction from './pages/EvaluateTransaction';
 import Policies from './pages/Policies';
 import QueryAssistant from './pages/QueryAssistant';
 import UploadPolicy from './pages/UploadPolicy';
+import DecisionHistory from './pages/DecisionHistory';
+import Metrics from './pages/Metrics';
+import FeedbackViewer from './pages/FeedbackViewer';
 
 function App() {
   return (
@@ -19,6 +22,9 @@ function App() {
             <Route path="/policies" element={<Policies />} />
             <Route path="/query" element={<QueryAssistant />} />
             <Route path="/upload" element={<UploadPolicy />} />
+            <Route path="/decisions" element={<DecisionHistory />} />
+            <Route path="/metrics" element={<Metrics />} />
+            <Route path="/feedback" element={<FeedbackViewer />} />
           </Routes>
         </main>
       </div>

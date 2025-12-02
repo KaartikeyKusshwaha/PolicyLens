@@ -46,6 +46,42 @@ export const feedbackService = {
     const response = await api.post('/api/feedback', feedbackData);
     return response.data;
   },
+  
+  getAll: async () => {
+    const response = await api.get('/api/feedback');
+    return response.data;
+  },
+  
+  getForTransaction: async (traceId) => {
+    const response = await api.get(`/api/feedback?trace_id=${traceId}`);
+    return response.data;
+  },
+};
+
+export const decisionService = {
+  getAll: async () => {
+    const response = await api.get('/api/decisions');
+    return response.data;
+  },
+  
+  getById: async (traceId) => {
+    const response = await api.get(`/api/decisions/${traceId}`);
+    return response.data;
+  },
+};
+
+export const auditService = {
+  getReport: async (traceId) => {
+    const response = await api.get(`/api/audit/report/${traceId}`);
+    return response.data;
+  },
+};
+
+export const metricsService = {
+  get: async () => {
+    const response = await api.get('/api/metrics');
+    return response.data;
+  },
 };
 
 export const healthCheck = async () => {
