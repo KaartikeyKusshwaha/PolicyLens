@@ -20,6 +20,11 @@ export const policyService = {
     const response = await api.get('/api/policies/stats');
     return response.data;
   },
+  
+  getAll: async () => {
+    const response = await api.get('/api/policies');
+    return response.data;
+  },
 };
 
 export const transactionService = {
