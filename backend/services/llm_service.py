@@ -105,10 +105,7 @@ Respond in JSON format:
         """Answer a compliance query using retrieved policies"""
         
         if not self.client:
-            return {
-                "answer": "LLM service not available. Please configure OpenAI API key.",
-                "confidence": 0.0
-            }
+            return self._fallback_answer(query, policy_context)
         
         policy_text = self._format_policy_context(policy_context)
         
@@ -134,10 +131,8 @@ Respond in JSON format:
             
         except Exception as e:
             logger.error(f"Error in LLM query answering: {e}")
-            return {
-                "answer": f"Error processing query: {str(e)}",
-                "confidence": 0.0
-            }
+            # Fallback to rule-based answer
+            return self._fallback_answer(query, policy_context)
     
     @retry_with_backoff(max_retries=3, initial_delay=1.0, backoff_factor=2.0)
     def _query_llm_with_retry(self, prompt: str) -> Dict[str, Any]:
@@ -245,4 +240,36 @@ Respond in JSON format:
             "risk_score": risk_score,
             "reasoning": reasoning,
             "confidence": 0.6
+        }
+    
+    def _fallback_answer(
+        self,
+        query: str,
+        policy_context: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
+        """Provide a fallback answer when LLM is unavailable"""
+        
+        if not policy_context:
+            return {
+                "answer": "I don't have sufficient policy information to answer this question. Please ensure policies are uploaded to the system.",
+                "confidence": 0.0
+            }
+        
+        # Build answer from top relevant policies
+        answer_parts = [f"Based on the available policies, here's what I found:\n"]
+        
+        for i, policy in enumerate(policy_context[:3], 1):
+            answer_parts.append(
+                f"\n{i}. From '{policy['doc_title']}' ({policy['source']}, v{policy['version']}):\n"
+                f"   {policy['text'][:300]}..."
+            )
+        
+        answer_parts.append(
+            f"\n\nNote: This is a basic policy excerpt. For detailed compliance guidance, "
+            f"please configure an AI API key for advanced analysis."
+        )
+        
+        return {
+            "answer": "".join(answer_parts),
+            "confidence": 0.5
         }
