@@ -1,16 +1,19 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Shield, FileText, Search, BarChart3, Upload } from 'lucide-react';
+import { Shield, FileText, Search, BarChart3, Upload, History, Activity, MessageSquare } from 'lucide-react';
 
 const Navbar = () => {
   const location = useLocation();
   
   const navItems = [
     { path: '/', label: 'Dashboard', icon: BarChart3 },
-    { path: '/evaluate', label: 'Evaluate Transaction', icon: Shield },
+    { path: '/evaluate', label: 'Evaluate', icon: Shield },
+    { path: '/decisions', label: 'Decisions', icon: History },
     { path: '/policies', label: 'Policies', icon: FileText },
-    { path: '/query', label: 'Query Assistant', icon: Search },
-    { path: '/upload', label: 'Upload Policy', icon: Upload },
+    { path: '/query', label: 'Query', icon: Search },
+    { path: '/metrics', label: 'Metrics', icon: Activity },
+    { path: '/feedback', label: 'Feedback', icon: MessageSquare },
+    { path: '/upload', label: 'Upload', icon: Upload },
   ];
   
   return (

@@ -1,0 +1,72 @@
+{
+  "transaction": {
+    "transaction_id": "TXNXI02XR516",
+    "amount": 250000.0,
+    "currency": "USD",
+    "sender": "Acme Corp",
+    "receiver": "Global Trading Ltd",
+    "sender_country": "UK",
+    "receiver_country": "Japan",
+    "timestamp": "2025-12-02 14:24:45.662000+00:00",
+    "description": "International wire transfer",
+    "metadata": {}
+  },
+  "decision": {
+    "transaction_id": "TXNXI02XR516",
+    "verdict": "needs_review",
+    "risk_level": "medium",
+    "risk_score": 0.5,
+    "reasoning": "Rule-based evaluation: Amount=250000.0, Countries=UK->Japan",
+    "policy_citations": [
+      {
+        "doc_id": "8f1f1375-6785-41f0-9439-27418d5d3ec8",
+        "doc_title": "High-Risk Country Monitoring",
+        "section": "1.2 Enhanced Due Diligence Measures",
+        "text": "For transactions involving high-risk countries: - Obtain additional documentation on source of funds - Verify the purpose and nature of the transaction - Require senior management approval for amounts exceeding USD 5,000 - Conduct enhanced ongoing monitoring - Review customer relationship every 6 months",
+        "relevance_score": 0.41470661759376526,
+        "version": "2.0"
+      },
+      {
+        "doc_id": "d6e2926a-d979-470d-bdee-a752a5a60398",
+        "doc_title": "Fraud Detection and Prevention",
+        "section": "1.1 Red Flags for Fraudulent Activity",
+        "text": "- Transactions inconsistent with customer profile or business - Unusual wire transfer activity, especially to foreign countries - Multiple small transactions to the same beneficiary - Customer requests for urgency without valid explanation - Reluctance to provide information about transaction purpose - Use of multiple accounts for no apparent reason",
+        "relevance_score": 0.3913986086845398,
+        "version": "1.5"
+      },
+      {
+        "doc_id": "7492143b-5141-4273-9cc3-ed9bee62ab97",
+        "doc_title": "AML Transaction Monitoring - Large Cash Transactions",
+        "section": "1.1 Threshold Requirements",
+        "text": "All cash transactions exceeding USD 10,000 (or equivalent in local currency) must be reported within 24 hours to the Financial Intelligence Unit (FIU).",
+        "relevance_score": 0.3705975115299225,
+        "version": "2.1"
+      },
+      {
+        "doc_id": "64a73a39-1cbc-4d49-a2c8-ddf57555f729",
+        "doc_title": "AML Transaction Monitoring Guidelines",
+        "section": "",
+        "text": "# AML Transaction Monitoring Guidelines ## Section 1: Transaction Thresholds ### 1.1 Large Transaction Reporting All transactions exceeding USD 10,000 must be reported to the compliance team within 24 hours. Transactions above USD 50,000 require enhanced due diligence and senior management approval. ### 1.2 Structuring Detection Multiple transactions from the same entity totaling more than USD 10,000 within a 7-day period should be aggregated and reviewed for potential structuring activity. ## S",
+        "relevance_score": 0.3089095950126648,
+        "version": "1.0"
+      }
+    ],
+    "similar_cases": [
+      {
+        "case_id": "69c64519-9fae-4f5b-b143-46f4b90c13b5",
+        "transaction_id": "TXN-DEMO-001",
+        "similarity_score": 0.6297445893287659,
+        "decision": "flag",
+        "reasoning": "Rule-based evaluation: Amount=75000.0, Countries=USA->Iran",
+        "timestamp": "2025-12-02 14:11:41"
+      }
+    ],
+    "confidence": 0.6,
+    "timestamp": "2025-12-02 14:24:45.962339",
+    "reviewed_by": null,
+    "override_notes": null
+  },
+  "trace_id": "5e7e4c2e-30a0-4e05-8d8c-8daeea1ef715",
+  "processing_time_ms": 3174.6020317077637,
+  "stored_at": "2025-12-02T14:24:49.002535"
+}

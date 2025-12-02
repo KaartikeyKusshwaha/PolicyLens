@@ -1,24 +1,31 @@
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, FileText, AlertCircle, CheckCircle } from 'lucide-react';
-import { policyService, healthCheck } from '../services/api';
+import { TrendingUp, FileText, AlertCircle, CheckCircle, Activity, MessageSquare } from 'lucide-react';
+import { policyService, healthCheck, metricsService } from '../services/api';
 
 const Dashboard = () => {
   const [stats, setStats] = useState(null);
   const [health, setHealth] = useState(null);
+  const [metrics, setMetrics] = useState(null);
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
     loadData();
+    const interval = setInterval(() => {
+      metricsService.get().then(setMetrics).catch(console.error);
+    }, 10000);
+    return () => clearInterval(interval);
   }, []);
   
   const loadData = async () => {
     try {
-      const [statsData, healthData] = await Promise.all([
+      const [statsData, healthData, metricsData] = await Promise.all([
         policyService.getStats(),
-        healthCheck()
+        healthCheck(),
+        metricsService.get()
       ]);
       setStats(statsData);
       setHealth(healthData);
+      setMetrics(metricsData);
     } catch (error) {
       console.error('Error loading dashboard:', error);
     } finally {
@@ -52,7 +59,7 @@ const Dashboard = () => {
       {/* System Status */}
       <div className="card">
         <h2 className="text-xl font-semibold mb-4">System Status</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="flex items-center space-x-3">
             {health?.milvus_connected ? (
               <CheckCircle className="w-5 h-5 text-green-500" />
@@ -73,17 +80,26 @@ const Dashboard = () => {
               <p className="text-sm text-gray-600">{health?.status || 'operational'}</p>
             </div>
           </div>
+          <div className="flex items-center space-x-3">
+            <Activity className="w-5 h-5 text-blue-500" />
+            <div>
+              <p className="font-medium">Storage</p>
+              <p className="text-sm text-gray-600">
+                {health?.storage?.total_decisions || 0} decisions stored
+              </p>
+            </div>
+          </div>
         </div>
       </div>
       
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="card">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Total Documents</p>
+              <p className="text-sm text-gray-600">Policy Chunks</p>
               <p className="text-3xl font-bold text-gray-900 mt-2">
-                {stats?.total_documents || 0}
+                {stats?.total_chunks || 0}
               </p>
             </div>
             <FileText className="w-12 h-12 text-blue-500 opacity-20" />
@@ -93,9 +109,9 @@ const Dashboard = () => {
         <div className="card">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Policy Chunks</p>
+              <p className="text-sm text-gray-600">Compliance Cases</p>
               <p className="text-3xl font-bold text-gray-900 mt-2">
-                {stats?.total_chunks || 0}
+                {stats?.total_cases || 0}
               </p>
             </div>
             <TrendingUp className="w-12 h-12 text-green-500 opacity-20" />
@@ -105,18 +121,30 @@ const Dashboard = () => {
         <div className="card">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Active Sources</p>
+              <p className="text-sm text-gray-600">Evaluations</p>
               <p className="text-3xl font-bold text-gray-900 mt-2">
-                {stats?.sources ? Object.keys(stats.sources).length : 0}
+                {metrics?.counters?.total_evaluations || 0}
               </p>
             </div>
             <AlertCircle className="w-12 h-12 text-purple-500 opacity-20" />
           </div>
         </div>
+        
+        <div className="card">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Queries</p>
+              <p className="text-3xl font-bold text-gray-900 mt-2">
+                {metrics?.counters?.total_queries || 0}
+              </p>
+            </div>
+            <MessageSquare className="w-12 h-12 text-orange-500 opacity-20" />
+          </div>
+        </div>
       </div>
       
       {/* Policy Sources */}
-      {stats?.sources && (
+      {stats?.sources && Object.keys(stats.sources).length > 0 && (
         <div className="card">
           <h2 className="text-xl font-semibold mb-4">Policy Sources</h2>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -130,10 +158,43 @@ const Dashboard = () => {
         </div>
       )}
       
-      {/* Quick Actions */}
+      {/* Performance Metrics */}
+      {metrics?.latency?.evaluation && (
+        <div className="card">
+          <h2 className="text-xl font-semibold mb-4">Performance Metrics</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="text-center p-4 bg-blue-50 rounded-lg">
+              <p className="text-sm text-gray-600 mb-1">Avg Latency</p>
+              <p className="text-2xl font-bold text-blue-700">
+                {metrics.latency.evaluation.avg_ms?.toFixed(0) || 0}ms
+              </p>
+            </div>
+            <div className="text-center p-4 bg-green-50 rounded-lg">
+              <p className="text-sm text-gray-600 mb-1">Median (p50)</p>
+              <p className="text-2xl font-bold text-green-700">
+                {metrics.latency.evaluation.p50_ms?.toFixed(0) || 0}ms
+              </p>
+            </div>
+            <div className="text-center p-4 bg-yellow-50 rounded-lg">
+              <p className="text-sm text-gray-600 mb-1">p95</p>
+              <p className="text-2xl font-bold text-yellow-700">
+                {metrics.latency.evaluation.p95_ms?.toFixed(0) || 0}ms
+              </p>
+            </div>
+            <div className="text-center p-4 bg-purple-50 rounded-lg">
+              <p className="text-sm text-gray-600 mb-1">Total Uploads</p>
+              <p className="text-2xl font-bold text-purple-700">
+                {metrics.counters?.total_policy_uploads || 0}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Getting Started */}
       <div className="card">
         <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <a
             href="/evaluate"
             className="flex items-center space-x-3 p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
@@ -153,6 +214,17 @@ const Dashboard = () => {
             <div>
               <p className="font-medium text-gray-900">Upload Policy</p>
               <p className="text-sm text-gray-600">Add new compliance policy</p>
+            </div>
+          </a>
+          
+          <a
+            href="/decisions"
+            className="flex items-center space-x-3 p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
+          >
+            <Activity className="w-6 h-6 text-green-600" />
+            <div>
+              <p className="font-medium text-gray-900">View Decisions</p>
+              <p className="text-sm text-gray-600">Browse decision history</p>
             </div>
           </a>
         </div>

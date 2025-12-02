@@ -1,7 +1,13 @@
 from openai import OpenAI
 from typing import List, Dict, Any
 import logging
+import sys
+import os
 from config import settings
+
+# Add utils to path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utils.retry import retry_with_backoff
 
 logger = logging.getLogger(__name__)
 
@@ -63,24 +69,30 @@ Respond in JSON format:
 }}"""
         
         try:
-            response = self.client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {"role": "system", "content": "You are an expert compliance analyst specializing in AML and KYC regulations."},
-                    {"role": "user", "content": prompt}
-                ],
-                temperature=self.temperature,
-                max_tokens=self.max_tokens,
-                response_format={"type": "json_object"}
-            )
-            
-            import json
-            result = json.loads(response.choices[0].message.content)
+            result = self._call_llm_with_retry(prompt)
             return result
             
         except Exception as e:
             logger.error(f"Error in LLM evaluation: {e}")
             return self._fallback_evaluation(transaction, policy_context)
+    
+    @retry_with_backoff(max_retries=3, initial_delay=1.0, backoff_factor=2.0)
+    def _call_llm_with_retry(self, prompt: str) -> Dict[str, Any]:
+        """Call LLM with retry logic"""
+        response = self.client.chat.completions.create(
+            model=self.model,
+            messages=[
+                {"role": "system", "content": "You are an expert compliance analyst specializing in AML and KYC regulations."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=self.temperature,
+            max_tokens=self.max_tokens,
+            response_format={"type": "json_object"}
+        )
+        
+        import json
+        result = json.loads(response.choices[0].message.content)
+        return result
     
     def answer_query(
         self,
@@ -114,19 +126,7 @@ Respond in JSON format:
 }}"""
         
         try:
-            response = self.client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {"role": "system", "content": "You are an expert compliance analyst."},
-                    {"role": "user", "content": prompt}
-                ],
-                temperature=self.temperature,
-                max_tokens=self.max_tokens,
-                response_format={"type": "json_object"}
-            )
-            
-            import json
-            result = json.loads(response.choices[0].message.content)
+            result = self._query_llm_with_retry(prompt)
             return result
             
         except Exception as e:
@@ -135,6 +135,24 @@ Respond in JSON format:
                 "answer": f"Error processing query: {str(e)}",
                 "confidence": 0.0
             }
+    
+    @retry_with_backoff(max_retries=3, initial_delay=1.0, backoff_factor=2.0)
+    def _query_llm_with_retry(self, prompt: str) -> Dict[str, Any]:
+        """Call LLM for query answering with retry logic"""
+        response = self.client.chat.completions.create(
+            model=self.model,
+            messages=[
+                {"role": "system", "content": "You are an expert compliance analyst."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=self.temperature,
+            max_tokens=self.max_tokens,
+            response_format={"type": "json_object"}
+        )
+        
+        import json
+        result = json.loads(response.choices[0].message.content)
+        return result
     
     def _format_policy_context(self, policies: List[Dict[str, Any]]) -> str:
         """Format policy chunks for LLM context"""

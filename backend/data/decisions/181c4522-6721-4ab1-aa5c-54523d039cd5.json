@@ -1,0 +1,71 @@
+{
+  "transaction": {
+    "transaction_id": "TXN-DEMO-001",
+    "amount": 75000.0,
+    "currency": "USD",
+    "sender": "John Smith",
+    "receiver": "ABC Trading LLC",
+    "sender_country": "USA",
+    "receiver_country": "Iran",
+    "timestamp": "2025-12-02 19:41:41.470809",
+    "description": "Business payment for goods",
+    "metadata": {}
+  },
+  "decision": {
+    "transaction_id": "TXN-DEMO-001",
+    "verdict": "flag",
+    "risk_level": "high",
+    "risk_score": 0.9,
+    "reasoning": "Rule-based evaluation: Amount=75000.0, Countries=USA->Iran",
+    "policy_citations": [
+      {
+        "doc_id": "8f1f1375-6785-41f0-9439-27418d5d3ec8",
+        "doc_title": "High-Risk Country Monitoring",
+        "section": "1.2 Enhanced Due Diligence Measures",
+        "text": "For transactions involving high-risk countries: - Obtain additional documentation on source of funds - Verify the purpose and nature of the transaction - Require senior management approval for amounts exceeding USD 5,000 - Conduct enhanced ongoing monitoring - Review customer relationship every 6 months",
+        "relevance_score": 0.37462112307548523,
+        "version": "2.0"
+      },
+      {
+        "doc_id": "42dd83b4-c980-4309-971b-8414aaaa51bb",
+        "doc_title": "OFAC Sanctions Screening Requirements",
+        "section": "1.4 Prohibited Countries",
+        "text": "Transactions involving the following countries are strictly prohibited: - North Korea - Iran (except authorized humanitarian transactions) - Syria - Crimea region of Ukraine",
+        "relevance_score": 0.35149437189102173,
+        "version": "4.2"
+      },
+      {
+        "doc_id": "7492143b-5141-4273-9cc3-ed9bee62ab97",
+        "doc_title": "AML Transaction Monitoring - Large Cash Transactions",
+        "section": "1.3 Enhanced Due Diligence",
+        "text": "For transactions exceeding USD 50,000: - Verify source of funds with supporting documentation - Obtain senior management approval - Conduct additional background checks on all parties - Monitor subsequent account activity for 90 days",
+        "relevance_score": 0.34902632236480713,
+        "version": "2.1"
+      },
+      {
+        "doc_id": "d6e2926a-d979-470d-bdee-a752a5a60398",
+        "doc_title": "Fraud Detection and Prevention",
+        "section": "1.3 Business Email Compromise (BEC)",
+        "text": "Warning signs: - Last-minute changes to payment instructions - Requests for wire transfers to new beneficiaries - Communication from executives outside normal channels - Urgent requests bypassing normal approval processes",
+        "relevance_score": 0.33602002263069153,
+        "version": "1.5"
+      },
+      {
+        "doc_id": "b5b1480c-81b0-4ba4-963a-a2002e5284ee",
+        "doc_title": "KYC Customer Identification and Verification",
+        "section": "1.2 Business Entities",
+        "text": "For corporate customers, obtain: - Certificate of incorporation or business registration - Articles of association - List of beneficial owners (25% or greater ownership) - Board resolution authorizing account opening - Source of funds and purpose of business relationship",
+        "relevance_score": 0.2341146022081375,
+        "version": "3.0"
+      }
+    ],
+    "similar_cases": [],
+    "confidence": 0.6,
+    "timestamp": "2025-12-02 14:11:41.874842",
+    "reviewed_by": null,
+    "override_notes": null
+  },
+  "trace_id": "181c4522-6721-4ab1-aa5c-54523d039cd5",
+  "processing_time_ms": 2694.889545440674,
+  "stored_at": "2025-12-02T14:11:44.419367"
+}
