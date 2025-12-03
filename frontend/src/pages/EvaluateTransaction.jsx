@@ -69,7 +69,7 @@ const EvaluateTransaction = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-900">Evaluate Transaction</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Evaluate Transaction</h1>
         <button
           onClick={generateRandomTransaction}
           className="btn btn-secondary"
@@ -86,7 +86,7 @@ const EvaluateTransaction = () => {
           <h2 className="text-xl font-semibold mb-4">Transaction Details</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                 Transaction ID
               </label>
               <input
@@ -101,7 +101,7 @@ const EvaluateTransaction = () => {
             
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                   Amount
                 </label>
                 <input
@@ -114,7 +114,7 @@ const EvaluateTransaction = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                   Currency
                 </label>
                 <select
@@ -132,7 +132,7 @@ const EvaluateTransaction = () => {
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                 Sender
               </label>
               <input
@@ -146,7 +146,7 @@ const EvaluateTransaction = () => {
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                 Sender Country
               </label>
               <input
@@ -159,7 +159,7 @@ const EvaluateTransaction = () => {
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                 Receiver
               </label>
               <input
@@ -173,7 +173,7 @@ const EvaluateTransaction = () => {
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                 Receiver Country
               </label>
               <input
@@ -186,7 +186,7 @@ const EvaluateTransaction = () => {
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                 Description
               </label>
               <textarea
@@ -226,7 +226,7 @@ const EvaluateTransaction = () => {
               <h2 className="text-xl font-semibold mb-4">Decision</h2>
               <div className="space-y-4">
                 <div>
-                  <p className="text-sm text-gray-600 mb-2">Verdict</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">Verdict</p>
                   <span className={`badge ${
                     result.decision.verdict === 'flag' ? 'badge-high' :
                     result.decision.verdict === 'needs_review' ? 'badge-medium' :
@@ -237,7 +237,7 @@ const EvaluateTransaction = () => {
                 </div>
                 
                 <div>
-                  <p className="text-sm text-gray-600 mb-2">Risk Assessment</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">Risk Assessment</p>
                   <RiskBadge 
                     level={result.decision.risk_level} 
                     score={result.decision.risk_score}
@@ -245,9 +245,9 @@ const EvaluateTransaction = () => {
                 </div>
                 
                 <div>
-                  <p className="text-sm text-gray-600 mb-2">Confidence</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">Confidence</p>
                   <div className="flex items-center space-x-2">
-                    <div className="flex-1 bg-gray-200 rounded-full h-2">
+                    <div className="flex-1 bg-gray-200 dark:bg-gray-600 rounded-full h-2">
                       <div
                         className="bg-primary h-2 rounded-full"
                         style={{ width: `${result.decision.confidence * 100}%` }}
@@ -260,7 +260,7 @@ const EvaluateTransaction = () => {
                 </div>
                 
                 <div>
-                  <p className="text-sm text-gray-600 mb-2">Processing Time</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">Processing Time</p>
                   <p className="text-sm font-medium">
                     {result.processing_time_ms.toFixed(0)}ms
                   </p>
@@ -271,7 +271,7 @@ const EvaluateTransaction = () => {
             {/* Reasoning */}
             <div className="card">
               <h2 className="text-xl font-semibold mb-4">Reasoning</h2>
-              <p className="text-gray-700 whitespace-pre-wrap">
+              <p className="text-gray-700 dark:text-gray-200 whitespace-pre-wrap">
                 {result.decision.reasoning}
               </p>
             </div>
@@ -284,18 +284,18 @@ const EvaluateTransaction = () => {
                 </h2>
                 <div className="space-y-3">
                   {result.decision.policy_citations.map((citation, idx) => (
-                    <div key={idx} className="p-3 bg-gray-50 rounded-lg">
+                    <div key={idx} className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                       <div className="flex items-center justify-between mb-2">
-                        <p className="font-medium text-sm">{citation.doc_title}</p>
-                        <span className="text-xs text-gray-500">
+                        <p className="font-medium text-sm dark:text-white">{citation.doc_title}</p>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
                           Relevance: {(citation.relevance_score * 100).toFixed(0)}%
                         </span>
                       </div>
                       {citation.section && (
-                        <p className="text-xs text-gray-600 mb-1">{citation.section}</p>
+                        <p className="text-xs text-gray-600 dark:text-gray-300 mb-1">{citation.section}</p>
                       )}
-                      <p className="text-sm text-gray-700">{citation.text}</p>
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-sm text-gray-700 dark:text-gray-200">{citation.text}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                         Source: {citation.doc_id} | Version: {citation.version}
                       </p>
                     </div>

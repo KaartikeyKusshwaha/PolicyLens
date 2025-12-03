@@ -39,7 +39,7 @@ const QueryAssistant = () => {
   
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-gray-900">Compliance Query Assistant</h1>
+      <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Compliance Query Assistant</h1>
       
       {error && <Alert type="error" message={error} onClose={() => setError(null)} />}
       
@@ -50,7 +50,7 @@ const QueryAssistant = () => {
             <h2 className="text-xl font-semibold mb-4">Ask a Question</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                   Your Question
                 </label>
                 <textarea
@@ -64,7 +64,7 @@ const QueryAssistant = () => {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                   Topic (Optional)
                 </label>
                 <select
@@ -108,7 +108,7 @@ const QueryAssistant = () => {
                 <button
                   key={idx}
                   onClick={() => loadSampleQuery(sq)}
-                  className="w-full text-left p-3 bg-gray-50 hover:bg-gray-100 rounded-lg text-sm transition-colors"
+                  className="w-full text-left p-3 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg text-sm transition-colors"
                 >
                   <MessageCircle className="w-4 h-4 inline mr-2 text-primary" />
                   {sq}
@@ -127,14 +127,14 @@ const QueryAssistant = () => {
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-xl font-semibold">Answer</h2>
                   <div className="flex items-center space-x-2">
-                    <span className="text-sm text-gray-600">Confidence:</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-300">Confidence:</span>
                     <span className="font-medium">
                       {(result.confidence * 100).toFixed(0)}%
                     </span>
                   </div>
                 </div>
                 <div className="prose max-w-none">
-                  <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">
+                  <p className="text-gray-700 dark:text-gray-200 whitespace-pre-wrap leading-relaxed">
                     {result.answer}
                   </p>
                 </div>
@@ -148,20 +148,20 @@ const QueryAssistant = () => {
                   </h2>
                   <div className="space-y-4">
                     {result.citations.map((citation, idx) => (
-                      <div key={idx} className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                      <div key={idx} className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
                         <div className="flex items-start justify-between mb-2">
                           <div className="flex-1">
-                            <h3 className="font-medium text-gray-900">{citation.doc_title}</h3>
+                            <h3 className="font-medium text-gray-900 dark:text-white">{citation.doc_title}</h3>
                             {citation.section && (
-                              <p className="text-sm text-gray-600 mt-1">{citation.section}</p>
+                              <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">{citation.section}</p>
                             )}
                           </div>
                           <span className="text-xs bg-primary text-white px-2 py-1 rounded">
                             {(citation.relevance_score * 100).toFixed(0)}% match
                           </span>
                         </div>
-                        <p className="text-sm text-gray-700 mb-2">{citation.text}</p>
-                        <div className="flex items-center justify-between text-xs text-gray-500">
+                        <p className="text-sm text-gray-700 dark:text-gray-200 mb-2">{citation.text}</p>
+                        <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
                           <span>Document ID: {citation.doc_id}</span>
                           <span>Version: {citation.version}</span>
                         </div>
@@ -173,7 +173,7 @@ const QueryAssistant = () => {
             </div>
           ) : (
             <div className="card h-full flex items-center justify-center">
-              <div className="text-center text-gray-500">
+              <div className="text-center text-gray-500 dark:text-gray-400">
                 <Search className="w-16 h-16 mx-auto mb-4 opacity-20" />
                 <p className="text-lg font-medium">Ask a question to get started</p>
                 <p className="text-sm mt-2">
