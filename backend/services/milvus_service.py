@@ -38,7 +38,7 @@ class MilvusService:
                 FieldSchema(name="chunk_id", dtype=DataType.VARCHAR, max_length=100, is_primary=True),
                 FieldSchema(name="doc_id", dtype=DataType.VARCHAR, max_length=100),
                 FieldSchema(name="text", dtype=DataType.VARCHAR, max_length=4000),
-                FieldSchema(name="embedding", dtype=DataType.FLOAT_VECTOR, dim=1536),
+                FieldSchema(name="embedding", dtype=DataType.FLOAT_VECTOR, dim=384),
                 FieldSchema(name="doc_title", dtype=DataType.VARCHAR, max_length=500),
                 FieldSchema(name="section", dtype=DataType.VARCHAR, max_length=200),
                 FieldSchema(name="source", dtype=DataType.VARCHAR, max_length=50),
@@ -65,7 +65,7 @@ class MilvusService:
             fields = [
                 FieldSchema(name="case_id", dtype=DataType.VARCHAR, max_length=100, is_primary=True),
                 FieldSchema(name="transaction_id", dtype=DataType.VARCHAR, max_length=100),
-                FieldSchema(name="embedding", dtype=DataType.FLOAT_VECTOR, dim=1536),
+                FieldSchema(name="embedding", dtype=DataType.FLOAT_VECTOR, dim=384),
                 FieldSchema(name="decision", dtype=DataType.VARCHAR, max_length=50),
                 FieldSchema(name="reasoning", dtype=DataType.VARCHAR, max_length=4000),
                 FieldSchema(name="risk_score", dtype=DataType.FLOAT),
@@ -222,6 +222,71 @@ class MilvusService:
                 })
         
         return output
+    
+    def get_all_documents(self) -> List[Dict[str, Any]]:
+        """Get list of all unique documents from Milvus"""
+        if not self.connected:
+            logger.warning("Not connected to Milvus - returning empty list")
+            return []
+        
+        try:
+            collection = Collection(self.collection_name)
+            collection.load()
+            
+            # Query all chunks to aggregate by document
+            results = collection.query(
+                expr="is_active == true",
+                output_fields=["doc_id", "doc_title", "source", "topic", "version"],
+                limit=16384  # Max limit
+            )
+            
+            # Aggregate by doc_id
+            docs_dict = {}
+            for result in results:
+                doc_id = result["doc_id"]
+                if doc_id not in docs_dict:
+                    docs_dict[doc_id] = {
+                        "doc_id": doc_id,
+                        "title": result["doc_title"],
+                        "source": result["source"].upper(),
+                        "topic": result["topic"].upper(),
+                        "version": result["version"],
+                        "chunks": 0
+                    }
+                docs_dict[doc_id]["chunks"] += 1
+            
+            # Add descriptions based on title/topic
+            for doc in docs_dict.values():
+                if "CTR" in doc["title"]:
+                    doc["description"] = "Currency Transaction Report filing requirements"
+                elif "SAR" in doc["title"]:
+                    doc["description"] = "Suspicious Activity Report filing requirements"
+                elif "CDD" in doc["title"] or "Customer Due Diligence" in doc["title"]:
+                    doc["description"] = "Customer identification and verification requirements"
+                elif "Recordkeeping" in doc["title"]:
+                    doc["description"] = "BSA recordkeeping and retention requirements"
+                elif "International" in doc["title"]:
+                    doc["description"] = "International AML standards and high-risk jurisdictions"
+                elif "BSA/AML" in doc["title"]:
+                    doc["description"] = "Bank Secrecy Act compliance program requirements"
+                elif "AML" in doc["title"]:
+                    doc["description"] = "Anti-money laundering transaction monitoring guidelines"
+                elif "Sanctions" in doc["title"]:
+                    doc["description"] = "Sanctions screening and compliance policy"
+                elif "KYC" in doc["title"]:
+                    doc["description"] = "Know Your Customer identification requirements"
+                elif "Fraud" in doc["title"]:
+                    doc["description"] = "Fraud detection and prevention guidelines"
+                elif "PEP" in doc["title"]:
+                    doc["description"] = "Politically Exposed Persons screening requirements"
+                else:
+                    doc["description"] = doc["title"]
+            
+            return list(docs_dict.values())
+            
+        except Exception as e:
+            logger.error(f"Error getting documents from Milvus: {e}")
+            return []
     
     def deactivate_document_chunks(self, doc_id: str):
         """Mark all chunks from a document as inactive"""

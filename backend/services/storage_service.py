@@ -15,6 +15,7 @@ class StorageService:
         self.storage_dir = Path(storage_dir)
         self.decisions_dir = self.storage_dir / "decisions"
         self.feedback_dir = self.storage_dir / "feedback"
+        self.metrics_file = self.storage_dir / "metrics.json"
         
         # Create directories
         self.decisions_dir.mkdir(parents=True, exist_ok=True)
@@ -129,6 +130,33 @@ class StorageService:
         except Exception as e:
             logger.error(f"Error listing feedback: {e}")
             return []
+    
+    def store_metrics(self, metrics_data: Dict[str, Any]) -> bool:
+        """Store metrics to disk"""
+        try:
+            metrics_data["last_updated"] = datetime.now().isoformat()
+            
+            with open(self.metrics_file, 'w', encoding='utf-8') as f:
+                json.dump(metrics_data, f, indent=2, default=str)
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error storing metrics: {e}")
+            return False
+    
+    def load_metrics(self) -> Optional[Dict[str, Any]]:
+        """Load metrics from disk"""
+        try:
+            if not self.metrics_file.exists():
+                return None
+            
+            with open(self.metrics_file, 'r', encoding='utf-8') as f:
+                return json.load(f)
+                
+        except Exception as e:
+            logger.error(f"Error loading metrics: {e}")
+            return None
     
     def get_statistics(self) -> Dict[str, Any]:
         """Get storage statistics"""

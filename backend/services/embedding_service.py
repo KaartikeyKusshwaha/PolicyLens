@@ -54,23 +54,18 @@ class EmbeddingService:
         """Generate embedding using local model"""
         try:
             embedding = self.local_model.encode(text, convert_to_tensor=False)
-            # Pad to 1536 dimensions for consistency
-            padded = list(embedding) + [0.0] * (1536 - len(embedding))
-            return padded[:1536]
+            # Return 384 dimensions (all-MiniLM-L6-v2 native size)
+            return list(embedding)
         except Exception as e:
             logger.error(f"Error generating local embedding: {e}")
-            return [0.0] * 1536
+            return [0.0] * 384
     
     def _generate_local_embeddings(self, texts: List[str]) -> List[List[float]]:
         """Generate embeddings for multiple texts using local model"""
         try:
             embeddings = self.local_model.encode(texts, convert_to_tensor=False)
-            # Pad to 1536 dimensions
-            padded_embeddings = []
-            for embedding in embeddings:
-                padded = list(embedding) + [0.0] * (1536 - len(embedding))
-                padded_embeddings.append(padded[:1536])
-            return padded_embeddings
+            # Return 384 dimensions (all-MiniLM-L6-v2 native size)
+            return [list(embedding) for embedding in embeddings]
         except Exception as e:
             logger.error(f"Error generating local embeddings: {e}")
-            return [[0.0] * 1536 for _ in texts]
+            return [[0.0] * 384 for _ in texts]

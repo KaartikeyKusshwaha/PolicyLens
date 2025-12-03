@@ -1,4 +1,4 @@
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
 from collections import defaultdict, deque
 import logging
@@ -8,27 +8,40 @@ logger = logging.getLogger(__name__)
 
 
 class MetricsService:
-    """In-memory metrics tracking for monitoring"""
+    """Persistent metrics tracking for monitoring"""
     
-    def __init__(self, demo_mode=False):
+    def __init__(self, storage_service=None, milvus_service=None, demo_mode=False):
         self.lock = threading.Lock()
         self.demo_mode = demo_mode
+        self.storage_service = storage_service
+        self.milvus_service = milvus_service
         
-        # Counters - initialize with demo data if in demo mode
-        if demo_mode:
+        # Try to load persisted metrics
+        loaded_metrics = self._load_persisted_metrics()
+        
+        # Counters - initialize from persisted data or defaults
+        if loaded_metrics:
+            self.total_evaluations = loaded_metrics.get("total_evaluations", 0)
+            self.total_queries = loaded_metrics.get("total_queries", 0)
+            self.total_policy_uploads = loaded_metrics.get("total_policy_uploads", 0)
+            self.total_feedback = loaded_metrics.get("total_feedback", 0)
+            self.verdicts = defaultdict(int, loaded_metrics.get("verdicts", {}))
+            self.risk_levels = defaultdict(int, loaded_metrics.get("risk_levels", {}))
+            logger.info(f"Loaded persisted metrics: {self.total_evaluations} evaluations, {self.total_queries} queries")
+        elif demo_mode:
             self.total_evaluations = 3
             self.total_queries = 0
-            self.total_policy_uploads = 3  # Show 3 demo policies as uploads
+            self.total_policy_uploads = 3
             self.total_feedback = 0
+            self.verdicts = defaultdict(int)
+            self.risk_levels = defaultdict(int)
         else:
             self.total_evaluations = 0
             self.total_queries = 0
             self.total_policy_uploads = 0
             self.total_feedback = 0
-        
-        # Decision verdicts
-        self.verdicts = defaultdict(int)  # FLAG, NEEDS_REVIEW, ACCEPTABLE
-        self.risk_levels = defaultdict(int)  # HIGH, MEDIUM, LOW
+            self.verdicts = defaultdict(int)
+            self.risk_levels = defaultdict(int)
         
         # Latency tracking (keep last 1000 measurements)
         self.evaluation_latencies = deque(maxlen=1000)
@@ -43,6 +56,25 @@ class MetricsService:
         self._init_hourly_tracking()
         
         logger.info("Metrics service initialized")
+    
+    def _load_persisted_metrics(self) -> Optional[Dict[str, Any]]:
+        """Load metrics from storage"""
+        if self.storage_service:
+            return self.storage_service.load_metrics()
+        return None
+    
+    def _persist_metrics(self):
+        """Persist current metrics to storage"""
+        if self.storage_service:
+            metrics_data = {
+                "total_evaluations": self.total_evaluations,
+                "total_queries": self.total_queries,
+                "total_policy_uploads": self.total_policy_uploads,
+                "total_feedback": self.total_feedback,
+                "verdicts": dict(self.verdicts),
+                "risk_levels": dict(self.risk_levels)
+            }
+            self.storage_service.store_metrics(metrics_data)
     
     def _init_hourly_tracking(self):
         """Initialize hourly buckets"""
@@ -71,22 +103,28 @@ class MetricsService:
                     "hour": current_hour.isoformat(),
                     "count": 1
                 })
+            
+            # Persist metrics
+            self._persist_metrics()
     
     def record_query(self, latency_ms: float):
         """Record a compliance query"""
         with self.lock:
             self.total_queries += 1
             self.query_latencies.append(latency_ms)
+            self._persist_metrics()
     
     def record_policy_upload(self):
         """Record a policy upload"""
         with self.lock:
             self.total_policy_uploads += 1
+            self._persist_metrics()
     
     def record_feedback(self):
         """Record feedback submission"""
         with self.lock:
             self.total_feedback += 1
+            self._persist_metrics()
     
     def record_embedding_latency(self, latency_ms: float):
         """Record embedding generation latency"""
@@ -101,11 +139,20 @@ class MetricsService:
     def get_metrics(self) -> Dict[str, Any]:
         """Get current metrics snapshot"""
         with self.lock:
+            # Sync policy count from Milvus if available (count unique documents, not chunks)
+            policy_count = self.total_policy_uploads
+            if self.milvus_service and self.milvus_service.connected:
+                try:
+                    docs = self.milvus_service.get_all_documents()
+                    policy_count = len(docs)
+                except Exception as e:
+                    logger.warning(f"Could not sync policy count from Milvus: {e}")
+            
             return {
                 "counters": {
                     "total_evaluations": self.total_evaluations,
                     "total_queries": self.total_queries,
-                    "total_policy_uploads": self.total_policy_uploads,
+                    "total_policy_uploads": policy_count,
                     "total_feedback": self.total_feedback
                 },
                 "decisions": {
