@@ -3,16 +3,17 @@ from typing import Optional
 
 
 class Settings(BaseSettings):
-    # OpenAI Configuration
-    openai_api_key: str = ""
+    # API Configuration
+    openai_api_key: str = "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"
+    api_base_url: str = "https://openrouter.ai/api/v1"
     
     # Milvus Configuration
     milvus_host: str = "localhost"
     milvus_port: int = 19530
     
     # Model Configuration
-    embedding_model: str = "text-embedding-3-large"
-    llm_model: str = "gpt-4-turbo-preview"
+    embedding_model: str = "all-MiniLM-L6-v2"  # Local embeddings
+    llm_model: str = "google/gemma-3n-e4b-it:free"
     llm_temperature: float = 0.1
     max_tokens: int = 2000
     

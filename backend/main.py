@@ -1,10 +1,13 @@
 from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from contextlib import asynccontextmanager
 import logging
 import uuid
 from datetime import datetime
 from typing import Optional
+import os
 
 from models import (
     PolicyDocument, Transaction, PolicySource, PolicyTopic,
@@ -68,7 +71,9 @@ async def lifespan(app: FastAPI):
     storage_service = StorageService()
     logger.info("✓ Storage service initialized")
     
-    metrics_service = MetricsService()
+    # Initialize metrics with demo mode flag
+    demo_mode = not (milvus_service and milvus_service.connected)
+    metrics_service = MetricsService(demo_mode=demo_mode)
     logger.info("✓ Metrics service initialized")
     
     logger.info("🚀 PolicyLens API ready!")
@@ -98,8 +103,8 @@ app.add_middleware(
 )
 
 
-@app.get("/")
-async def root():
+@app.get("/api/health")
+async def health_check():
     """Health check endpoint"""
     storage_stats = storage_service.get_statistics() if storage_service else {}
     return {
@@ -240,17 +245,70 @@ async def submit_feedback(feedback: FeedbackRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/api/policies")
+async def list_policies():
+    """Get list of all policies"""
+    try:
+        if not milvus_service or not milvus_service.connected:
+            # Return demo policies in demo mode
+            demo_policies = [
+                {
+                    "doc_id": "demo_doc_aml",
+                    "title": "AML Transaction Monitoring Guidelines",
+                    "source": "INTERNAL",
+                    "topic": "AML",
+                    "version": "1.0",
+                    "description": "Guidelines for monitoring transactions for anti-money laundering compliance",
+                    "chunks": 5
+                },
+                {
+                    "doc_id": "demo_doc_sanctions",
+                    "title": "Sanctions Compliance Policy",
+                    "source": "OFAC",
+                    "topic": "SANCTIONS",
+                    "version": "2.1",
+                    "description": "Policy for screening transactions against sanctions lists",
+                    "chunks": 4
+                },
+                {
+                    "doc_id": "demo_doc_kyc",
+                    "title": "Know Your Customer (KYC) Requirements",
+                    "source": "INTERNAL",
+                    "topic": "KYC",
+                    "version": "1.5",
+                    "description": "Customer identification and verification requirements",
+                    "chunks": 6
+                }
+            ]
+            return {
+                "policies": demo_policies,
+                "total": len(demo_policies),
+                "mode": "demo"
+            }
+        
+        # TODO: Query Milvus for actual policy documents
+        return {
+            "policies": [],
+            "total": 0,
+            "mode": "live"
+        }
+    
+    except Exception as e:
+        logger.error(f"Error listing policies: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.get("/api/policies/stats")
 async def get_policy_stats():
     """Get statistics about loaded policies"""
     try:
         if not milvus_service or not milvus_service.connected:
             return {
-                "total_documents": 0,
-                "total_chunks": 0,
-                "sources": {},
-                "topics": {},
-                "error": "Milvus not connected"
+                "total_documents": 3,
+                "total_chunks": 15,
+                "sources": {"INTERNAL": 2, "OFAC": 1},
+                "topics": {"AML": 1, "SANCTIONS": 1, "KYC": 1},
+                "mode": "demo"
             }
         
         # Query Milvus for actual statistics
@@ -402,6 +460,40 @@ async def list_feedback(limit: int = 50):
     except Exception as e:
         logger.error(f"Error listing feedback: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# Mount static files (frontend build)
+frontend_dist = os.path.join(os.path.dirname(__file__), "..", "frontend", "dist")
+if os.path.exists(frontend_dist):
+    # Mount assets directory
+    app.mount("/assets", StaticFiles(directory=os.path.join(frontend_dist, "assets")), name="assets")
+    
+    # Serve frontend - needs to be added AFTER all API routes
+    from fastapi.responses import HTMLResponse
+    
+    @app.get("/", response_class=HTMLResponse)
+    async def serve_root():
+        """Serve frontend root"""
+        index_path = os.path.join(frontend_dist, "index.html")
+        with open(index_path, "r", encoding="utf-8") as f:
+            return f.read()
+    
+    @app.get("/{full_path:path}", response_class=HTMLResponse)
+    async def serve_frontend(full_path: str):
+        """Serve frontend for all non-API routes (SPA routing)"""
+        # Don't intercept API routes
+        if full_path.startswith("api"):
+            raise HTTPException(status_code=404, detail="Not found")
+        
+        # Check if it's a file request
+        file_path = os.path.join(frontend_dist, full_path)
+        if os.path.isfile(file_path):
+            return FileResponse(file_path)
+        
+        # For all other routes, serve index.html (SPA routing)
+        index_path = os.path.join(frontend_dist, "index.html")
+        with open(index_path, "r", encoding="utf-8") as f:
+            return f.read()
 
 
 if __name__ == "__main__":

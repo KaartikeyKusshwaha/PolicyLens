@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+// Use relative URL so frontend and backend are on same origin
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -17,6 +18,11 @@ export const policyService = {
   
   getStats: async () => {
     const response = await api.get('/api/policies/stats');
+    return response.data;
+  },
+  
+  getAll: async () => {
+    const response = await api.get('/api/policies');
     return response.data;
   },
 };
