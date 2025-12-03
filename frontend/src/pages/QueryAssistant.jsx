@@ -93,7 +93,7 @@ const QueryAssistant = () => {
                 ) : (
                   <>
                     <Search className="w-4 h-4" />
-                    <span>Search Policies</span>
+                    <span>Search</span>
                   </>
                 )}
               </button>
