@@ -21,6 +21,8 @@ from services.document_processor import DocumentProcessor
 from services.compliance_engine import ComplianceEngine
 from services.storage_service import StorageService
 from services.metrics_service import MetricsService
+from services.policy_sentinel import PolicySentinel
+from services.report_generator import ReportGenerator
 from config import settings
 
 # Configure logging
@@ -38,12 +40,14 @@ document_processor = None
 compliance_engine = None
 storage_service = None
 metrics_service = None
+policy_sentinel = None
+report_generator = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan context manager for startup and shutdown"""
-    global milvus_service, embedding_service, llm_service, document_processor, compliance_engine, storage_service, metrics_service
+    global milvus_service, embedding_service, llm_service, document_processor, compliance_engine, storage_service, metrics_service, policy_sentinel, report_generator
     
     logger.info("Starting PolicyLens API...")
     
@@ -70,6 +74,14 @@ async def lifespan(app: FastAPI):
     
     storage_service = StorageService()
     logger.info("✓ Storage service initialized")
+    
+    # Initialize policy sentinel for change detection
+    policy_sentinel = PolicySentinel(milvus_service, storage_service)
+    logger.info("✓ Policy sentinel initialized")
+    
+    # Initialize report generator
+    report_generator = ReportGenerator()
+    logger.info("✓ Report generator initialized")
     
     # Initialize metrics with storage and Milvus services
     demo_mode = not (milvus_service and milvus_service.connected)
@@ -122,7 +134,7 @@ async def health_check():
 
 @app.post("/api/policies/upload")
 async def upload_policy(policy_request: PolicyUploadRequest):
-    """Upload and process a new policy document"""
+    """Upload and process a new policy document (JSON format)"""
     try:
         doc_id = str(uuid.uuid4())
         
@@ -148,6 +160,61 @@ async def upload_policy(policy_request: PolicyUploadRequest):
             "chunks_created": len(chunks),
             "status": "processed",
             "message": "Policy document uploaded and indexed successfully"
+        }
+    
+    except Exception as e:
+        logger.error(f"Error uploading policy: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/policies/upload-file")
+async def upload_policy_file(
+    file: UploadFile = File(...),
+    title: str = None,
+    source: str = "UPLOADED",
+    topic: str = "GENERAL",
+    version: str = "1.0"
+):
+    """Upload and process a policy document from file (PDF, DOCX, TXT)"""
+    try:
+        # Read file content
+        file_content = await file.read()
+        
+        # Extract text from file
+        extracted_text = document_processor.extract_text_from_file(file_content, file.filename)
+        
+        if not extracted_text or len(extracted_text.strip()) < 100:
+            raise HTTPException(status_code=400, detail="Extracted text is too short or empty")
+        
+        # Create document
+        doc_id = str(uuid.uuid4())
+        doc_title = title or file.filename.rsplit('.', 1)[0]
+        
+        document = PolicyDocument(
+            doc_id=doc_id,
+            title=doc_title,
+            content=extracted_text,
+            source=source,
+            topic=topic,
+            version=version,
+            metadata={"original_filename": file.filename, "file_size": len(file_content)}
+        )
+        
+        # Process and store
+        chunks = document_processor.process_document(document)
+        
+        # Track metrics
+        if metrics_service:
+            metrics_service.record_policy_upload()
+        
+        return {
+            "doc_id": doc_id,
+            "title": doc_title,
+            "filename": file.filename,
+            "text_length": len(extracted_text),
+            "chunks_created": len(chunks),
+            "status": "processed",
+            "message": f"Policy document '{file.filename}' uploaded and indexed successfully"
         }
     
     except Exception as e:
@@ -340,6 +407,101 @@ async def get_policy_stats():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.post("/api/policies/{doc_id}/update")
+async def update_policy(doc_id: str, policy_request: PolicyUploadRequest):
+    """Update an existing policy and trigger change detection"""
+    try:
+        # Get old document content
+        old_docs = milvus_service.get_all_documents() if milvus_service.connected else []
+        old_doc = next((d for d in old_docs if d["doc_id"] == doc_id), None)
+        
+        if not old_doc:
+            raise HTTPException(status_code=404, detail=f"Policy {doc_id} not found")
+        
+        # Create new version
+        new_doc_id = f"{doc_id}_v{policy_request.version}"
+        
+        new_document = PolicyDocument(
+            doc_id=new_doc_id,
+            title=policy_request.title,
+            content=policy_request.content,
+            source=policy_request.source,
+            topic=policy_request.topic,
+            version=policy_request.version,
+            metadata=policy_request.metadata
+        )
+        
+        # Process new document
+        chunks = document_processor.process_document(new_document)
+        
+        # Detect changes (simplified - in production, fetch old content from storage)
+        change_data = policy_sentinel.detect_policy_change(
+            doc_id, 
+            new_doc_id, 
+            old_doc.get("title", ""), 
+            policy_request.content
+        )
+        
+        # Identify impacted decisions
+        impacted_decisions = policy_sentinel.identify_impacted_decisions(doc_id)
+        
+        # Generate impact report
+        impact_report = policy_sentinel.generate_change_impact_report(change_data, impacted_decisions)
+        
+        # Trigger re-evaluation if significant change
+        if change_data.get("change_magnitude", 0) > 0.10:
+            re_eval_queue = policy_sentinel.trigger_re_evaluation(impacted_decisions)
+        else:
+            re_eval_queue = {"message": "Change too minor to trigger re-evaluation"}
+        
+        # Deactivate old version
+        milvus_service.deactivate_document_chunks(doc_id)
+        
+        return {
+            "doc_id": new_doc_id,
+            "old_doc_id": doc_id,
+            "status": "updated",
+            "chunks_created": len(chunks),
+            "change_detection": change_data,
+            "impact_report": impact_report,
+            "re_evaluation": re_eval_queue
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating policy: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/policies/changes")
+async def get_policy_changes(limit: int = 10):
+    """Get recent policy changes"""
+    try:
+        changes = policy_sentinel.get_recent_changes(limit=limit)
+        return {
+            "changes": changes,
+            "count": len(changes)
+        }
+    except Exception as e:
+        logger.error(f"Error retrieving policy changes: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/policies/impact-reports")
+async def get_impact_reports(limit: int = 10):
+    """Get recent change impact reports"""
+    try:
+        reports = policy_sentinel.get_impact_reports(limit=limit)
+        return {
+            "reports": reports,
+            "count": len(reports)
+        }
+    except Exception as e:
+        logger.error(f"Error retrieving impact reports: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.get("/api/decisions/{trace_id}")
 async def get_decision(trace_id: str):
     """Retrieve a decision by trace ID"""
@@ -383,8 +545,10 @@ async def list_decisions(limit: int = 50, skip: int = 0):
 
 
 @app.get("/api/audit/report/{trace_id}")
-async def generate_audit_report(trace_id: str):
-    """Generate audit report for a specific decision"""
+async def generate_audit_report(trace_id: str, format: str = "json"):
+    """Generate audit report for a specific decision (JSON or PDF)"""
+    from fastapi.responses import Response
+    
     try:
         if not storage_service:
             raise HTTPException(status_code=503, detail="Storage service unavailable")
@@ -423,12 +587,54 @@ async def generate_audit_report(trace_id: str):
             }
         }
         
+        # Return PDF if requested
+        if format.lower() == "pdf":
+            pdf_bytes = report_generator.generate_decision_report(decision_data)
+            return Response(
+                content=pdf_bytes,
+                media_type="application/pdf",
+                headers={"Content-Disposition": f"attachment; filename=audit_report_{trace_id}.pdf"}
+            )
+        
+        # Default: return JSON
         return audit_report
     
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error generating audit report for {trace_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/audit/impact-report/{report_id}")
+async def get_impact_report_pdf(report_id: str, format: str = "json"):
+    """Get policy change impact report (JSON or PDF)"""
+    from fastapi.responses import Response
+    
+    try:
+        # Get the impact report
+        reports = policy_sentinel.get_impact_reports(limit=100)
+        report = next((r for r in reports if r.get("report_id") == report_id), None)
+        
+        if not report:
+            raise HTTPException(status_code=404, detail=f"Impact report not found: {report_id}")
+        
+        # Return PDF if requested
+        if format.lower() == "pdf":
+            pdf_bytes = report_generator.generate_impact_report(report)
+            return Response(
+                content=pdf_bytes,
+                media_type="application/pdf",
+                headers={"Content-Disposition": f"attachment; filename={report_id}.pdf"}
+            )
+        
+        # Default: return JSON
+        return report
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error retrieving impact report: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

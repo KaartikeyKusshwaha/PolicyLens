@@ -1,8 +1,11 @@
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional, BinaryIO
 import uuid
 import re
 from datetime import datetime
 import logging
+import io
+import pdfplumber
+from docx import Document as DocxDocument
 from models import PolicyDocument, PolicyChunk
 from services.embedding_service import EmbeddingService
 from services.milvus_service import MilvusService
@@ -17,6 +20,53 @@ class DocumentProcessor:
         self.milvus_service = milvus_service
         self.chunk_size = settings.chunk_size
         self.chunk_overlap = settings.chunk_overlap
+    
+    def extract_text_from_pdf(self, file_content: bytes) -> str:
+        """Extract text from PDF file"""
+        try:
+            text_content = []
+            with pdfplumber.open(io.BytesIO(file_content)) as pdf:
+                for page in pdf.pages:
+                    page_text = page.extract_text()
+                    if page_text:
+                        text_content.append(page_text)
+            
+            full_text = '\n\n'.join(text_content)
+            logger.info(f"Extracted {len(full_text)} characters from PDF with {len(text_content)} pages")
+            return full_text
+        except Exception as e:
+            logger.error(f"Error extracting text from PDF: {e}")
+            raise ValueError(f"Failed to extract text from PDF: {str(e)}")
+    
+    def extract_text_from_docx(self, file_content: bytes) -> str:
+        """Extract text from DOCX file"""
+        try:
+            doc = DocxDocument(io.BytesIO(file_content))
+            text_content = []
+            
+            for paragraph in doc.paragraphs:
+                if paragraph.text.strip():
+                    text_content.append(paragraph.text)
+            
+            full_text = '\n\n'.join(text_content)
+            logger.info(f"Extracted {len(full_text)} characters from DOCX")
+            return full_text
+        except Exception as e:
+            logger.error(f"Error extracting text from DOCX: {e}")
+            raise ValueError(f"Failed to extract text from DOCX: {str(e)}")
+    
+    def extract_text_from_file(self, file_content: bytes, filename: str) -> str:
+        """Extract text from various file formats"""
+        file_ext = filename.lower().split('.')[-1]
+        
+        if file_ext == 'pdf':
+            return self.extract_text_from_pdf(file_content)
+        elif file_ext in ['docx', 'doc']:
+            return self.extract_text_from_docx(file_content)
+        elif file_ext == 'txt':
+            return file_content.decode('utf-8')
+        else:
+            raise ValueError(f"Unsupported file format: {file_ext}")
     
     def process_document(self, document: PolicyDocument) -> List[PolicyChunk]:
         """Process a document: chunk it, generate embeddings, and store in Milvus"""
