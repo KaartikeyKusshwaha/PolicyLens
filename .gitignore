@@ -38,3 +38,8 @@ htmlcov/
 dist/
 build/
 *.egg-info/
+
+# Runtime data
+backend/data/metrics.json
+backend/data/decisions/
+backend/data/policies/
