@@ -14,8 +14,28 @@ const Metrics = () => {
 
   const loadMetrics = async () => {
     try {
+      // Fetch regular metrics
       const data = await metricsService.get();
-      setMetrics(data);
+      
+      // Fetch persisted latency data from database
+      const latencyData = await metricsService.getLatency();
+      
+      // Merge persisted latency data with real-time metrics
+      const mergedMetrics = {
+        ...data,
+        latency: {
+          evaluation: {
+            ...latencyData.evaluation,
+            sample_count: latencyData.evaluation.count
+          },
+          query: {
+            ...latencyData.query,
+            sample_count: latencyData.query.count
+          }
+        }
+      };
+      
+      setMetrics(mergedMetrics);
     } catch (error) {
       console.error('Error loading metrics:', error);
     } finally {

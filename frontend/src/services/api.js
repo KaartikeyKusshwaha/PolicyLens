@@ -88,6 +88,13 @@ export const metricsService = {
     const response = await api.get('/api/metrics');
     return response.data;
   },
+  getLatency: async (operationType = null, hours = 24) => {
+    const params = new URLSearchParams();
+    if (operationType) params.append('operation_type', operationType);
+    if (hours) params.append('hours', hours);
+    const response = await api.get(`/api/metrics/latency?${params.toString()}`);
+    return response.data;
+  },
 };
 
 export const healthCheck = async () => {
