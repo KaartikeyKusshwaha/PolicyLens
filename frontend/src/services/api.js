@@ -1,7 +1,8 @@
 import axios from 'axios';
 
-// Use relative URL so frontend and backend are on same origin
-const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+// Frontend is on port 3000, API is on port 8000
+// Always use localhost:8000 for API calls
+const API_BASE_URL = 'http://localhost:8000';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -91,8 +92,10 @@ export const metricsService = {
   getLatency: async (operationType = null, hours = 24) => {
     const params = new URLSearchParams();
     if (operationType) params.append('operation_type', operationType);
-    if (hours) params.append('hours', hours);
-    const response = await api.get(`/api/metrics/latency?${params.toString()}`);
+    params.append('hours', hours);
+    const queryString = params.toString();
+    const url = queryString ? `/api/metrics/latency?${queryString}` : '/api/metrics/latency';
+    const response = await api.get(url);
     return response.data;
   },
 };

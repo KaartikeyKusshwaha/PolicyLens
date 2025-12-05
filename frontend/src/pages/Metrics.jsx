@@ -14,25 +14,16 @@ const Metrics = () => {
 
   const loadMetrics = async () => {
     try {
-      // Fetch regular metrics
-      const data = await metricsService.get();
-      
-      // Fetch persisted latency data from database
+      // Fetch persisted latency data from database (use this as primary source)
       const latencyData = await metricsService.getLatency();
       
-      // Merge persisted latency data with real-time metrics
+      // Fetch regular metrics for other data
+      const data = await metricsService.get();
+      
+      // Use latency data directly - no complex merging
       const mergedMetrics = {
         ...data,
-        latency: {
-          evaluation: {
-            ...latencyData.evaluation,
-            sample_count: latencyData.evaluation.count
-          },
-          query: {
-            ...latencyData.query,
-            sample_count: latencyData.query.count
-          }
-        }
+        latency: latencyData  // Use the API response directly
       };
       
       setMetrics(mergedMetrics);
@@ -147,7 +138,7 @@ const Metrics = () => {
             </div>
           </div>
           <div className="mt-4 text-sm text-gray-600 text-center">
-            Based on {metrics.latency.evaluation.sample_count || 0} samples
+            Based on {metrics.latency.evaluation.count || 0} samples
           </div>
         </div>
       )}
@@ -192,7 +183,7 @@ const Metrics = () => {
             </div>
           </div>
           <div className="mt-4 text-sm text-gray-600 text-center">
-            Based on {metrics.latency.query.sample_count || 0} samples
+            Based on {metrics.latency.query.count || 0} samples
           </div>
         </div>
       )}
