@@ -43,12 +43,13 @@ metrics_service = None
 policy_sentinel = None
 report_generator = None
 batch_processor = None
+risk_scorer = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan context manager for startup and shutdown"""
-    global milvus_service, embedding_service, llm_service, document_processor, compliance_engine, storage_service, metrics_service, policy_sentinel, report_generator, batch_processor
+    global milvus_service, embedding_service, llm_service, document_processor, compliance_engine, storage_service, metrics_service, policy_sentinel, report_generator, batch_processor, risk_scorer
     
     logger.info("Starting PolicyLens API...")
     
@@ -97,6 +98,11 @@ async def lifespan(app: FastAPI):
     from services.batch_processor import BatchProcessor
     batch_processor = BatchProcessor(compliance_engine, storage_service)
     logger.info("✓ Batch processor initialized")
+    
+    # Initialize risk scorer
+    from services.risk_scorer import RiskScorer
+    risk_scorer = RiskScorer(milvus_service, embedding_service, storage_service)
+    logger.info("✓ Risk scorer initialized")
     
     logger.info("🚀 PolicyLens API ready!")
     
@@ -803,6 +809,26 @@ async def generate_impact_report(reevaluation_summary: dict):
         }
     except Exception as e:
         logger.error(f"Impact report generation failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# Risk Scoring Endpoints
+@app.get("/api/risk/statistics")
+async def get_risk_statistics():
+    """
+    Get comprehensive risk statistics across all decisions
+    
+    Returns:
+        Statistics including total cases, verdict distribution, average risk scores
+    """
+    try:
+        if not risk_scorer:
+            raise HTTPException(status_code=503, detail="Risk scorer not initialized")
+        
+        stats = risk_scorer.get_risk_statistics()
+        return stats
+    except Exception as e:
+        logger.error(f"Failed to get risk statistics: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
