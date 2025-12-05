@@ -1,6 +1,10 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
+// Auto-detect environment: Docker uses 'backend' hostname, local uses 'localhost'
+const isDocker = process.env.DOCKER_ENV === 'true'
+const apiTarget = isDocker ? 'http://backend:8000' : 'http://localhost:8000'
+
 export default defineConfig({
   plugins: [react()],
   server: {
@@ -8,9 +12,18 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api': {
-        target: 'http://backend:8000',
+        target: apiTarget,
         changeOrigin: true,
+        secure: false,
       }
+    },
+    // Improve HMR stability
+    hmr: {
+      overlay: true,
     }
+  },
+  // Optimize dependencies for faster dev server startup
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'react-router-dom']
   }
 })
