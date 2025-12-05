@@ -257,7 +257,8 @@ async def evaluate_transaction(request: TransactionEvaluationRequest):
             metrics_service.record_evaluation(
                 verdict=result["decision"].verdict.value,
                 risk_level=result["decision"].risk_level.value,
-                latency_ms=result["processing_time_ms"]
+                latency_ms=result["processing_time_ms"],
+                transaction_id=request.transaction.transaction_id
             )
         
         return TransactionEvaluationResponse(
@@ -286,7 +287,7 @@ async def query_compliance(request: QueryRequest):
         # Track metrics
         if metrics_service:
             latency_ms = (time.time() - start_time) * 1000
-            metrics_service.record_query(latency_ms)
+            metrics_service.record_query(latency_ms, request.query)
         
         return QueryResponse(
             query=result["query"],
@@ -663,6 +664,45 @@ async def get_metrics():
         raise
     except Exception as e:
         logger.error(f"Error retrieving metrics: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/metrics/latency")
+async def get_latency_metrics(operation_type: Optional[str] = None, hours: int = 24):
+    """Get persisted latency statistics from storage
+    
+    Args:
+        operation_type: Filter by operation type ('evaluation' or 'query'). If None, returns all.
+        hours: Number of hours to look back (default: 24)
+    """
+    try:
+        if not metrics_service:
+            raise HTTPException(status_code=503, detail="Metrics service unavailable")
+        
+        # Get persisted latency stats
+        if operation_type:
+            stats = metrics_service.get_persisted_latency_stats(operation_type, hours)
+            return {
+                "operation_type": operation_type,
+                "hours": hours,
+                "statistics": stats
+            }
+        else:
+            # Get stats for all operation types
+            eval_stats = metrics_service.get_persisted_latency_stats("evaluation", hours)
+            query_stats = metrics_service.get_persisted_latency_stats("query", hours)
+            
+            return {
+                "hours": hours,
+                "evaluation": eval_stats,
+                "query": query_stats,
+                "total_operations": eval_stats["count"] + query_stats["count"]
+            }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error retrieving latency metrics: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

@@ -86,7 +86,7 @@ class MetricsService:
                 "count": 0
             })
     
-    def record_evaluation(self, verdict: str, risk_level: str, latency_ms: float):
+    def record_evaluation(self, verdict: str, risk_level: str, latency_ms: float, transaction_id: str = None):
         """Record a transaction evaluation"""
         with self.lock:
             self.total_evaluations += 1
@@ -106,13 +106,21 @@ class MetricsService:
             
             # Persist metrics
             self._persist_metrics()
+            
+            # Store latency data to disk for analysis
+            if self.storage_service:
+                self.storage_service.store_latency_data("evaluation", latency_ms, transaction_id)
     
-    def record_query(self, latency_ms: float):
+    def record_query(self, latency_ms: float, query_text: str = None):
         """Record a compliance query"""
         with self.lock:
             self.total_queries += 1
             self.query_latencies.append(latency_ms)
             self._persist_metrics()
+            
+            # Store latency data to disk for analysis
+            if self.storage_service:
+                self.storage_service.store_latency_data("query", latency_ms, query_text)
     
     def record_policy_upload(self):
         """Record a policy upload"""
@@ -193,6 +201,12 @@ class MetricsService:
             "p95_ms": round(sorted_latencies[int(count * 0.95)], 2),
             "p99_ms": round(sorted_latencies[int(count * 0.99)], 2)
         }
+    
+    def get_persisted_latency_stats(self, operation_type: str = None, hours: int = 24) -> Dict[str, Any]:
+        """Get latency statistics from persisted data in storage"""
+        if self.storage_service:
+            return self.storage_service.get_latency_statistics(operation_type, hours)
+        return {"count": 0, "avg_ms": 0, "min_ms": 0, "max_ms": 0}
     
     def reset_metrics(self):
         """Reset all metrics (useful for testing)"""

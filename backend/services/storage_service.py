@@ -1,7 +1,7 @@
 import json
 import os
 from typing import Dict, Any, List, Optional
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 from pathlib import Path
 
@@ -144,6 +144,72 @@ class StorageService:
         except Exception as e:
             logger.error(f"Error storing metrics: {e}")
             return False
+    
+    def store_latency_data(self, operation_type: str, latency_ms: float, transaction_id: str = None) -> bool:
+        """Store individual latency measurement for analysis"""
+        try:
+            latency_file = self.storage_dir / "latencies.jsonl"
+            
+            latency_record = {
+                "timestamp": datetime.now().isoformat(),
+                "operation_type": operation_type,
+                "latency_ms": latency_ms,
+                "transaction_id": transaction_id
+            }
+            
+            # Append to JSONL file (one JSON object per line)
+            with open(latency_file, 'a', encoding='utf-8') as f:
+                f.write(json.dumps(latency_record, default=str) + '\n')
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error storing latency data: {e}")
+            return False
+    
+    def get_latency_statistics(self, operation_type: str = None, hours: int = 24) -> Dict[str, Any]:
+        """Get latency statistics from stored data"""
+        try:
+            latency_file = self.storage_dir / "latencies.jsonl"
+            
+            if not latency_file.exists():
+                return {"count": 0, "avg_ms": 0, "min_ms": 0, "max_ms": 0}
+            
+            cutoff_time = datetime.now() - timedelta(hours=hours)
+            latencies = []
+            
+            with open(latency_file, 'r', encoding='utf-8') as f:
+                for line in f:
+                    try:
+                        record = json.loads(line.strip())
+                        record_time = datetime.fromisoformat(record["timestamp"])
+                        
+                        # Filter by time and operation type
+                        if record_time >= cutoff_time:
+                            if operation_type is None or record["operation_type"] == operation_type:
+                                latencies.append(record["latency_ms"])
+                    except (json.JSONDecodeError, KeyError, ValueError):
+                        continue
+            
+            if not latencies:
+                return {"count": 0, "avg_ms": 0, "min_ms": 0, "max_ms": 0}
+            
+            sorted_latencies = sorted(latencies)
+            count = len(sorted_latencies)
+            
+            return {
+                "count": count,
+                "avg_ms": round(sum(sorted_latencies) / count, 2),
+                "min_ms": round(sorted_latencies[0], 2),
+                "max_ms": round(sorted_latencies[-1], 2),
+                "p50_ms": round(sorted_latencies[int(count * 0.5)], 2),
+                "p95_ms": round(sorted_latencies[int(count * 0.95)], 2),
+                "p99_ms": round(sorted_latencies[int(count * 0.99)], 2)
+            }
+            
+        except Exception as e:
+            logger.error(f"Error getting latency statistics: {e}")
+            return {"count": 0, "avg_ms": 0, "min_ms": 0, "max_ms": 0}
     
     def load_metrics(self) -> Optional[Dict[str, Any]]:
         """Load metrics from disk"""
