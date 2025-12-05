@@ -89,13 +89,17 @@ export const metricsService = {
     const response = await api.get('/api/metrics');
     return response.data;
   },
-  getLatency: async (operationType = null, hours = 24) => {
+  getLatency: async (operationType = null, hours = null) => {
     const params = new URLSearchParams();
     if (operationType) params.append('operation_type', operationType);
-    params.append('hours', hours);
+    if (hours) params.append('hours', hours);
     const queryString = params.toString();
     const url = queryString ? `/api/metrics/latency?${queryString}` : '/api/metrics/latency';
     const response = await api.get(url);
+    return response.data;
+  },
+  getCounters: async () => {
+    const response = await api.get('/api/metrics/counters');
     return response.data;
   },
 };

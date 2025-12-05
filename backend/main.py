@@ -667,6 +667,23 @@ async def get_metrics():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/api/metrics/counters")
+async def get_counters():
+    """Get operation counters (total counts only)"""
+    try:
+        if not metrics_service:
+            raise HTTPException(status_code=503, detail="Metrics service unavailable")
+        
+        return {
+            "total_evaluations": metrics_service.total_evaluations,
+            "total_queries": metrics_service.total_queries,
+            "total_policy_uploads": metrics_service.total_policy_uploads
+        }
+    except Exception as e:
+        logger.error(f"Error retrieving counters: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.get("/api/metrics/latency")
 async def get_latency_metrics(operation_type: Optional[str] = None, hours: int = 24):
     """Get persisted latency statistics from storage
@@ -688,15 +705,13 @@ async def get_latency_metrics(operation_type: Optional[str] = None, hours: int =
                 "statistics": stats
             }
         else:
-            # Get stats for all operation types
-            eval_stats = metrics_service.get_persisted_latency_stats("evaluation", hours)
-            query_stats = metrics_service.get_persisted_latency_stats("query", hours)
+            # Get stats for all operation types (all-time if hours not specified)
+            eval_stats = metrics_service.get_persisted_latency_stats("evaluation", hours) if hours else metrics_service.get_persisted_latency_stats("evaluation", None)
+            query_stats = metrics_service.get_persisted_latency_stats("query", hours) if hours else metrics_service.get_persisted_latency_stats("query", None)
             
             return {
-                "hours": hours,
                 "evaluation": eval_stats,
-                "query": query_stats,
-                "total_operations": eval_stats["count"] + query_stats["count"]
+                "query": query_stats
             }
     
     except HTTPException:

@@ -167,15 +167,20 @@ class StorageService:
             logger.error(f"Error storing latency data: {e}")
             return False
     
-    def get_latency_statistics(self, operation_type: str = None, hours: int = 24) -> Dict[str, Any]:
-        """Get latency statistics from stored data"""
+    def get_latency_statistics(self, operation_type: str = None, hours: int = None) -> Dict[str, Any]:
+        """Get latency statistics from stored data
+        
+        Args:
+            operation_type: Filter by operation type ('evaluation' or 'query'). If None, returns all.
+            hours: Number of hours to look back. If None, returns all-time data.
+        """
         try:
             latency_file = self.storage_dir / "latencies.jsonl"
             
             if not latency_file.exists():
                 return {"count": 0, "avg_ms": 0, "min_ms": 0, "max_ms": 0}
             
-            cutoff_time = datetime.now() - timedelta(hours=hours)
+            cutoff_time = datetime.now() - timedelta(hours=hours) if hours is not None else None
             latencies = []
             
             with open(latency_file, 'r', encoding='utf-8') as f:
@@ -185,7 +190,7 @@ class StorageService:
                         record_time = datetime.fromisoformat(record["timestamp"])
                         
                         # Filter by time and operation type
-                        if record_time >= cutoff_time:
+                        if cutoff_time is None or record_time >= cutoff_time:
                             if operation_type is None or record["operation_type"] == operation_type:
                                 latencies.append(record["latency_ms"])
                     except (json.JSONDecodeError, KeyError, ValueError):

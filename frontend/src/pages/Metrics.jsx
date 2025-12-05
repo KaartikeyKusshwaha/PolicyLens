@@ -3,30 +3,29 @@ import { Activity, TrendingUp, Clock, FileText, MessageSquare, BarChart3 } from 
 import { metricsService } from '../services/api';
 
 const Metrics = () => {
+  const [counters, setCounters] = useState(null);
   const [metrics, setMetrics] = useState(null);
+  const [latency, setLatency] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadMetrics();
-    const interval = setInterval(loadMetrics, 5000); // Refresh every 5 seconds
+    const interval = setInterval(loadMetrics, 5000);
     return () => clearInterval(interval);
   }, []);
 
   const loadMetrics = async () => {
     try {
-      // Fetch persisted latency data from database (use this as primary source)
-      const latencyData = await metricsService.getLatency();
-      
-      // Fetch regular metrics for other data
+      // Fetch metrics (includes counters)
       const data = await metricsService.get();
       
-      // Use latency data directly - no complex merging
-      const mergedMetrics = {
-        ...data,
-        latency: latencyData  // Use the API response directly
-      };
+      // Fetch latency statistics from database
+      const latencyData = await metricsService.getLatency();
       
-      setMetrics(mergedMetrics);
+      // Use counters from main metrics endpoint
+      setCounters(data.counters);
+      setMetrics(data);
+      setLatency(latencyData);
     } catch (error) {
       console.error('Error loading metrics:', error);
     } finally {
@@ -66,7 +65,7 @@ const Metrics = () => {
             <div>
               <p className="text-sm text-gray-600 mb-1">Total Evaluations</p>
               <p className="text-4xl font-bold text-blue-700">
-                {metrics?.counters?.total_evaluations || 0}
+                {counters?.total_evaluations || 0}
               </p>
             </div>
             <BarChart3 className="w-12 h-12 text-blue-500 opacity-30" />
@@ -78,7 +77,7 @@ const Metrics = () => {
             <div>
               <p className="text-sm text-gray-600 mb-1">Total Queries</p>
               <p className="text-4xl font-bold text-purple-700">
-                {metrics?.counters?.total_queries || 0}
+                {counters?.total_queries || 0}
               </p>
             </div>
             <MessageSquare className="w-12 h-12 text-purple-500 opacity-30" />
@@ -90,7 +89,7 @@ const Metrics = () => {
             <div>
               <p className="text-sm text-gray-600 mb-1">Policy Uploads</p>
               <p className="text-4xl font-bold text-green-700">
-                {metrics?.counters?.total_policy_uploads || 0}
+                {counters?.total_policy_uploads || 0}
               </p>
             </div>
             <FileText className="w-12 h-12 text-green-500 opacity-30" />
@@ -99,153 +98,186 @@ const Metrics = () => {
       </div>
 
       {/* Evaluation Latency */}
-      {metrics?.latency?.evaluation && (
-        <div className="card">
-          <div className="flex items-center space-x-3 mb-4">
-            <Clock className="w-6 h-6 text-primary" />
-            <h2 className="text-xl font-semibold">Evaluation Latency</h2>
+      <div className="card">
+        <div className="flex items-center space-x-2 mb-4">
+          <Clock className="w-5 h-5 text-gray-500" />
+          <h2 className="text-xl font-semibold">Evaluation Latency</h2>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div className="bg-gray-50 rounded-lg p-4 text-center">
+            <p className="text-sm text-gray-600">Average</p>
+            <p className="text-2xl font-bold text-gray-800">
+              {formatLatency(latency?.evaluation?.avg_ms)}
+            </p>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            <div className="text-center p-4 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-600 mb-1">Average</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {formatLatency(metrics.latency.evaluation.avg_ms)}
-              </p>
-            </div>
-            <div className="text-center p-4 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-600 mb-1">Median (p50)</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {formatLatency(metrics.latency.evaluation.p50_ms)}
-              </p>
-            </div>
-            <div className="text-center p-4 bg-yellow-50 rounded-lg">
-              <p className="text-sm text-gray-600 mb-1">p95</p>
-              <p className="text-2xl font-bold text-yellow-700">
-                {formatLatency(metrics.latency.evaluation.p95_ms)}
-              </p>
-            </div>
-            <div className="text-center p-4 bg-orange-50 rounded-lg">
-              <p className="text-sm text-gray-600 mb-1">p99</p>
-              <p className="text-2xl font-bold text-orange-700">
-                {formatLatency(metrics.latency.evaluation.p99_ms)}
-              </p>
-            </div>
-            <div className="text-center p-4 bg-red-50 rounded-lg">
-              <p className="text-sm text-gray-600 mb-1">Max</p>
-              <p className="text-2xl font-bold text-red-700">
-                {formatLatency(metrics.latency.evaluation.max_ms)}
-              </p>
-            </div>
+          <div className="bg-gray-50 rounded-lg p-4 text-center">
+            <p className="text-sm text-gray-600">Median (p50)</p>
+            <p className="text-2xl font-bold text-gray-800">
+              {formatLatency(latency?.evaluation?.p50_ms)}
+            </p>
           </div>
-          <div className="mt-4 text-sm text-gray-600 text-center">
-            Based on {metrics.latency.evaluation.count || 0} samples
+          <div className="bg-yellow-50 rounded-lg p-4 text-center">
+            <p className="text-sm text-gray-600">p95</p>
+            <p className="text-2xl font-bold text-yellow-700">
+              {formatLatency(latency?.evaluation?.p95_ms)}
+            </p>
+          </div>
+          <div className="bg-orange-50 rounded-lg p-4 text-center">
+            <p className="text-sm text-gray-600">p99</p>
+            <p className="text-2xl font-bold text-orange-700">
+              {formatLatency(latency?.evaluation?.p99_ms)}
+            </p>
+          </div>
+          <div className="bg-red-50 rounded-lg p-4 text-center">
+            <p className="text-sm text-gray-600">Max</p>
+            <p className="text-2xl font-bold text-red-700">
+              {formatLatency(latency?.evaluation?.max_ms)}
+            </p>
           </div>
         </div>
-      )}
+        <p className="text-sm text-gray-500 mt-2 text-center">
+          Based on {latency?.evaluation?.count || 0} samples
+        </p>
+      </div>
 
       {/* Query Latency */}
-      {metrics?.latency?.query && (
-        <div className="card">
-          <div className="flex items-center space-x-3 mb-4">
-            <Clock className="w-6 h-6 text-primary" />
-            <h2 className="text-xl font-semibold">Query Latency</h2>
+      <div className="card">
+        <div className="flex items-center space-x-2 mb-4">
+          <Clock className="w-5 h-5 text-gray-500" />
+          <h2 className="text-xl font-semibold">Query Latency</h2>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div className="bg-gray-50 rounded-lg p-4 text-center">
+            <p className="text-sm text-gray-600">Average</p>
+            <p className="text-2xl font-bold text-gray-800">
+              {formatLatency(latency?.query?.avg_ms)}
+            </p>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            <div className="text-center p-4 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-600 mb-1">Average</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {formatLatency(metrics.latency.query.avg_ms)}
-              </p>
-            </div>
-            <div className="text-center p-4 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-600 mb-1">Median (p50)</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {formatLatency(metrics.latency.query.p50_ms)}
-              </p>
-            </div>
-            <div className="text-center p-4 bg-yellow-50 rounded-lg">
-              <p className="text-sm text-gray-600 mb-1">p95</p>
-              <p className="text-2xl font-bold text-yellow-700">
-                {formatLatency(metrics.latency.query.p95_ms)}
-              </p>
-            </div>
-            <div className="text-center p-4 bg-orange-50 rounded-lg">
-              <p className="text-sm text-gray-600 mb-1">p99</p>
-              <p className="text-2xl font-bold text-orange-700">
-                {formatLatency(metrics.latency.query.p99_ms)}
-              </p>
-            </div>
-            <div className="text-center p-4 bg-red-50 rounded-lg">
-              <p className="text-sm text-gray-600 mb-1">Max</p>
-              <p className="text-2xl font-bold text-red-700">
-                {formatLatency(metrics.latency.query.max_ms)}
-              </p>
-            </div>
+          <div className="bg-gray-50 rounded-lg p-4 text-center">
+            <p className="text-sm text-gray-600">Median (p50)</p>
+            <p className="text-2xl font-bold text-gray-800">
+              {formatLatency(latency?.query?.p50_ms)}
+            </p>
           </div>
-          <div className="mt-4 text-sm text-gray-600 text-center">
-            Based on {metrics.latency.query.count || 0} samples
+          <div className="bg-yellow-50 rounded-lg p-4 text-center">
+            <p className="text-sm text-gray-600">p95</p>
+            <p className="text-2xl font-bold text-yellow-700">
+              {formatLatency(latency?.query?.p95_ms)}
+            </p>
+          </div>
+          <div className="bg-orange-50 rounded-lg p-4 text-center">
+            <p className="text-sm text-gray-600">p99</p>
+            <p className="text-2xl font-bold text-orange-700">
+              {formatLatency(latency?.query?.p99_ms)}
+            </p>
+          </div>
+          <div className="bg-red-50 rounded-lg p-4 text-center">
+            <p className="text-sm text-gray-600">Max</p>
+            <p className="text-2xl font-bold text-red-700">
+              {formatLatency(latency?.query?.max_ms)}
+            </p>
           </div>
         </div>
-      )}
+        <p className="text-sm text-gray-500 mt-2 text-center">
+          Based on {latency?.query?.count || 0} samples
+        </p>
+      </div>
+
+      {/* Verdict Distribution */}
+      <div className="card">
+        <h2 className="text-xl font-semibold mb-4">Verdict Distribution</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-green-50 rounded-lg p-4 text-center">
+            <p className="text-sm text-gray-600">Compliant</p>
+            <p className="text-3xl font-bold text-green-600">
+              {metrics?.verdicts?.compliant || 0}
+            </p>
+          </div>
+          <div className="bg-red-50 rounded-lg p-4 text-center">
+            <p className="text-sm text-gray-600">Non-Compliant</p>
+            <p className="text-3xl font-bold text-red-600">
+              {metrics?.verdicts?.non_compliant || 0}
+            </p>
+          </div>
+          <div className="bg-yellow-50 rounded-lg p-4 text-center">
+            <p className="text-sm text-gray-600">Partially Compliant</p>
+            <p className="text-3xl font-bold text-yellow-600">
+              {metrics?.verdicts?.partially_compliant || 0}
+            </p>
+          </div>
+          <div className="bg-gray-50 rounded-lg p-4 text-center">
+            <p className="text-sm text-gray-600">Needs Review</p>
+            <p className="text-3xl font-bold text-gray-600">
+              {metrics?.verdicts?.needs_review || 0}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Risk Level Distribution */}
+      <div className="card">
+        <h2 className="text-xl font-semibold mb-4">Risk Level Distribution</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-green-50 rounded-lg p-4 text-center">
+            <p className="text-sm text-gray-600">Low Risk</p>
+            <p className="text-3xl font-bold text-green-600">
+              {metrics?.risk_levels?.low || 0}
+            </p>
+          </div>
+          <div className="bg-yellow-50 rounded-lg p-4 text-center">
+            <p className="text-sm text-gray-600">Medium Risk</p>
+            <p className="text-3xl font-bold text-yellow-600">
+              {metrics?.risk_levels?.medium || 0}
+            </p>
+          </div>
+          <div className="bg-orange-50 rounded-lg p-4 text-center">
+            <p className="text-sm text-gray-600">High Risk</p>
+            <p className="text-3xl font-bold text-orange-600">
+              {metrics?.risk_levels?.high || 0}
+            </p>
+          </div>
+          <div className="bg-red-50 rounded-lg p-4 text-center">
+            <p className="text-sm text-gray-600">Critical Risk</p>
+            <p className="text-3xl font-bold text-red-600">
+              {metrics?.risk_levels?.critical || 0}
+            </p>
+          </div>
+        </div>
+      </div>
 
       {/* Hourly Activity */}
-      {metrics?.hourly_activity && Object.keys(metrics.hourly_activity).length > 0 && (
-        <div className="card">
-          <div className="flex items-center space-x-3 mb-4">
-            <TrendingUp className="w-6 h-6 text-primary" />
-            <h2 className="text-xl font-semibold">Hourly Activity (Last 24h)</h2>
-          </div>
-          <div className="space-y-2">
-            {Object.entries(metrics.hourly_activity)
-              .sort((a, b) => b[0].localeCompare(a[0]))
-              .slice(0, 12)
-              .map(([hour, count]) => {
-                const maxCount = Math.max(...Object.values(metrics.hourly_activity));
-                const width = maxCount > 0 ? (count / maxCount) * 100 : 0;
-                return (
-                  <div key={hour} className="flex items-center space-x-4">
-                    <div className="w-32 text-sm text-gray-600 font-mono">
-                      {new Date(hour).toLocaleString('en-US', { 
-                        month: 'short', 
-                        day: 'numeric', 
-                        hour: '2-digit',
-                        hour12: false 
-                      })}
-                    </div>
-                    <div className="flex-1 bg-gray-100 rounded-full h-6 overflow-hidden">
-                      <div 
-                        className="bg-gradient-to-r from-primary to-blue-500 h-full flex items-center justify-end pr-2 transition-all duration-300"
-                        style={{ width: `${width}%` }}
-                      >
-                        {count > 0 && (
-                          <span className="text-xs font-semibold text-white">{count}</span>
-                        )}
-                      </div>
-                    </div>
+      <div className="card">
+        <h2 className="text-xl font-semibold mb-4">Hourly Activity (Last 24 Hours)</h2>
+        <div className="overflow-x-auto">
+          <div className="flex gap-2 min-w-full">
+            {metrics?.hourly_activity?.slice(-24).filter(item => item.hour).map((item, index) => {
+              const hourDate = new Date(item.hour);
+              if (isNaN(hourDate.getTime())) return null;
+              
+              const hour = hourDate.getHours();
+              const count = item.count || 0;
+              const maxCount = Math.max(...(metrics?.hourly_activity?.map(h => h.count || 0) || [1]), 1);
+              const height = maxCount > 0 ? (count / maxCount) * 100 : 0;
+              
+              return (
+                <div key={index} className="flex flex-col items-center flex-1 min-w-[40px]">
+                  <div className="text-xs text-gray-600 mb-1">{count}</div>
+                  <div className="w-full bg-gray-200 rounded-t relative" style={{ height: '100px', display: 'flex', alignItems: 'flex-end' }}>
+                    <div 
+                      className={`w-full rounded-t transition-all ${count > 0 ? 'bg-blue-500 hover:bg-blue-600' : 'bg-gray-300'}`}
+                      style={{ height: `${Math.max(height, count > 0 ? 5 : 0)}%` }}
+                      title={`${hour}:00 - ${count} evaluations`}
+                    ></div>
                   </div>
-                );
-              })}
+                  <p className="text-xs text-gray-500 mt-1">{hour}h</p>
+                </div>
+              );
+            }).filter(Boolean)}
           </div>
         </div>
-      )}
-
-      {/* System Info */}
-      <div className="card bg-gray-50">
-        <h2 className="text-xl font-semibold mb-4">System Information</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-          <div>
-            <p className="text-gray-600">Metrics Collection Started</p>
-            <p className="font-mono text-gray-900">
-              {metrics?.start_time ? new Date(metrics.start_time).toLocaleString() : 'N/A'}
-            </p>
-          </div>
-          <div>
-            <p className="text-gray-600">Last Updated</p>
-            <p className="font-mono text-gray-900">
-              {new Date().toLocaleString()}
-            </p>
-          </div>
-        </div>
+        <p className="text-sm text-gray-500 mt-4 text-center">
+          Total activity (evaluations, queries, policy uploads) per hour
+        </p>
       </div>
     </div>
   );

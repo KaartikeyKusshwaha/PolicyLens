@@ -1,0 +1,36 @@
+﻿<!DOCTYPE html>
+<html>
+<head><title>Debug API</title></head>
+<body style="font-family: monospace; padding: 20px;">
+<h2>Testing API Calls</h2>
+<div id="output"></div>
+<script>
+const log = (msg) => {
+  document.getElementById('output').innerHTML += msg + '<br>';
+  console.log(msg);
+};
+
+log('Starting tests...');
+
+// Test 1: Regular metrics
+fetch('http://localhost:8000/api/metrics')
+  .then(r => r.json())
+  .then(data => {
+    log(' /api/metrics works');
+    log('  Eval count from regular: ' + (data.latency?.evaluation?.count || 'undefined'));
+  })
+  .catch(err => log('✗ /api/metrics failed: ' + err));
+
+// Test 2: Latency endpoint
+fetch('http://localhost:8000/api/metrics/latency?hours=24')
+  .then(r => r.json())
+  .then(data => {
+    log(' /api/metrics/latency works');
+    log('  Eval count: ' + data.evaluation.count);
+    log('  Query count: ' + data.query.count);
+    log('  Full response: ' + JSON.stringify(data, null, 2));
+  })
+  .catch(err => log(' /api/metrics/latency failed: ' + err));
+</script>
+</body>
+</html>
