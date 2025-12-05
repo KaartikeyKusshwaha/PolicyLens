@@ -42,12 +42,13 @@ storage_service = None
 metrics_service = None
 policy_sentinel = None
 report_generator = None
+batch_processor = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan context manager for startup and shutdown"""
-    global milvus_service, embedding_service, llm_service, document_processor, compliance_engine, storage_service, metrics_service, policy_sentinel, report_generator
+    global milvus_service, embedding_service, llm_service, document_processor, compliance_engine, storage_service, metrics_service, policy_sentinel, report_generator, batch_processor
     
     logger.info("Starting PolicyLens API...")
     
@@ -91,6 +92,11 @@ async def lifespan(app: FastAPI):
         demo_mode=demo_mode
     )
     logger.info("✓ Metrics service initialized")
+    
+    # Initialize batch processor
+    from services.batch_processor import BatchProcessor
+    batch_processor = BatchProcessor(compliance_engine, storage_service)
+    logger.info("✓ Batch processor initialized")
     
     logger.info("🚀 PolicyLens API ready!")
     
@@ -705,6 +711,99 @@ if os.path.exists(frontend_dist):
         index_path = os.path.join(frontend_dist, "index.html")
         with open(index_path, "r", encoding="utf-8") as f:
             return f.read()
+
+
+# Batch Re-evaluation Endpoints
+@app.post("/api/batch/reevaluate")
+async def reevaluate_all(filter_by: Optional[dict] = None):
+    """
+    Re-evaluate all stored decisions with current policies
+    
+    Optional filters:
+    - verdict: Filter by verdict (FLAG, REVIEW, CLEAR)
+    - date_from: ISO date string
+    - date_to: ISO date string
+    """
+    try:
+        if not batch_processor:
+            raise HTTPException(status_code=503, detail="Batch processor not initialized")
+        
+        result = await batch_processor.reevaluate_all_decisions(filter_by)
+        return result
+    except Exception as e:
+        logger.error(f"Batch re-evaluation failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/batch/candidates")
+async def get_reevaluation_candidates(
+    days_old: int = 30,
+    verdict: Optional[str] = None
+):
+    """
+    Get list of decisions that should be re-evaluated
+    
+    Args:
+        days_old: Consider decisions older than this many days (default: 30)
+        verdict: Filter by verdict (FLAG, REVIEW, CLEAR)
+    """
+    try:
+        if not batch_processor:
+            raise HTTPException(status_code=503, detail="Batch processor not initialized")
+        
+        candidates = batch_processor.get_reevaluation_candidates(days_old, verdict)
+        return {
+            "candidates": candidates,
+            "total": len(candidates),
+            "filters": {
+                "days_old": days_old,
+                "verdict": verdict
+            }
+        }
+    except Exception as e:
+        logger.error(f"Failed to get candidates: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/batch/reevaluate-by-policy/{policy_id}")
+async def reevaluate_by_policy(policy_id: str):
+    """
+    Re-evaluate decisions affected by a specific policy
+    
+    Args:
+        policy_id: ID of the policy that changed
+    """
+    try:
+        if not batch_processor:
+            raise HTTPException(status_code=503, detail="Batch processor not initialized")
+        
+        result = batch_processor.reevaluate_by_policy(policy_id)
+        return result
+    except Exception as e:
+        logger.error(f"Policy-based re-evaluation failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/batch/impact-report")
+async def generate_impact_report(reevaluation_summary: dict):
+    """
+    Generate human-readable impact report from re-evaluation results
+    
+    Args:
+        reevaluation_summary: Result from reevaluate_all endpoint
+    """
+    try:
+        if not batch_processor:
+            raise HTTPException(status_code=503, detail="Batch processor not initialized")
+        
+        report = batch_processor.generate_impact_report(reevaluation_summary)
+        return {
+            "report": report,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Impact report generation failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 if __name__ == "__main__":
