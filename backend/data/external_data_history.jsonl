@@ -1,3 +1,11 @@
 {"source": "OFAC", "status": "success", "records_fetched": 18422, "message": "Successfully fetched 18422 SDN entries", "timestamp": "2025-12-06T12:27:34.984621"}
 {"source": "FATF", "status": "success", "records_fetched": 29, "message": "Successfully fetched risk jurisdictions", "timestamp": "2025-12-06T12:32:21.583080"}
 {"source": "RBI", "status": "success", "records_fetched": 0, "message": "Successfully fetched 0 circulars", "timestamp": "2025-12-06T12:32:22.465595"}
+{"source": "RBI", "status": "success", "records_fetched": 0, "message": "Successfully fetched 0 circulars", "timestamp": "2025-12-06T12:41:11.230136"}
+{"source": "RBI", "status": "success", "records_fetched": 0, "message": "Successfully fetched 0 circulars", "timestamp": "2025-12-06T12:41:14.229665"}
+{"source": "RBI", "status": "success", "records_fetched": 0, "message": "Successfully fetched 0 circulars", "timestamp": "2025-12-06T12:41:15.801704"}
+{"source": "RBI", "status": "success", "records_fetched": 0, "message": "Successfully fetched 0 circulars", "timestamp": "2025-12-06T12:41:16.649351"}
+{"source": "RBI", "status": "success", "records_fetched": 0, "message": "Successfully fetched 0 circulars", "timestamp": "2025-12-06T12:41:17.352409"}
+{"source": "RBI", "status": "success", "records_fetched": 0, "message": "Successfully fetched 0 circulars", "timestamp": "2025-12-06T12:41:17.958008"}
+{"source": "RBI", "status": "success", "records_fetched": 0, "message": "Successfully fetched 0 circulars", "timestamp": "2025-12-06T12:41:18.162921"}
+{"source": "FATF", "status": "success", "records_fetched": 29, "message": "Successfully fetched risk jurisdictions", "timestamp": "2025-12-06T12:51:30.292774"}

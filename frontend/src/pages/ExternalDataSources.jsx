@@ -29,7 +29,7 @@ const ExternalDataSources = () => {
 
       if (historyRes.ok) {
         const history = await historyRes.json();
-        setFetchHistory(history.fetch_history || []);
+        setFetchHistory(Array.isArray(history) ? history : []);
       }
     } catch (error) {
       console.error('Error loading data:', error);
@@ -212,9 +212,17 @@ const ExternalDataSources = () => {
 
           return (
             <div key={source.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-              <div className={`p-4 bg-${source.color}-50 border-b border-${source.color}-100`}>
+              <div className={`p-4 border-b ${
+                source.color === 'red' ? 'bg-red-50 border-red-100' :
+                source.color === 'orange' ? 'bg-orange-50 border-orange-100' :
+                'bg-blue-50 border-blue-100'
+              }`}>
                 <div className="flex items-center gap-3">
-                  <div className={`text-${source.color}-600`}>
+                  <div className={
+                    source.color === 'red' ? 'text-red-600' :
+                    source.color === 'orange' ? 'text-orange-600' :
+                    'text-blue-600'
+                  }>
                     {source.icon}
                   </div>
                   <div>
@@ -239,7 +247,11 @@ const ExternalDataSources = () => {
                 <button
                   onClick={() => handleFetch(source.id)}
                   disabled={isLoading || fetching !== null}
-                  className={`w-full flex items-center justify-center gap-2 px-4 py-2 bg-${source.color}-600 text-white rounded-lg hover:bg-${source.color}-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors`}
+                  className={`w-full flex items-center justify-center gap-2 px-4 py-2 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
+                    source.color === 'red' ? 'bg-red-600 hover:bg-red-700' :
+                    source.color === 'orange' ? 'bg-orange-600 hover:bg-orange-700' :
+                    'bg-blue-600 hover:bg-blue-700'
+                  }`}
                 >
                   <Download className={`w-4 h-4 ${isLoading ? 'animate-bounce' : ''}`} />
                   {isLoading ? 'Fetching...' : 'Fetch Now'}
