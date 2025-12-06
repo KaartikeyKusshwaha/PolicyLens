@@ -16,7 +16,6 @@ class StorageService:
         self.decisions_dir = self.storage_dir / "decisions"
         self.feedback_dir = self.storage_dir / "feedback"
         self.metrics_file = self.storage_dir / "metrics.json"
-        self.external_data_cache_file = self.storage_dir / "external_data_cache.json"
         
         # Create directories
         self.decisions_dir.mkdir(parents=True, exist_ok=True)
@@ -295,58 +294,3 @@ class StorageService:
             
         except Exception as e:
             logger.error(f"Error storing external data fetch: {e}")
-    
-    def cache_external_data(self, source: str, data: Dict[str, Any]) -> bool:
-        """Cache external data to file"""
-        try:
-            cache = self._load_cache()
-            
-            cache[source] = {
-                "data": data,
-                "cached_at": datetime.now().isoformat(),
-                "ttl_hours": 24  # Cache valid for 24 hours
-            }
-            
-            with open(self.external_data_cache_file, 'w', encoding='utf-8') as f:
-                json.dump(cache, f, indent=2, default=str)
-            
-            logger.info(f"Cached external data for {source}")
-            return True
-            
-        except Exception as e:
-            logger.error(f"Error caching external data for {source}: {e}")
-            return False
-    
-    def get_cached_external_data(self, source: str) -> Optional[Dict[str, Any]]:
-        """Get cached external data if still valid"""
-        try:
-            cache = self._load_cache()
-            
-            if source not in cache:
-                return None
-            
-            cached_entry = cache[source]
-            cached_at = datetime.fromisoformat(cached_entry["cached_at"])
-            ttl_hours = cached_entry.get("ttl_hours", 24)
-            
-            # Check if cache is still valid
-            if datetime.now() - cached_at < timedelta(hours=ttl_hours):
-                logger.info(f"Returning cached data for {source}")
-                return cached_entry["data"]
-            else:
-                logger.info(f"Cache expired for {source}")
-                return None
-                
-        except Exception as e:
-            logger.error(f"Error getting cached external data for {source}: {e}")
-            return None
-    
-    def _load_cache(self) -> Dict[str, Any]:
-        """Load external data cache from file"""
-        try:
-            if self.external_data_cache_file.exists():
-                with open(self.external_data_cache_file, 'r', encoding='utf-8') as f:
-                    return json.load(f)
-        except Exception as e:
-            logger.error(f"Error loading cache: {e}")
-        return {}

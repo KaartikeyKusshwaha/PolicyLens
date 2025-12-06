@@ -375,21 +375,22 @@ class ExternalDataManager:
     Orchestrates fetching, processing, and storing external compliance data
     """
     
-    def __init__(self, document_processor=None, storage_service=None):
+    def __init__(self, document_processor=None, storage_service=None, milvus_service=None):
         self.ofac = OFACConnector()
         self.fatf = FATFConnector()
         self.rbi = RBIConnector()
         self.document_processor = document_processor
         self.storage_service = storage_service
+        self.milvus_service = milvus_service
         self.logger = logging.getLogger(__name__)
     
     async def fetch_data(self, source: str, use_cache: bool = True) -> Dict:
-        """Fetch data from a specific source with caching support"""
+        """Fetch data from a specific source with Milvus caching"""
         source = source.upper()
         
-        # Try to get cached data first
-        if use_cache and self.storage_service:
-            cached = self.storage_service.get_cached_external_data(source)
+        # Try to get cached data from Milvus first
+        if use_cache and self.milvus_service:
+            cached = self.milvus_service.get_external_data(source, ttl_hours=24)
             if cached:
                 return {
                     'source': source,
@@ -397,6 +398,7 @@ class ExternalDataManager:
                     'status': 'success',
                     'data': cached,
                     'from_cache': True,
+                    'records_count': cached.get('count', 0),
                     'error': None
                 }
         
@@ -416,9 +418,11 @@ class ExternalDataManager:
                 result['records_count'] = data.get('count', 0)
                 self.logger.info(f"✓ Fetched {result['records_count']} OFAC SDN entries")
                 
-                # Cache the data
+                # Cache the data in Milvus
+                if self.milvus_service:
+                    self.milvus_service.store_external_data('OFAC', data, result['records_count'])
+                
                 if self.storage_service:
-                    self.storage_service.cache_external_data('OFAC', data)
                     self.storage_service.store_external_data_fetch(
                         source='OFAC',
                         status='success',
@@ -437,9 +441,11 @@ class ExternalDataManager:
                 result['records_count'] = high_risk.get('count', 0) + monitored.get('count', 0)
                 self.logger.info(f"✓ Fetched FATF risk jurisdictions")
                 
-                # Cache the data
+                # Cache the data in Milvus
+                if self.milvus_service:
+                    self.milvus_service.store_external_data('FATF', data, result['records_count'])
+                
                 if self.storage_service:
-                    self.storage_service.cache_external_data('FATF', data)
                     self.storage_service.store_external_data_fetch(
                         source='FATF',
                         status='success',
@@ -453,9 +459,11 @@ class ExternalDataManager:
                 result['records_count'] = data.get('count', 0)
                 self.logger.info(f"✓ Fetched {result['records_count']} RBI circulars")
                 
-                # Cache the data
+                # Cache the data in Milvus
+                if self.milvus_service:
+                    self.milvus_service.store_external_data('RBI', data, result['records_count'])
+                
                 if self.storage_service:
-                    self.storage_service.cache_external_data('RBI', data)
                     self.storage_service.store_external_data_fetch(
                         source='RBI',
                         status='success',

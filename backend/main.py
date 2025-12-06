@@ -108,8 +108,8 @@ async def lifespan(app: FastAPI):
     risk_scorer = RiskScorer(milvus_service, embedding_service, storage_service)
     logger.info("✓ Risk scorer initialized")
     
-    # Initialize external data manager
-    external_data_manager = ExternalDataManager(document_processor, storage_service)
+    # Initialize external data manager with Milvus caching
+    external_data_manager = ExternalDataManager(document_processor, storage_service, milvus_service)
     logger.info("✓ External data manager initialized")
     
     # Initialize data scheduler
