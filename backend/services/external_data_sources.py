@@ -64,16 +64,27 @@ class OFACConnector:
             raise
     
     def _parse_sdn_csv(self, csv_content: str) -> Dict:
-        """Parse OFAC SDN CSV format"""
+        """Parse OFAC SDN CSV format - limit to 50 most important entries for performance"""
         sanctions = []
         
+        # Priority programs for importance sorting
+        priority_programs = ['SDGT', 'SDNTK', 'IRAN', 'SYRIA', 'CUBA', 'UKRAINE-EO13662', 'RUSSIA']
+        
         csv_reader = csv.DictReader(io.StringIO(csv_content))
+        priority_entries = []
+        other_entries = []
+        total_count = 0
+        
+        # Fast collection of priority entries and first 200 others
         for row in csv_reader:
-            sanctions.append({
+            total_count += 1
+            program = row.get('Program', '')
+            
+            entry = {
                 'entity_number': row.get('ent_num', ''),
                 'name': row.get('SDN_Name', ''),
                 'type': row.get('SDN_Type', ''),
-                'program': row.get('Program', ''),
+                'program': program,
                 'title': row.get('Title', ''),
                 'call_sign': row.get('Call_Sign', ''),
                 'vessel_type': row.get('Vess_type', ''),
@@ -82,12 +93,26 @@ class OFACConnector:
                 'vessel_flag': row.get('Vess_flag', ''),
                 'vessel_owner': row.get('Vess_owner', ''),
                 'remarks': row.get('Remarks', '')
-            })
+            }
+            
+            # Prioritize important programs
+            if program in priority_programs:
+                priority_entries.append(entry)
+            elif len(other_entries) < 200:  # Only keep first 200 non-priority
+                other_entries.append(entry)
+            
+            # Early exit after collecting enough priority entries
+            if len(priority_entries) >= 50:
+                break
+        
+        # Combine and limit to 50
+        sanctions = (priority_entries + other_entries)[:50]
         
         return {
             'source': 'OFAC_SDN',
             'fetched_at': datetime.utcnow().isoformat(),
             'count': len(sanctions),
+            'total_available': total_count,
             'data': sanctions
         }
     
