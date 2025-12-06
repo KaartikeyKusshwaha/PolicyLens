@@ -10,6 +10,7 @@ import UploadPolicy from './pages/UploadPolicy';
 import DecisionHistory from './pages/DecisionHistory';
 import Metrics from './pages/Metrics';
 import FeedbackViewer from './pages/FeedbackViewer';
+import ExternalDataSources from './pages/ExternalDataSources';
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
               <Route path="/decisions" element={<DecisionHistory />} />
               <Route path="/metrics" element={<Metrics />} />
               <Route path="/feedback" element={<FeedbackViewer />} />
+              <Route path="/external-data" element={<ExternalDataSources />} />
             </Routes>
           </main>
         </div>

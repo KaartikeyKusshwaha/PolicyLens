@@ -1,9 +1,13 @@
 {
-  "total_evaluations": 0,
+  "total_evaluations": 2,
   "total_queries": 1,
-  "total_policy_uploads": 0,
+  "total_policy_uploads": 2,
   "total_feedback": 0,
-  "verdicts": {},
-  "risk_levels": {},
-  "last_updated": "2025-12-03T20:02:46.115253"
+  "verdicts": {
+    "flag": 2
+  },
+  "risk_levels": {
+    "high": 2
+  },
+  "last_updated": "2025-12-06T13:26:42.417622"
 }
