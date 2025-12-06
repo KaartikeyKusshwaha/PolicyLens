@@ -358,6 +358,86 @@ class ExternalDataManager:
         self.storage_service = storage_service
         self.logger = logging.getLogger(__name__)
     
+    async def fetch_data(self, source: str) -> Dict:
+        """Fetch data from a specific source"""
+        source = source.upper()
+        result = {
+            'source': source,
+            'timestamp': datetime.utcnow().isoformat(),
+            'status': 'success',
+            'data': None,
+            'error': None
+        }
+        
+        try:
+            if source == 'OFAC':
+                data = self.ofac.fetch_sdn_list()
+                result['data'] = data
+                result['records_count'] = data.get('count', 0)
+                self.logger.info(f"✓ Fetched {result['records_count']} OFAC SDN entries")
+                
+                # Store fetch history
+                if self.storage_service:
+                    self.storage_service.store_external_data_fetch(
+                        source='OFAC',
+                        status='success',
+                        records_fetched=result['records_count'],
+                        message=f"Successfully fetched {result['records_count']} SDN entries"
+                    )
+                    
+            elif source == 'FATF':
+                high_risk = self.fatf.fetch_high_risk_jurisdictions()
+                monitored = self.fatf.fetch_monitored_jurisdictions()
+                result['data'] = {
+                    'high_risk': high_risk,
+                    'monitored': monitored
+                }
+                result['records_count'] = high_risk.get('count', 0) + monitored.get('count', 0)
+                self.logger.info(f"✓ Fetched FATF risk jurisdictions")
+                
+                # Store fetch history
+                if self.storage_service:
+                    self.storage_service.store_external_data_fetch(
+                        source='FATF',
+                        status='success',
+                        records_fetched=result['records_count'],
+                        message=f"Successfully fetched risk jurisdictions"
+                    )
+                    
+            elif source == 'RBI':
+                data = self.rbi.fetch_recent_circulars(category='AML', limit=20)
+                result['data'] = data
+                result['records_count'] = data.get('count', 0)
+                self.logger.info(f"✓ Fetched {result['records_count']} RBI circulars")
+                
+                # Store fetch history
+                if self.storage_service:
+                    self.storage_service.store_external_data_fetch(
+                        source='RBI',
+                        status='success',
+                        records_fetched=result['records_count'],
+                        message=f"Successfully fetched {result['records_count']} circulars"
+                    )
+            else:
+                result['status'] = 'error'
+                result['error'] = f"Unknown source: {source}. Valid sources: OFAC, FATF, RBI"
+                
+        except Exception as e:
+            result['status'] = 'error'
+            result['error'] = str(e)
+            self.logger.error(f"✗ {source} fetch failed: {e}")
+            
+            # Store error in history
+            if self.storage_service:
+                self.storage_service.store_external_data_fetch(
+                    source=source,
+                    status='error',
+                    records_fetched=0,
+                    message=f"Error: {str(e)}"
+                )
+        
+        return result
+    
     def fetch_all_sources(self) -> Dict:
         """Fetch data from all external sources"""
         results = {
