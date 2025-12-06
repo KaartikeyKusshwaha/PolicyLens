@@ -4,42 +4,45 @@ __pycache__/
 *$py.class
 *.so
 .Python
-env/
 venv/
+env/
 ENV/
-.venv
+dist/
+build/
+*.egg-info/
 
-# Environment
-.env
-.env.local
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
 
-# IDE
+# IDEs
 .vscode/
 .idea/
 *.swp
 *.swo
-*~
 
 # OS
 .DS_Store
 Thumbs.db
 
-# Logs
-*.log
-logs/
+# Environment
+.env
+!.env.example
 
-# Testing
-.pytest_cache/
-.coverage
-htmlcov/
-.tox/
+# Test files
+test_*.py
+test_*.json
+test-*.html
+test-*.ps1
+debug-*.html
 
-# Distribution
-dist/
-build/
-*.egg-info/
+# Documentation (keep README)
+DEMO_*.md
+IMPLEMENTATION_*.md
+MILVUS_*.md
+plan.md
 
-# Runtime data
-backend/data/metrics.json
-backend/data/decisions/
-backend/data/policies/
+# Data directories
+backend/data/decisions/*.json
+backend/data/feedback/*.json
