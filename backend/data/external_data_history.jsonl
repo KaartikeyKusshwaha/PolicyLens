@@ -9,3 +9,4 @@
 {"source": "RBI", "status": "success", "records_fetched": 0, "message": "Successfully fetched 0 circulars", "timestamp": "2025-12-06T12:41:17.958008"}
 {"source": "RBI", "status": "success", "records_fetched": 0, "message": "Successfully fetched 0 circulars", "timestamp": "2025-12-06T12:41:18.162921"}
 {"source": "FATF", "status": "success", "records_fetched": 29, "message": "Successfully fetched risk jurisdictions", "timestamp": "2025-12-06T12:51:30.292774"}
+{"source": "OFAC", "status": "success", "records_fetched": 18422, "message": "Successfully fetched 18422 SDN entries", "timestamp": "2025-12-06T13:12:52.409337"}
