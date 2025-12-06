@@ -10,7 +10,7 @@ const Metrics = () => {
 
   useEffect(() => {
     loadMetrics();
-    const interval = setInterval(loadMetrics, 5000);
+    const interval = setInterval(loadMetrics, 15000);
     return () => clearInterval(interval);
   }, []);
 

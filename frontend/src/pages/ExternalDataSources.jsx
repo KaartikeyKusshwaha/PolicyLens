@@ -13,7 +13,7 @@ const ExternalDataSources = () => {
 
   useEffect(() => {
     loadData();
-    const interval = setInterval(loadData, 30000); // Refresh every 30s
+    const interval = setInterval(loadData, 120000); // Refresh every 2 minutes
     return () => clearInterval(interval);
   }, []);
 

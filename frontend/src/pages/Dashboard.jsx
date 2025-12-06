@@ -12,7 +12,7 @@ const Dashboard = () => {
     loadData();
     const interval = setInterval(() => {
       metricsService.get().then(setMetrics).catch(console.error);
-    }, 10000);
+    }, 30000);
     return () => clearInterval(interval);
   }, []);
   
