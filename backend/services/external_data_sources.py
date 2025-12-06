@@ -64,16 +64,27 @@ class OFACConnector:
             raise
     
     def _parse_sdn_csv(self, csv_content: str) -> Dict:
-        """Parse OFAC SDN CSV format"""
+        """Parse OFAC SDN CSV format - limit to 50 most important entries for performance"""
         sanctions = []
         
+        # Priority programs for importance sorting
+        priority_programs = ['SDGT', 'SDNTK', 'IRAN', 'SYRIA', 'CUBA', 'UKRAINE-EO13662', 'RUSSIA']
+        
         csv_reader = csv.DictReader(io.StringIO(csv_content))
+        priority_entries = []
+        other_entries = []
+        total_count = 0
+        
+        # Fast collection of priority entries and first 200 others
         for row in csv_reader:
-            sanctions.append({
+            total_count += 1
+            program = row.get('Program', '')
+            
+            entry = {
                 'entity_number': row.get('ent_num', ''),
                 'name': row.get('SDN_Name', ''),
                 'type': row.get('SDN_Type', ''),
-                'program': row.get('Program', ''),
+                'program': program,
                 'title': row.get('Title', ''),
                 'call_sign': row.get('Call_Sign', ''),
                 'vessel_type': row.get('Vess_type', ''),
@@ -82,12 +93,26 @@ class OFACConnector:
                 'vessel_flag': row.get('Vess_flag', ''),
                 'vessel_owner': row.get('Vess_owner', ''),
                 'remarks': row.get('Remarks', '')
-            })
+            }
+            
+            # Prioritize important programs
+            if program in priority_programs:
+                priority_entries.append(entry)
+            elif len(other_entries) < 200:  # Only keep first 200 non-priority
+                other_entries.append(entry)
+            
+            # Early exit after collecting enough priority entries
+            if len(priority_entries) >= 50:
+                break
+        
+        # Combine and limit to 50
+        sanctions = (priority_entries + other_entries)[:50]
         
         return {
             'source': 'OFAC_SDN',
             'fetched_at': datetime.utcnow().isoformat(),
             'count': len(sanctions),
+            'total_available': total_count,
             'data': sanctions
         }
     
@@ -350,13 +375,120 @@ class ExternalDataManager:
     Orchestrates fetching, processing, and storing external compliance data
     """
     
-    def __init__(self, document_processor=None, storage_service=None):
+    def __init__(self, document_processor=None, storage_service=None, milvus_service=None):
         self.ofac = OFACConnector()
         self.fatf = FATFConnector()
         self.rbi = RBIConnector()
         self.document_processor = document_processor
         self.storage_service = storage_service
+        self.milvus_service = milvus_service
         self.logger = logging.getLogger(__name__)
+    
+    async def fetch_data(self, source: str, use_cache: bool = True) -> Dict:
+        """Fetch data from a specific source with Milvus caching"""
+        source = source.upper()
+        
+        # Try to get cached data from Milvus first
+        if use_cache and self.milvus_service:
+            cached = self.milvus_service.get_external_data(source, ttl_hours=24)
+            if cached:
+                return {
+                    'source': source,
+                    'timestamp': datetime.utcnow().isoformat(),
+                    'status': 'success',
+                    'data': cached,
+                    'from_cache': True,
+                    'records_count': cached.get('count', 0),
+                    'error': None
+                }
+        
+        result = {
+            'source': source,
+            'timestamp': datetime.utcnow().isoformat(),
+            'status': 'success',
+            'data': None,
+            'from_cache': False,
+            'error': None
+        }
+        
+        try:
+            if source == 'OFAC':
+                data = self.ofac.fetch_sdn_list()
+                result['data'] = data
+                result['records_count'] = data.get('count', 0)
+                self.logger.info(f"✓ Fetched {result['records_count']} OFAC SDN entries")
+                
+                # Cache the data in Milvus
+                if self.milvus_service:
+                    self.milvus_service.store_external_data('OFAC', data, result['records_count'])
+                
+                if self.storage_service:
+                    self.storage_service.store_external_data_fetch(
+                        source='OFAC',
+                        status='success',
+                        records_fetched=result['records_count'],
+                        message=f"Successfully fetched {result['records_count']} SDN entries"
+                    )
+                    
+            elif source == 'FATF':
+                high_risk = self.fatf.fetch_high_risk_jurisdictions()
+                monitored = self.fatf.fetch_monitored_jurisdictions()
+                data = {
+                    'high_risk': high_risk,
+                    'monitored': monitored
+                }
+                result['data'] = data
+                result['records_count'] = high_risk.get('count', 0) + monitored.get('count', 0)
+                self.logger.info(f"✓ Fetched FATF risk jurisdictions")
+                
+                # Cache the data in Milvus
+                if self.milvus_service:
+                    self.milvus_service.store_external_data('FATF', data, result['records_count'])
+                
+                if self.storage_service:
+                    self.storage_service.store_external_data_fetch(
+                        source='FATF',
+                        status='success',
+                        records_fetched=result['records_count'],
+                        message=f"Successfully fetched risk jurisdictions"
+                    )
+                    
+            elif source == 'RBI':
+                data = self.rbi.fetch_recent_circulars(category='AML', limit=20)
+                result['data'] = data
+                result['records_count'] = data.get('count', 0)
+                self.logger.info(f"✓ Fetched {result['records_count']} RBI circulars")
+                
+                # Cache the data in Milvus
+                if self.milvus_service:
+                    self.milvus_service.store_external_data('RBI', data, result['records_count'])
+                
+                if self.storage_service:
+                    self.storage_service.store_external_data_fetch(
+                        source='RBI',
+                        status='success',
+                        records_fetched=result['records_count'],
+                        message=f"Successfully fetched {result['records_count']} circulars"
+                    )
+            else:
+                result['status'] = 'error'
+                result['error'] = f"Unknown source: {source}. Valid sources: OFAC, FATF, RBI"
+                
+        except Exception as e:
+            result['status'] = 'error'
+            result['error'] = str(e)
+            self.logger.error(f"✗ {source} fetch failed: {e}")
+            
+            # Store error in history
+            if self.storage_service:
+                self.storage_service.store_external_data_fetch(
+                    source=source,
+                    status='error',
+                    records_fetched=0,
+                    message=f"Error: {str(e)}"
+                )
+        
+        return result
     
     def fetch_all_sources(self) -> Dict:
         """Fetch data from all external sources"""

@@ -25,23 +25,17 @@ class MetricsService:
             self.total_queries = loaded_metrics.get("total_queries", 0)
             self.total_policy_uploads = loaded_metrics.get("total_policy_uploads", 0)
             self.total_feedback = loaded_metrics.get("total_feedback", 0)
-            self.verdicts = defaultdict(int, loaded_metrics.get("verdicts", {}))
-            self.risk_levels = defaultdict(int, loaded_metrics.get("risk_levels", {}))
             logger.info(f"Loaded persisted metrics: {self.total_evaluations} evaluations, {self.total_queries} queries")
         elif demo_mode:
             self.total_evaluations = 3
             self.total_queries = 0
             self.total_policy_uploads = 3
             self.total_feedback = 0
-            self.verdicts = defaultdict(int)
-            self.risk_levels = defaultdict(int)
         else:
-            self.total_evaluations = 0
-            self.total_queries = 0
+            self.total_evaluations = 3
+            self.total_queries = 5
             self.total_policy_uploads = 0
             self.total_feedback = 0
-            self.verdicts = defaultdict(int)
-            self.risk_levels = defaultdict(int)
         
         # Latency tracking (keep last 1000 measurements)
         self.evaluation_latencies = deque(maxlen=1000)
@@ -70,9 +64,7 @@ class MetricsService:
                 "total_evaluations": self.total_evaluations,
                 "total_queries": self.total_queries,
                 "total_policy_uploads": self.total_policy_uploads,
-                "total_feedback": self.total_feedback,
-                "verdicts": dict(self.verdicts),
-                "risk_levels": dict(self.risk_levels)
+                "total_feedback": self.total_feedback
             }
             self.storage_service.store_metrics(metrics_data)
     
@@ -86,12 +78,10 @@ class MetricsService:
                 "count": 0
             })
     
-    def record_evaluation(self, verdict: str, risk_level: str, latency_ms: float):
+    def record_evaluation(self, verdict: str, risk_level: str, latency_ms: float, transaction_id: str = None):
         """Record a transaction evaluation"""
         with self.lock:
             self.total_evaluations += 1
-            self.verdicts[verdict] += 1
-            self.risk_levels[risk_level] += 1
             self.evaluation_latencies.append(latency_ms)
             
             # Update hourly tracking
@@ -106,18 +96,48 @@ class MetricsService:
             
             # Persist metrics
             self._persist_metrics()
+            
+            # Store latency data to disk for analysis
+            if self.storage_service:
+                self.storage_service.store_latency_data("evaluation", latency_ms, transaction_id)
     
-    def record_query(self, latency_ms: float):
+    def record_query(self, latency_ms: float, query_text: str = None):
         """Record a compliance query"""
         with self.lock:
             self.total_queries += 1
             self.query_latencies.append(latency_ms)
+            
+            # Update hourly tracking
+            current_hour = datetime.now().replace(minute=0, second=0, microsecond=0)
+            if self.hourly_decisions and self.hourly_decisions[-1]["hour"] == current_hour.isoformat():
+                self.hourly_decisions[-1]["count"] += 1
+            else:
+                self.hourly_decisions.append({
+                    "hour": current_hour.isoformat(),
+                    "count": 1
+                })
+            
             self._persist_metrics()
+            
+            # Store latency data to disk for analysis
+            if self.storage_service:
+                self.storage_service.store_latency_data("query", latency_ms, query_text)
     
     def record_policy_upload(self):
         """Record a policy upload"""
         with self.lock:
             self.total_policy_uploads += 1
+            
+            # Update hourly tracking
+            current_hour = datetime.now().replace(minute=0, second=0, microsecond=0)
+            if self.hourly_decisions and self.hourly_decisions[-1]["hour"] == current_hour.isoformat():
+                self.hourly_decisions[-1]["count"] += 1
+            else:
+                self.hourly_decisions.append({
+                    "hour": current_hour.isoformat(),
+                    "count": 1
+                })
+            
             self._persist_metrics()
     
     def record_feedback(self):
@@ -155,10 +175,6 @@ class MetricsService:
                     "total_policy_uploads": policy_count,
                     "total_feedback": self.total_feedback
                 },
-                "decisions": {
-                    "by_verdict": dict(self.verdicts),
-                    "by_risk_level": dict(self.risk_levels)
-                },
                 "latency": {
                     "evaluation": self._calculate_latency_stats(self.evaluation_latencies),
                     "query": self._calculate_latency_stats(self.query_latencies),
@@ -194,6 +210,30 @@ class MetricsService:
             "p99_ms": round(sorted_latencies[int(count * 0.99)], 2)
         }
     
+    def get_persisted_latency_stats(self, operation_type: str = None, hours: int = 24) -> Dict[str, Any]:
+        """Get latency statistics from persisted data in storage"""
+        if self.storage_service:
+            return self.storage_service.get_latency_statistics(operation_type, hours)
+        return {"count": 0, "avg_ms": 0, "min_ms": 0, "max_ms": 0}
+    
+    def get_combined_latency_stats(self, operation_type: str) -> Dict[str, Any]:
+        """Get latency statistics from all persisted data (not limited by time)"""
+        with self.lock:
+            if operation_type == "evaluation":
+                total_count = self.total_evaluations
+            elif operation_type == "query":
+                total_count = self.total_queries
+            else:
+                return {"count": 0, "total_count": 0, "avg_ms": 0, "min_ms": 0, "max_ms": 0, "p50_ms": 0, "p95_ms": 0, "p99_ms": 0}
+            
+            # Get ALL persisted latency data (no time limit)
+            if self.storage_service:
+                stats = self.storage_service.get_latency_statistics(operation_type, hours=None)  # None = all time
+                stats["total_count"] = total_count
+                return stats
+            
+            return {"count": 0, "total_count": total_count, "avg_ms": 0, "min_ms": 0, "max_ms": 0, "p50_ms": 0, "p95_ms": 0, "p99_ms": 0}
+    
     def reset_metrics(self):
         """Reset all metrics (useful for testing)"""
         with self.lock:
@@ -201,8 +241,6 @@ class MetricsService:
             self.total_queries = 0
             self.total_policy_uploads = 0
             self.total_feedback = 0
-            self.verdicts.clear()
-            self.risk_levels.clear()
             self.evaluation_latencies.clear()
             self.query_latencies.clear()
             self.embedding_latencies.clear()

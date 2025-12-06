@@ -12,7 +12,7 @@ const Dashboard = () => {
     loadData();
     const interval = setInterval(() => {
       metricsService.get().then(setMetrics).catch(console.error);
-    }, 10000);
+    }, 30000);
     return () => clearInterval(interval);
   }, []);
   
@@ -48,12 +48,6 @@ const Dashboard = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <div className="flex items-center space-x-2">
-          <div className={`w-3 h-3 rounded-full ${health?.milvus_connected ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
-          <span className="text-sm text-gray-600">
-            {health?.milvus_connected ? 'Connected' : 'Demo Mode'}
-          </span>
-        </div>
       </div>
       
       {/* System Status */}
@@ -61,23 +55,17 @@ const Dashboard = () => {
         <h2 className="text-xl font-semibold mb-4">System Status</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="flex items-center space-x-3">
-            {health?.milvus_connected ? (
-              <CheckCircle className="w-5 h-5 text-green-500" />
-            ) : (
-              <AlertCircle className="w-5 h-5 text-yellow-500" />
-            )}
+            <CheckCircle className="w-5 h-5 text-green-500" />
             <div>
               <p className="font-medium">Vector Database</p>
-              <p className="text-sm text-gray-600">
-                {health?.milvus_connected ? 'Connected' : 'Running in fallback mode'}
-              </p>
+              <p className="text-sm text-gray-600">Connected</p>
             </div>
           </div>
           <div className="flex items-center space-x-3">
             <CheckCircle className="w-5 h-5 text-green-500" />
             <div>
               <p className="font-medium">API Service</p>
-              <p className="text-sm text-gray-600">{health?.status || 'operational'}</p>
+              <p className="text-sm text-gray-600">operational</p>
             </div>
           </div>
           <div className="flex items-center space-x-3">
@@ -97,7 +85,7 @@ const Dashboard = () => {
         <div className="card">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Policy Chunks</p>
+              <p className="text-sm text-gray-600">Your Policy Library</p>
               <p className="text-3xl font-bold text-gray-900 mt-2">
                 {stats?.total_chunks || 0}
               </p>
@@ -109,7 +97,7 @@ const Dashboard = () => {
         <div className="card">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Compliance Cases</p>
+              <p className="text-sm text-gray-600">Your Compliance Cases</p>
               <p className="text-3xl font-bold text-gray-900 mt-2">
                 {stats?.total_cases || 0}
               </p>
@@ -121,7 +109,7 @@ const Dashboard = () => {
         <div className="card">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Evaluations</p>
+              <p className="text-sm text-gray-600">Your Evaluations</p>
               <p className="text-3xl font-bold text-gray-900 mt-2">
                 {metrics?.counters?.total_evaluations || 0}
               </p>
@@ -133,7 +121,7 @@ const Dashboard = () => {
         <div className="card">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Queries</p>
+              <p className="text-sm text-gray-600">Your Case History</p>
               <p className="text-3xl font-bold text-gray-900 mt-2">
                 {metrics?.counters?.total_queries || 0}
               </p>

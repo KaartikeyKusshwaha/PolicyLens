@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Globe, Calendar, RefreshCw, Database, AlertCircle, CheckCircle, Clock, Download, FileText } from 'lucide-react';
 import Alert from '../components/Alert';
 
@@ -8,10 +8,12 @@ const ExternalDataSources = () => {
   const [loading, setLoading] = useState(true);
   const [fetching, setFetching] = useState(null);
   const [alert, setAlert] = useState(null);
+  const [selectedSource, setSelectedSource] = useState(null);
+  const [sourceData, setSourceData] = useState(null);
 
   useEffect(() => {
     loadData();
-    const interval = setInterval(loadData, 30000); // Refresh every 30s
+    const interval = setInterval(loadData, 120000); // Refresh every 2 minutes
     return () => clearInterval(interval);
   }, []);
 
@@ -29,7 +31,7 @@ const ExternalDataSources = () => {
 
       if (historyRes.ok) {
         const history = await historyRes.json();
-        setFetchHistory(history.fetch_history || []);
+        setFetchHistory(Array.isArray(history) ? history : []);
       }
     } catch (error) {
       console.error('Error loading data:', error);
@@ -55,6 +57,13 @@ const ExternalDataSources = () => {
           type: 'success',
           message: `Successfully fetched data from ${source || 'all sources'}!`
         });
+        
+        // Store fetched data for display
+        if (source && data.data) {
+          setSelectedSource(source);
+          setSourceData(data.data);
+        }
+        
         loadData(); // Refresh data
       } else {
         setAlert({
@@ -212,9 +221,17 @@ const ExternalDataSources = () => {
 
           return (
             <div key={source.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-              <div className={`p-4 bg-${source.color}-50 border-b border-${source.color}-100`}>
+              <div className={`p-4 border-b ${
+                source.color === 'red' ? 'bg-red-50 border-red-100' :
+                source.color === 'orange' ? 'bg-orange-50 border-orange-100' :
+                'bg-blue-50 border-blue-100'
+              }`}>
                 <div className="flex items-center gap-3">
-                  <div className={`text-${source.color}-600`}>
+                  <div className={
+                    source.color === 'red' ? 'text-red-600' :
+                    source.color === 'orange' ? 'text-orange-600' :
+                    'text-blue-600'
+                  }>
                     {source.icon}
                   </div>
                   <div>
@@ -239,7 +256,11 @@ const ExternalDataSources = () => {
                 <button
                   onClick={() => handleFetch(source.id)}
                   disabled={isLoading || fetching !== null}
-                  className={`w-full flex items-center justify-center gap-2 px-4 py-2 bg-${source.color}-600 text-white rounded-lg hover:bg-${source.color}-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors`}
+                  className={`w-full flex items-center justify-center gap-2 px-4 py-2 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
+                    source.color === 'red' ? 'bg-red-600 hover:bg-red-700' :
+                    source.color === 'orange' ? 'bg-orange-600 hover:bg-orange-700' :
+                    'bg-blue-600 hover:bg-blue-700'
+                  }`}
                 >
                   <Download className={`w-4 h-4 ${isLoading ? 'animate-bounce' : ''}`} />
                   {isLoading ? 'Fetching...' : 'Fetch Now'}
@@ -249,6 +270,96 @@ const ExternalDataSources = () => {
           );
         })}
       </div>
+
+      {/* Data Display Modal/Section */}
+            {selectedSource && sourceData && (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-xl font-semibold">{selectedSource} Data Preview</h2>
+              {sourceData.from_cache && (
+                <span className="text-sm text-blue-600 mt-1">📦 Loaded from cache</span>
+              )}
+            </div>
+            <button
+              onClick={() => {
+                setSelectedSource(null);
+                setSourceData(null);
+              }}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              ✕
+            </button>
+          </div>          <div className="max-h-96 overflow-y-auto">
+            {selectedSource === 'OFAC' && sourceData.data && (
+              <div>
+                <p className="text-sm text-gray-600 mb-4">
+                  Showing {Math.min(20, sourceData.count || 0)} of {sourceData.count || 0} SDN entries
+                </p>
+                <div className="space-y-2">
+                  {sourceData.data.slice(0, 20).map((entry, idx) => (
+                    <div key={idx} className="p-3 bg-gray-50 rounded border border-gray-200">
+                      <div className="font-medium text-gray-900">{entry.name}</div>
+                      <div className="text-sm text-gray-600 mt-1">
+                        <span className="inline-block mr-3">Type: {entry.type}</span>
+                        <span className="inline-block">Program: {entry.program}</span>
+                      </div>
+                      {entry.remarks && (
+                        <div className="text-xs text-gray-500 mt-1">{entry.remarks}</div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {selectedSource === 'FATF' && (
+              <div>
+                <div className="mb-6">
+                  <h3 className="font-semibold text-red-600 mb-3">High-Risk Jurisdictions (Call for Action)</h3>
+                  <div className="space-y-2">
+                    {sourceData.high_risk?.data?.map((country, idx) => (
+                      <div key={idx} className="p-3 bg-red-50 rounded border border-red-200">
+                        <div className="font-medium text-gray-900">{country.country}</div>
+                        <div className="text-sm text-gray-600">{country.description}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-orange-600 mb-3">Jurisdictions under Increased Monitoring</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    {sourceData.monitored?.data?.map((country, idx) => (
+                      <div key={idx} className="p-2 bg-orange-50 rounded border border-orange-200 text-sm">
+                        {country.country}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {selectedSource === 'RBI' && sourceData.data && (
+              <div>
+                {sourceData.count === 0 ? (
+                  <p className="text-gray-500 text-center py-8">No RBI circulars found</p>
+                ) : (
+                  <div className="space-y-2">
+                    {sourceData.data.slice(0, 20).map((circular, idx) => (
+                      <div key={idx} className="p-3 bg-blue-50 rounded border border-blue-200">
+                        <div className="font-medium text-gray-900">{circular.title}</div>
+                        <div className="text-sm text-gray-600 mt-1">
+                          Date: {circular.date} | Ref: {circular.reference}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Fetch History */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">

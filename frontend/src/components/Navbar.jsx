@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Shield, FileText, Search, BarChart3, Upload, History, Activity, MessageSquare, Globe } from 'lucide-react';
+import { Shield, FileText, Search, BarChart3, Upload, History, Activity, MessageSquare, Database } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 
 const Navbar = () => {
@@ -11,7 +11,7 @@ const Navbar = () => {
     { path: '/evaluate', label: 'Evaluate', icon: Shield, color: 'red' },
     { path: '/decisions', label: 'Decisions', icon: History, color: 'orange' },
     { path: '/policies', label: 'Policies', icon: FileText, color: 'blue' },
-    { path: '/external-data', label: 'Data Sources', icon: Globe, color: 'green' },
+    { path: '/external-data', label: 'Data Sources', icon: Database, color: 'blue' },
     { path: '/query', label: 'Query', icon: Search, color: 'orange' },
     { path: '/metrics', label: 'Metrics', icon: Activity, color: 'red' },
     { path: '/feedback', label: 'Feedback', icon: MessageSquare, color: 'blue' },
@@ -25,7 +25,6 @@ const Navbar = () => {
       blue: 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700',
       red: 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700',
       orange: 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700',
-      green: 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700',
     };
     return colors[color] || colors.blue;
   };

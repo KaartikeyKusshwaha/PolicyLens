@@ -1,7 +1,8 @@
 import axios from 'axios';
 
-// Use relative URL so frontend and backend are on same origin
-const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+// Frontend is on port 3000, API is on port 8000
+// Always use localhost:8000 for API calls
+const API_BASE_URL = 'http://localhost:8000';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -86,6 +87,46 @@ export const auditService = {
 export const metricsService = {
   get: async () => {
     const response = await api.get('/api/metrics');
+    return response.data;
+  },
+  getLatency: async (operationType = null, hours = null) => {
+    const params = new URLSearchParams();
+    if (operationType) params.append('operation_type', operationType);
+    if (hours) params.append('hours', hours);
+    const queryString = params.toString();
+    const url = queryString ? `/api/metrics/latency?${queryString}` : '/api/metrics/latency';
+    const response = await api.get(url);
+    return response.data;
+  },
+  getCounters: async () => {
+    const response = await api.get('/api/metrics/counters');
+    return response.data;
+  },
+};
+
+export const externalDataService = {
+  fetchData: async (source) => {
+    const response = await api.post(`/api/external-data/fetch?source=${source}`);
+    return response.data;
+  },
+  
+  syncAll: async () => {
+    const response = await api.post('/api/external-data/sync');
+    return response.data;
+  },
+  
+  getSchedulerStatus: async () => {
+    const response = await api.get('/api/external-data/scheduler/status');
+    return response.data;
+  },
+  
+  triggerScheduledFetch: async (source) => {
+    const response = await api.post(`/api/external-data/scheduler/trigger?source=${source}`);
+    return response.data;
+  },
+  
+  getHistory: async (limit = 50) => {
+    const response = await api.get(`/api/external-data/history?limit=${limit}`);
     return response.data;
   },
 };

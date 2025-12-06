@@ -26,6 +26,7 @@ function App() {
               <Route path="/query" element={<QueryAssistant />} />
               <Route path="/upload" element={<UploadPolicy />} />
               <Route path="/decisions" element={<DecisionHistory />} />
+              <Route path="/external-data" element={<ExternalDataSources />} />
               <Route path="/metrics" element={<Metrics />} />
               <Route path="/feedback" element={<FeedbackViewer />} />
               <Route path="/external-data" element={<ExternalDataSources />} />

@@ -32,6 +32,29 @@ class MilvusService:
     
     def _create_collections(self):
         """Create collections if they don't exist"""
+        # External Data Cache Collection
+        external_data_collection = "external_data_cache"
+        if not utility.has_collection(external_data_collection):
+            fields = [
+                FieldSchema(name="source", dtype=DataType.VARCHAR, max_length=50, is_primary=True),
+                FieldSchema(name="data_json", dtype=DataType.VARCHAR, max_length=65535),
+                FieldSchema(name="cached_at", dtype=DataType.INT64),
+                FieldSchema(name="records_count", dtype=DataType.INT64),
+                FieldSchema(name="dummy_vector", dtype=DataType.FLOAT_VECTOR, dim=1),  # Required by Milvus
+            ]
+            schema = CollectionSchema(fields=fields, description="External data source cache")
+            collection = Collection(name=external_data_collection, schema=schema)
+            
+            # Create index on dummy_vector field (required for loading)
+            index_params = {
+                "index_type": "FLAT",
+                "metric_type": "L2",
+                "params": {}
+            }
+            collection.create_index(field_name="dummy_vector", index_params=index_params)
+            collection.load()
+            logger.info(f"Created and loaded collection: {external_data_collection}")
+        
         # Policy Chunks Collection
         if not utility.has_collection(self.collection_name):
             fields = [
@@ -358,6 +381,87 @@ class MilvusService:
                 "similarity_score": 0.73
             }
         ]
+    
+    def store_external_data(self, source: str, data: Dict[str, Any], records_count: int) -> bool:
+        """Store external data in Milvus"""
+        if not self.connected:
+            logger.warning("Not connected to Milvus - skipping external data storage")
+            return False
+        
+        try:
+            import json
+            collection = Collection("external_data_cache")
+            
+            # Ensure collection is loaded
+            if not utility.loading_progress("external_data_cache").get("loading_progress", "0%") == "100%":
+                collection.load()
+            
+            # Delete existing entry for this source
+            expr = f'source == "{source}"'
+            collection.delete(expr)
+            
+            # Insert new data (including dummy vector required by Milvus)
+            entities = [
+                [source],
+                [json.dumps(data, default=str)],
+                [int(datetime.now().timestamp())],
+                [records_count],
+                [[0.0]]  # Dummy vector - required by Milvus schema
+            ]
+            
+            collection.insert(entities)
+            collection.flush()
+            logger.info(f"Stored external data for {source} in Milvus")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error storing external data in Milvus: {e}")
+            return False
+    
+    def get_external_data(self, source: str, ttl_hours: int = 24) -> Optional[Dict[str, Any]]:
+        """Get cached external data from Milvus"""
+        if not self.connected:
+            logger.warning("Not connected to Milvus - cannot retrieve external data")
+            return None
+        
+        # Ensure collection is loaded
+        try:
+            collection = Collection("external_data_cache")
+            if not utility.loading_progress("external_data_cache").get("loading_progress", "0%") == "100%":
+                collection.load()
+        except Exception as e:
+            logger.error(f"Error loading collection: {e}")
+            return None
+        
+        try:
+            import json
+            from datetime import timedelta
+            
+            collection = Collection("external_data_cache")
+            collection.load()
+            
+            # Query for the source
+            expr = f'source == "{source}"'
+            results = collection.query(expr=expr, output_fields=["data_json", "cached_at", "records_count"])
+            
+            if not results:
+                return None
+            
+            result = results[0]
+            cached_at = datetime.fromtimestamp(result["cached_at"])
+            
+            # Check if cache is still valid
+            if datetime.now() - cached_at < timedelta(hours=ttl_hours):
+                data = json.loads(result["data_json"])
+                logger.info(f"Retrieved cached external data for {source} from Milvus")
+                return data
+            else:
+                logger.info(f"Cache expired for {source} in Milvus")
+                return None
+                
+        except Exception as e:
+            logger.error(f"Error getting external data from Milvus: {e}")
+            return None
     
     def disconnect(self):
         """Disconnect from Milvus"""

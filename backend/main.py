@@ -44,6 +44,8 @@ storage_service = None
 metrics_service = None
 policy_sentinel = None
 report_generator = None
+batch_processor = None
+risk_scorer = None
 external_data_manager = None
 data_scheduler = None
 
@@ -51,7 +53,7 @@ data_scheduler = None
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan context manager for startup and shutdown"""
-    global milvus_service, embedding_service, llm_service, document_processor, compliance_engine, storage_service, metrics_service, policy_sentinel, report_generator, external_data_manager, data_scheduler
+    global milvus_service, embedding_service, llm_service, document_processor, compliance_engine, storage_service, metrics_service, policy_sentinel, report_generator, batch_processor, risk_scorer, external_data_manager, data_scheduler
     
     logger.info("Starting PolicyLens API...")
     
@@ -87,15 +89,6 @@ async def lifespan(app: FastAPI):
     report_generator = ReportGenerator()
     logger.info("✓ Report generator initialized")
     
-    # Initialize external data manager
-    external_data_manager = ExternalDataManager(document_processor, storage_service)
-    logger.info("✓ External data manager initialized")
-    
-    # Initialize data scheduler
-    data_scheduler = DataScheduler(external_data_manager, storage_service, document_processor)
-    data_scheduler.start()
-    logger.info("✓ Data scheduler started")
-    
     # Initialize metrics with storage and Milvus services
     demo_mode = not (milvus_service and milvus_service.connected)
     metrics_service = MetricsService(
@@ -104,6 +97,25 @@ async def lifespan(app: FastAPI):
         demo_mode=demo_mode
     )
     logger.info("✓ Metrics service initialized")
+    
+    # Initialize batch processor
+    from services.batch_processor import BatchProcessor
+    batch_processor = BatchProcessor(compliance_engine, storage_service)
+    logger.info("✓ Batch processor initialized")
+    
+    # Initialize risk scorer
+    from services.risk_scorer import RiskScorer
+    risk_scorer = RiskScorer(milvus_service, embedding_service, storage_service)
+    logger.info("✓ Risk scorer initialized")
+    
+    # Initialize external data manager with Milvus caching
+    external_data_manager = ExternalDataManager(document_processor, storage_service, milvus_service)
+    logger.info("✓ External data manager initialized")
+    
+    # Initialize data scheduler
+    data_scheduler = DataScheduler(external_data_manager, storage_service, document_processor)
+    data_scheduler.start()
+    logger.info("✓ Data scheduler started")
     
     logger.info("🚀 PolicyLens API ready!")
     
@@ -260,7 +272,8 @@ async def evaluate_transaction(request: TransactionEvaluationRequest):
             metrics_service.record_evaluation(
                 verdict=result["decision"].verdict.value,
                 risk_level=result["decision"].risk_level.value,
-                latency_ms=result["processing_time_ms"]
+                latency_ms=result["processing_time_ms"],
+                transaction_id=request.transaction.transaction_id
             )
         
         return TransactionEvaluationResponse(
@@ -289,7 +302,7 @@ async def query_compliance(request: QueryRequest):
         # Track metrics
         if metrics_service:
             latency_ms = (time.time() - start_time) * 1000
-            metrics_service.record_query(latency_ms)
+            metrics_service.record_query(latency_ms, request.query)
         
         return QueryResponse(
             query=result["query"],
@@ -669,143 +682,57 @@ async def get_metrics():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# ============= External Data Sources Endpoints =============
+@app.get("/api/metrics/counters")
+async def get_counters():
+    """Get operation counters (total counts only)"""
+    try:
+        if not metrics_service:
+            raise HTTPException(status_code=503, detail="Metrics service unavailable")
+        
+        return {
+            "total_evaluations": metrics_service.total_evaluations,
+            "total_queries": metrics_service.total_queries,
+            "total_policy_uploads": metrics_service.total_policy_uploads
+        }
+    except Exception as e:
+        logger.error(f"Error retrieving counters: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/external-data/fetch")
-async def fetch_external_data(source: Optional[str] = None):
-    """
-    Manually trigger external data fetch
+
+@app.get("/api/metrics/latency")
+async def get_latency_metrics(operation_type: Optional[str] = None, hours: Optional[int] = None):
+    """Get persisted latency statistics from storage
     
     Args:
-        source: Optional source name (OFAC, FATF, RBI) or None for all sources
+        operation_type: Filter by operation type ('evaluation' or 'query'). If None, returns all.
+        hours: Number of hours to look back. If None, returns all-time data.
     """
     try:
-        if not external_data_manager:
-            raise HTTPException(status_code=503, detail="External data manager unavailable")
+        if not metrics_service:
+            raise HTTPException(status_code=503, detail="Metrics service unavailable")
         
-        logger.info(f"Manual fetch triggered for {source or 'all sources'}")
-        
-        if source == "OFAC":
-            result = external_data_manager.ofac.fetch_sdn_list()
-        elif source == "FATF":
-            high_risk = external_data_manager.fatf.fetch_high_risk_jurisdictions()
-            monitored = external_data_manager.fatf.fetch_monitored_jurisdictions()
-            result = {"high_risk": high_risk, "monitored": monitored}
-        elif source == "RBI":
-            result = external_data_manager.rbi.fetch_recent_circulars(category='AML', limit=50)
-        else:
-            # Fetch all sources
-            result = external_data_manager.fetch_all_sources()
-        
-        return {
-            "status": "success",
-            "source": source or "all",
-            "timestamp": datetime.utcnow().isoformat(),
-            "data": result
-        }
-    
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error fetching external data: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.post("/api/external-data/sync")
-async def sync_external_data():
-    """
-    Fetch and process all external data sources into policies
-    This will update OFAC, FATF, and RBI policy documents
-    """
-    try:
-        if not external_data_manager:
-            raise HTTPException(status_code=503, detail="External data manager unavailable")
-        
-        logger.info("Starting full external data sync...")
-        
-        # Fetch all data
-        fetched_data = external_data_manager.fetch_all_sources()
-        
-        # Process and store as policies
-        processed = external_data_manager.process_and_store(fetched_data)
-        
-        return {
-            "status": "success",
-            "timestamp": datetime.utcnow().isoformat(),
-            "fetched": fetched_data,
-            "processed": processed,
-            "message": "External data synced and policies updated"
-        }
-    
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error syncing external data: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.get("/api/external-data/scheduler/status")
-async def get_scheduler_status():
-    """Get data scheduler status"""
-    try:
-        if not data_scheduler:
-            raise HTTPException(status_code=503, detail="Data scheduler unavailable")
-        
-        return data_scheduler.get_status()
-    
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error getting scheduler status: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.post("/api/external-data/scheduler/trigger")
-async def trigger_scheduled_fetch(source: Optional[str] = None):
-    """
-    Manually trigger a scheduled data fetch
-    
-    Args:
-        source: Optional source name (OFAC, FATF, RBI) or None for all
-    """
-    try:
-        if not data_scheduler:
-            raise HTTPException(status_code=503, detail="Data scheduler unavailable")
-        
-        data_scheduler.trigger_manual_fetch(source)
-        
-        return {
-            "status": "triggered",
-            "source": source or "all",
-            "message": f"Manual fetch triggered for {source or 'all sources'}"
-        }
-    
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error triggering scheduled fetch: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.get("/api/external-data/history")
-async def get_fetch_history():
-    """Get recent fetch history"""
-    try:
-        if not data_scheduler:
-            raise HTTPException(status_code=503, detail="Data scheduler unavailable")
-        
-        return {
-            "fetch_history": data_scheduler.fetch_history[-50:],  # Last 50 fetches
-            "last_fetch_times": {
-                source: time.isoformat() 
-                for source, time in data_scheduler.last_fetch_times.items()
+        # Get persisted latency stats
+        if operation_type:
+            stats = metrics_service.get_persisted_latency_stats(operation_type, hours)
+            return {
+                "operation_type": operation_type,
+                "hours": hours,
+                "statistics": stats
             }
-        }
+        else:
+            # Get stats for all operation types (all-time by default)
+            eval_stats = metrics_service.get_persisted_latency_stats("evaluation", hours)
+            query_stats = metrics_service.get_persisted_latency_stats("query", hours)
+            
+            return {
+                "evaluation": eval_stats,
+                "query": query_stats
+            }
     
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error getting fetch history: {e}")
+        logger.error(f"Error retrieving latency metrics: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -860,6 +787,216 @@ if os.path.exists(frontend_dist):
         index_path = os.path.join(frontend_dist, "index.html")
         with open(index_path, "r", encoding="utf-8") as f:
             return f.read()
+
+
+# Batch Re-evaluation Endpoints
+@app.post("/api/batch/reevaluate")
+async def reevaluate_all(filter_by: Optional[dict] = None):
+    """
+    Re-evaluate all stored decisions with current policies
+    
+    Optional filters:
+    - verdict: Filter by verdict (FLAG, REVIEW, CLEAR)
+    - date_from: ISO date string
+    - date_to: ISO date string
+    """
+    try:
+        if not batch_processor:
+            raise HTTPException(status_code=503, detail="Batch processor not initialized")
+        
+        result = await batch_processor.reevaluate_all_decisions(filter_by)
+        return result
+    except Exception as e:
+        logger.error(f"Batch re-evaluation failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/batch/candidates")
+async def get_reevaluation_candidates(
+    days_old: int = 30,
+    verdict: Optional[str] = None
+):
+    """
+    Get list of decisions that should be re-evaluated
+    
+    Args:
+        days_old: Consider decisions older than this many days (default: 30)
+        verdict: Filter by verdict (FLAG, REVIEW, CLEAR)
+    """
+    try:
+        if not batch_processor:
+            raise HTTPException(status_code=503, detail="Batch processor not initialized")
+        
+        candidates = batch_processor.get_reevaluation_candidates(days_old, verdict)
+        return {
+            "candidates": candidates,
+            "total": len(candidates),
+            "filters": {
+                "days_old": days_old,
+                "verdict": verdict
+            }
+        }
+    except Exception as e:
+        logger.error(f"Failed to get candidates: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/batch/reevaluate-by-policy/{policy_id}")
+async def reevaluate_by_policy(policy_id: str):
+    """
+    Re-evaluate decisions affected by a specific policy
+    
+    Args:
+        policy_id: ID of the policy that changed
+    """
+    try:
+        if not batch_processor:
+            raise HTTPException(status_code=503, detail="Batch processor not initialized")
+        
+        result = batch_processor.reevaluate_by_policy(policy_id)
+        return result
+    except Exception as e:
+        logger.error(f"Policy-based re-evaluation failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/batch/impact-report")
+async def generate_impact_report(reevaluation_summary: dict):
+    """
+    Generate human-readable impact report from re-evaluation results
+    
+    Args:
+        reevaluation_summary: Result from reevaluate_all endpoint
+    """
+    try:
+        if not batch_processor:
+            raise HTTPException(status_code=503, detail="Batch processor not initialized")
+        
+        report = batch_processor.generate_impact_report(reevaluation_summary)
+        return {
+            "report": report,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Impact report generation failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# Risk Scoring Endpoints
+@app.get("/api/risk/statistics")
+async def get_risk_statistics():
+    """
+    Get comprehensive risk statistics across all decisions
+    
+    Returns:
+        Statistics including total cases, verdict distribution, average risk scores
+    """
+    try:
+        if not risk_scorer:
+            raise HTTPException(status_code=503, detail="Risk scorer not initialized")
+        
+        stats = risk_scorer.get_risk_statistics()
+        return stats
+    except Exception as e:
+        logger.error(f"Failed to get risk statistics: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# External Data Sources Endpoints
+@app.post("/api/external-data/fetch")
+async def fetch_external_data(source: str):
+    """
+    Manually fetch data from external sources
+    
+    Args:
+        source: OFAC, FATF, or RBI
+    """
+    try:
+        if not external_data_manager:
+            raise HTTPException(status_code=503, detail="External data manager not initialized")
+        
+        logger.info(f"Manual fetch triggered for {source}")
+        result = await external_data_manager.fetch_data(source)
+        return result
+    except Exception as e:
+        logger.error(f"External data fetch failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/external-data/sync")
+async def sync_all_external_data():
+    """
+    Sync all external data sources (OFAC, FATF, RBI)
+    """
+    try:
+        if not external_data_manager:
+            raise HTTPException(status_code=503, detail="External data manager not initialized")
+        
+        logger.info("Full sync triggered for all external data sources")
+        results = await external_data_manager.sync_all()
+        return {
+            "status": "completed",
+            "results": results,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"External data sync failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/external-data/scheduler/status")
+async def get_scheduler_status():
+    """
+    Get data scheduler status and scheduled jobs
+    """
+    try:
+        if not data_scheduler:
+            raise HTTPException(status_code=503, detail="Data scheduler not initialized")
+        
+        status = data_scheduler.get_status()
+        return status
+    except Exception as e:
+        logger.error(f"Failed to get scheduler status: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/external-data/scheduler/trigger")
+async def trigger_scheduled_fetch(source: str):
+    """
+    Manually trigger a scheduled data fetch job
+    
+    Args:
+        source: OFAC, FATF, RBI, or ALL
+    """
+    try:
+        if not data_scheduler:
+            raise HTTPException(status_code=503, detail="Data scheduler not initialized")
+        
+        logger.info(f"Manual trigger for {source} scheduled fetch")
+        result = data_scheduler.trigger_job(source)
+        return result
+    except Exception as e:
+        logger.error(f"Failed to trigger scheduled fetch: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/external-data/history")
+async def get_fetch_history(limit: int = 50):
+    """
+    Get history of external data fetches
+    
+    Args:
+        limit: Maximum number of records to return
+    """
+    try:
+        if not storage_service:
+            raise HTTPException(status_code=503, detail="Storage service not initialized")
+        
+        history = storage_service.get_external_data_history(limit)
+        return history
+    except Exception as e:
+        logger.error(f"Failed to get fetch history: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 if __name__ == "__main__":
