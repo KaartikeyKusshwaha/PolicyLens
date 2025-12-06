@@ -25,23 +25,17 @@ class MetricsService:
             self.total_queries = loaded_metrics.get("total_queries", 0)
             self.total_policy_uploads = loaded_metrics.get("total_policy_uploads", 0)
             self.total_feedback = loaded_metrics.get("total_feedback", 0)
-            self.verdicts = defaultdict(int, loaded_metrics.get("verdicts", {}))
-            self.risk_levels = defaultdict(int, loaded_metrics.get("risk_levels", {}))
             logger.info(f"Loaded persisted metrics: {self.total_evaluations} evaluations, {self.total_queries} queries")
         elif demo_mode:
             self.total_evaluations = 3
             self.total_queries = 0
             self.total_policy_uploads = 3
             self.total_feedback = 0
-            self.verdicts = defaultdict(int)
-            self.risk_levels = defaultdict(int)
         else:
             self.total_evaluations = 3
             self.total_queries = 5
             self.total_policy_uploads = 0
             self.total_feedback = 0
-            self.verdicts = defaultdict(int)
-            self.risk_levels = defaultdict(int)
         
         # Latency tracking (keep last 1000 measurements)
         self.evaluation_latencies = deque(maxlen=1000)
@@ -70,9 +64,7 @@ class MetricsService:
                 "total_evaluations": self.total_evaluations,
                 "total_queries": self.total_queries,
                 "total_policy_uploads": self.total_policy_uploads,
-                "total_feedback": self.total_feedback,
-                "verdicts": dict(self.verdicts),
-                "risk_levels": dict(self.risk_levels)
+                "total_feedback": self.total_feedback
             }
             self.storage_service.store_metrics(metrics_data)
     
@@ -90,8 +82,6 @@ class MetricsService:
         """Record a transaction evaluation"""
         with self.lock:
             self.total_evaluations += 1
-            self.verdicts[verdict] += 1
-            self.risk_levels[risk_level] += 1
             self.evaluation_latencies.append(latency_ms)
             
             # Update hourly tracking
@@ -185,10 +175,6 @@ class MetricsService:
                     "total_policy_uploads": policy_count,
                     "total_feedback": self.total_feedback
                 },
-                "decisions": {
-                    "by_verdict": dict(self.verdicts),
-                    "by_risk_level": dict(self.risk_levels)
-                },
                 "latency": {
                     "evaluation": self._calculate_latency_stats(self.evaluation_latencies),
                     "query": self._calculate_latency_stats(self.query_latencies),
@@ -255,8 +241,6 @@ class MetricsService:
             self.total_queries = 0
             self.total_policy_uploads = 0
             self.total_feedback = 0
-            self.verdicts.clear()
-            self.risk_levels.clear()
             self.evaluation_latencies.clear()
             self.query_latencies.clear()
             self.embedding_latencies.clear()

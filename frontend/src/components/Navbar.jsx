@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Shield, FileText, Search, BarChart3, Upload, History, Activity, MessageSquare } from 'lucide-react';
+import { Shield, FileText, Search, BarChart3, Upload, History, Activity, MessageSquare, Database } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 
 const Navbar = () => {
@@ -11,6 +11,7 @@ const Navbar = () => {
     { path: '/evaluate', label: 'Evaluate', icon: Shield, color: 'red' },
     { path: '/decisions', label: 'Decisions', icon: History, color: 'orange' },
     { path: '/policies', label: 'Policies', icon: FileText, color: 'blue' },
+    { path: '/external-data', label: 'Data Sources', icon: Database, color: 'blue' },
     { path: '/query', label: 'Query', icon: Search, color: 'orange' },
     { path: '/metrics', label: 'Metrics', icon: Activity, color: 'red' },
     { path: '/feedback', label: 'Feedback', icon: MessageSquare, color: 'blue' },

@@ -183,68 +183,6 @@ const Metrics = () => {
         </p>
       </div>
 
-      {/* Verdict Distribution */}
-      <div className="card">
-        <h2 className="text-xl font-semibold mb-4">Verdict Distribution</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-green-50 rounded-lg p-4 text-center">
-            <p className="text-sm text-gray-600">Compliant</p>
-            <p className="text-3xl font-bold text-green-600">
-              {metrics?.verdicts?.compliant || 0}
-            </p>
-          </div>
-          <div className="bg-red-50 rounded-lg p-4 text-center">
-            <p className="text-sm text-gray-600">Non-Compliant</p>
-            <p className="text-3xl font-bold text-red-600">
-              {metrics?.verdicts?.non_compliant || 0}
-            </p>
-          </div>
-          <div className="bg-yellow-50 rounded-lg p-4 text-center">
-            <p className="text-sm text-gray-600">Partially Compliant</p>
-            <p className="text-3xl font-bold text-yellow-600">
-              {metrics?.verdicts?.partially_compliant || 0}
-            </p>
-          </div>
-          <div className="bg-gray-50 rounded-lg p-4 text-center">
-            <p className="text-sm text-gray-600">Needs Review</p>
-            <p className="text-3xl font-bold text-gray-600">
-              {metrics?.verdicts?.needs_review || 0}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Risk Level Distribution */}
-      <div className="card">
-        <h2 className="text-xl font-semibold mb-4">Risk Level Distribution</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-green-50 rounded-lg p-4 text-center">
-            <p className="text-sm text-gray-600">Low Risk</p>
-            <p className="text-3xl font-bold text-green-600">
-              {metrics?.risk_levels?.low || 0}
-            </p>
-          </div>
-          <div className="bg-yellow-50 rounded-lg p-4 text-center">
-            <p className="text-sm text-gray-600">Medium Risk</p>
-            <p className="text-3xl font-bold text-yellow-600">
-              {metrics?.risk_levels?.medium || 0}
-            </p>
-          </div>
-          <div className="bg-orange-50 rounded-lg p-4 text-center">
-            <p className="text-sm text-gray-600">High Risk</p>
-            <p className="text-3xl font-bold text-orange-600">
-              {metrics?.risk_levels?.high || 0}
-            </p>
-          </div>
-          <div className="bg-red-50 rounded-lg p-4 text-center">
-            <p className="text-sm text-gray-600">Critical Risk</p>
-            <p className="text-3xl font-bold text-red-600">
-              {metrics?.risk_levels?.critical || 0}
-            </p>
-          </div>
-        </div>
-      </div>
-
       {/* Hourly Activity */}
       <div className="card">
         <h2 className="text-xl font-semibold mb-4">Hourly Activity (Last 24 Hours)</h2>

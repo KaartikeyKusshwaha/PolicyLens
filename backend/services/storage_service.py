@@ -248,3 +248,49 @@ class StorageService:
                 "total_feedback": 0,
                 "storage_path": str(self.storage_dir)
             }
+    
+    def get_external_data_history(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """Get history of external data fetches"""
+        try:
+            history_file = self.storage_dir / "external_data_history.jsonl"
+            
+            if not history_file.exists():
+                return []
+            
+            history = []
+            with open(history_file, 'r', encoding='utf-8') as f:
+                for line in f:
+                    try:
+                        record = json.loads(line.strip())
+                        history.append(record)
+                    except json.JSONDecodeError:
+                        continue
+            
+            # Return most recent first
+            history.reverse()
+            return history[:limit]
+            
+        except Exception as e:
+            logger.error(f"Error getting external data history: {e}")
+            return []
+    
+    def store_external_data_fetch(self, source: str, status: str, records_fetched: int, message: str = ""):
+        """Store external data fetch record"""
+        try:
+            history_file = self.storage_dir / "external_data_history.jsonl"
+            
+            record = {
+                "source": source,
+                "status": status,
+                "records_fetched": records_fetched,
+                "message": message,
+                "timestamp": datetime.now().isoformat()
+            }
+            
+            with open(history_file, 'a', encoding='utf-8') as f:
+                f.write(json.dumps(record) + '\n')
+                
+            logger.info(f"External data fetch recorded: {source} - {status}")
+            
+        except Exception as e:
+            logger.error(f"Error storing external data fetch: {e}")

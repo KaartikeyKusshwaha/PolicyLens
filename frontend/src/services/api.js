@@ -104,6 +104,33 @@ export const metricsService = {
   },
 };
 
+export const externalDataService = {
+  fetchData: async (source) => {
+    const response = await api.post(`/api/external-data/fetch?source=${source}`);
+    return response.data;
+  },
+  
+  syncAll: async () => {
+    const response = await api.post('/api/external-data/sync');
+    return response.data;
+  },
+  
+  getSchedulerStatus: async () => {
+    const response = await api.get('/api/external-data/scheduler/status');
+    return response.data;
+  },
+  
+  triggerScheduledFetch: async (source) => {
+    const response = await api.post(`/api/external-data/scheduler/trigger?source=${source}`);
+    return response.data;
+  },
+  
+  getHistory: async (limit = 50) => {
+    const response = await api.get(`/api/external-data/history?limit=${limit}`);
+    return response.data;
+  },
+};
+
 export const healthCheck = async () => {
   const response = await api.get('/');
   return response.data;
