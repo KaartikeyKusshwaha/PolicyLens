@@ -246,32 +246,25 @@ const ExternalDataSources = () => {
 
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleFetch(source.id)}
-                    disabled={isLoading || fetching !== null}
-                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
-                      source.color === 'red' ? 'bg-red-600 hover:bg-red-700' :
-                      source.color === 'orange' ? 'bg-orange-600 hover:bg-orange-700' :
-                      'bg-blue-600 hover:bg-blue-700'
-                    }`}
-                  >
-                    <Download className={`w-4 h-4 ${isLoading ? 'animate-bounce' : ''}`} />
-                    {isLoading ? 'Fetching...' : 'Fetch Now'}
-                  </button>
-                  {lastFetch && (
-                    <button
-                      onClick={() => {
-                        setSelectedSource(source.id);
-                        // Try to load from last fetch
-                        handleFetch(source.id);
-                      }}
-                      className="px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                    >
-                      <FileText className="w-4 h-4" />
-                    </button>
-                  )}
+                    <span className="text-gray-600">Last Fetch:</span>
+                    <span className="font-medium text-gray-900">
+                      {lastFetch ? formatDate(lastFetch) : 'Not yet run'}
+                    </span>
+                  </div>
                 </div>
+
+                <button
+                  onClick={() => handleFetch(source.id)}
+                  disabled={isLoading || fetching !== null}
+                  className={`w-full flex items-center justify-center gap-2 px-4 py-2 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
+                    source.color === 'red' ? 'bg-red-600 hover:bg-red-700' :
+                    source.color === 'orange' ? 'bg-orange-600 hover:bg-orange-700' :
+                    'bg-blue-600 hover:bg-blue-700'
+                  }`}
+                >
+                  <Download className={`w-4 h-4 ${isLoading ? 'animate-bounce' : ''}`} />
+                  {isLoading ? 'Fetching...' : 'Fetch Now'}
+                </button>
               </div>
             </div>
           );
@@ -363,14 +356,7 @@ const ExternalDataSources = () => {
             )}
           </div>
         </div>
-      )}      <Download className={`w-4 h-4 ${isLoading ? 'animate-bounce' : ''}`} />
-                  {isLoading ? 'Fetching...' : 'Fetch Now'}
-                </button>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      )}
 
       {/* Fetch History */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
