@@ -40,45 +40,46 @@ class DataScheduler:
     def start(self):
         """Start the scheduler with configured jobs"""
         
-        # Schedule OFAC updates - Daily at 2 AM
+        # Schedule OFAC updates - Hourly
         self.scheduler.add_job(
             self.fetch_ofac_data,
-            CronTrigger(hour=2, minute=0),
-            id='ofac_daily',
-            name='OFAC Daily Update',
+            IntervalTrigger(hours=1),
+            id='ofac_hourly',
+            name='OFAC Hourly Update',
             replace_existing=True
         )
-        logger.info("✓ Scheduled OFAC daily updates at 2 AM")
+        logger.info("✓ Scheduled OFAC hourly updates")
         
-        # Schedule FATF updates - Weekly on Monday
+        # Schedule FATF updates - Every 6 hours
         self.scheduler.add_job(
             self.fetch_fatf_data,
-            CronTrigger(day_of_week='mon', hour=3, minute=0),
-            id='fatf_weekly',
-            name='FATF Weekly Update',
+            IntervalTrigger(hours=6),
+            id='fatf_periodic',
+            name='FATF Periodic Update',
             replace_existing=True
         )
-        logger.info("✓ Scheduled FATF weekly updates on Monday 3 AM")
+        logger.info("✓ Scheduled FATF updates every 6 hours")
         
-        # Schedule RBI updates - Daily at 4 AM
+        # Schedule RBI updates - Every 6 hours
         self.scheduler.add_job(
             self.fetch_rbi_data,
-            CronTrigger(hour=4, minute=0),
-            id='rbi_daily',
-            name='RBI Daily Update',
+            IntervalTrigger(hours=6),
+            id='rbi_periodic',
+            name='RBI Periodic Update',
             replace_existing=True
         )
-        logger.info("✓ Scheduled RBI daily updates at 4 AM")
+        logger.info("✓ Scheduled RBI updates every 6 hours")
         
-        # Schedule full sync - Weekly on Sunday
+        # Initial fetch on startup (delayed by 30 seconds)
         self.scheduler.add_job(
             self.fetch_all_sources,
-            CronTrigger(day_of_week='sun', hour=1, minute=0),
-            id='full_sync_weekly',
-            name='Full Sync Weekly',
+            'date',
+            run_date=datetime.now() + timedelta(seconds=30),
+            id='initial_fetch',
+            name='Initial Data Fetch',
             replace_existing=True
         )
-        logger.info("✓ Scheduled full sync weekly on Sunday 1 AM")
+        logger.info("✓ Scheduled initial data fetch in 30 seconds")
         
         self.scheduler.start()
         logger.info("🚀 Data Scheduler started")

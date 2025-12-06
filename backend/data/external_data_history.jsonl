@@ -18,3 +18,10 @@
 {"source": "FATF", "status": "success", "records_fetched": 29, "message": "Successfully fetched risk jurisdictions", "timestamp": "2025-12-06T13:49:53.162435"}
 {"source": "OFAC", "status": "success", "records_fetched": 50, "message": "Successfully fetched 50 SDN entries", "timestamp": "2025-12-06T14:03:00.496467"}
 {"source": "FATF", "status": "success", "records_fetched": 29, "message": "Successfully fetched risk jurisdictions", "timestamp": "2025-12-06T14:03:00.507408"}
+{"source": "OFAC", "status": "error", "records_fetched": 0, "message": "Error: HTTPSConnectionPool(host='wc2h-sls-prod-public-published.s3.us-gov-west-1.amazonaws.com', port=443): Read timed out.", "timestamp": "2025-12-06T14:08:45.095016"}
+{"source": "OFAC", "status": "error", "records_fetched": 0, "message": "Error: HTTPSConnectionPool(host='wc2h-sls-prod-public-published.s3.us-gov-west-1.amazonaws.com', port=443): Read timed out. (read timeout=30)", "timestamp": "2025-12-06T14:23:14.527849"}
+{"source": "OFAC", "status": "success", "records_fetched": 50, "message": "Successfully fetched 50 SDN entries", "timestamp": "2025-12-06T14:32:12.654681"}
+{"source": "OFAC", "status": "error", "records_fetched": 0, "message": "Error: HTTPSConnectionPool(host='wc2h-sls-prod-public-published.s3.us-gov-west-1.amazonaws.com', port=443): Read timed out.", "timestamp": "2025-12-06T14:45:34.286533"}
+{"source": "FATF", "status": "success", "records_fetched": 29, "message": "Successfully fetched risk jurisdictions", "timestamp": "2025-12-06T14:47:14.115699"}
+{"source": "OFAC", "status": "error", "records_fetched": 0, "message": "Error: HTTPSConnectionPool(host='wc2h-sls-prod-public-published.s3.us-gov-west-1.amazonaws.com', port=443): Read timed out.", "timestamp": "2025-12-06T15:01:13.623642"}
+{"source": "OFAC", "status": "error", "records_fetched": 0, "message": "Error: HTTPSConnectionPool(host='wc2h-sls-prod-public-published.s3.us-gov-west-1.amazonaws.com', port=443): Read timed out.", "timestamp": "2025-12-06T15:06:13.347490"}

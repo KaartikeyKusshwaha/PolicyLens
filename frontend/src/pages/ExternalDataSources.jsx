@@ -272,10 +272,15 @@ const ExternalDataSources = () => {
       </div>
 
       {/* Data Display Modal/Section */}
-      {selectedSource && sourceData && (
+            {selectedSource && sourceData && (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold">{selectedSource} Data Preview</h2>
+            <div>
+              <h2 className="text-xl font-semibold">{selectedSource} Data Preview</h2>
+              {sourceData.from_cache && (
+                <span className="text-sm text-blue-600 mt-1">📦 Loaded from cache</span>
+              )}
+            </div>
             <button
               onClick={() => {
                 setSelectedSource(null);
@@ -285,9 +290,7 @@ const ExternalDataSources = () => {
             >
               ✕
             </button>
-          </div>
-
-          <div className="max-h-96 overflow-y-auto">
+          </div>          <div className="max-h-96 overflow-y-auto">
             {selectedSource === 'OFAC' && sourceData.data && (
               <div>
                 <p className="text-sm text-gray-600 mb-4">
