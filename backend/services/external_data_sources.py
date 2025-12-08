@@ -51,7 +51,7 @@ class OFACConnector:
             url = self.SDN_CSV_URL if format == 'csv' else self.SDN_XML_URL
             logger.info(f"Fetching OFAC SDN list from {url}")
             
-            response = self.session.get(url, timeout=30)
+            response = self.session.get(url, timeout=10, stream=True)
             response.raise_for_status()
             
             if format == 'csv':
@@ -79,8 +79,11 @@ class OFACConnector:
         other_entries = []
         total_count = 0
         
-        # Fast collection of priority entries and first 200 others
-        for row in csv_reader:
+        # Fast collection - only process first 100 rows for speed
+        for idx, row in enumerate(csv_reader):
+            if idx >= 100:  # Stop after 100 rows for speed
+                break
+                
             total_count += 1
             program = row.get('Program', '').strip().strip('"')
             
@@ -102,11 +105,11 @@ class OFACConnector:
             # Prioritize important programs
             if program in priority_programs:
                 priority_entries.append(entry)
-            elif len(other_entries) < 200:  # Only keep first 200 non-priority
+            elif len(other_entries) < 50:  # Only keep first 50 non-priority
                 other_entries.append(entry)
             
-            # Early exit after collecting enough priority entries
-            if len(priority_entries) >= 50:
+            # Early exit after collecting enough entries
+            if len(priority_entries) >= 50 and len(other_entries) >= 50:
                 break
         
         # Combine and limit to 50
@@ -147,7 +150,7 @@ class OFACConnector:
         """Fetch OFAC consolidated sanctions list"""
         try:
             logger.info("Fetching OFAC consolidated sanctions list")
-            response = self.session.get(self.CONSOLIDATED_URL, timeout=30)
+            response = self.session.get(self.CONSOLIDATED_URL, timeout=10)
             response.raise_for_status()
             
             return self._parse_consolidated_xml(response.text)
@@ -255,7 +258,7 @@ class FATFConnector:
         """
         try:
             logger.info("Scraping FATF website for updates")
-            response = self.session.get(self.HIGH_RISK_URL, timeout=30)
+            response = self.session.get(self.HIGH_RISK_URL, timeout=10)
             response.raise_for_status()
             
             soup = BeautifulSoup(response.text, 'html.parser')
@@ -309,7 +312,7 @@ class RBIConnector:
             logger.info(f"Fetching RBI circulars for category: {category}")
             
             # Fetch standalone circulars page (no params needed)
-            response = self.session.get(self.CIRCULARS_URL, timeout=30)
+            response = self.session.get(self.CIRCULARS_URL, timeout=10)
             response.raise_for_status()
             
             parsed = self._parse_circulars_page(response.text, category, limit)
@@ -409,7 +412,7 @@ class RBIConnector:
         """Download a specific RBI circular PDF"""
         try:
             logger.info(f"Downloading RBI circular from {url}")
-            response = self.session.get(url, timeout=60)
+            response = self.session.get(url, timeout=10)
             response.raise_for_status()
             return response.content
         except Exception as e:
