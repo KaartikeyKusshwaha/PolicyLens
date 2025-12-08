@@ -379,7 +379,6 @@ const ExternalDataSources = () => {
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Time</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Source</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Message</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -400,9 +399,6 @@ const ExternalDataSources = () => {
                         )}
                         {record.status}
                       </span>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
-                      {record.message || 'Data fetched successfully'}
                     </td>
                   </tr>
                 ))}
