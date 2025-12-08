@@ -311,6 +311,43 @@ class MilvusService:
             logger.error(f"Error getting documents from Milvus: {e}")
             return []
     
+    def get_document_content(self, doc_id: str) -> Optional[Dict[str, Any]]:
+        """Get full document content by reconstructing from chunks"""
+        if not self.connected:
+            logger.warning("Not connected to Milvus")
+            return None
+        
+        try:
+            collection = Collection(self.collection_name)
+            collection.load()
+            
+            # Query all chunks for this document
+            results = collection.query(
+                expr=f'doc_id == "{doc_id}" && is_active == true',
+                output_fields=["doc_id", "doc_title", "text", "section", "source", "topic", "version"],
+                limit=1000
+            )
+            
+            if not results:
+                return None
+            
+            # Reconstruct document from chunks
+            full_text = "\n\n".join([chunk["text"] for chunk in results])
+            
+            return {
+                "doc_id": doc_id,
+                "title": results[0]["doc_title"],
+                "source": results[0]["source"],
+                "topic": results[0]["topic"],
+                "version": results[0]["version"],
+                "content": full_text,
+                "chunks": len(results)
+            }
+            
+        except Exception as e:
+            logger.error(f"Error getting document content from Milvus: {e}")
+            return None
+    
     def deactivate_document_chunks(self, doc_id: str):
         """Mark all chunks from a document as inactive"""
         if not self.connected:

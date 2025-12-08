@@ -8,6 +8,8 @@ const Policies = () => {
   const [error, setError] = useState(null);
   const [mode, setMode] = useState('');
   const [expandedPolicy, setExpandedPolicy] = useState(null);
+  const [policyContent, setPolicyContent] = useState({});
+  const [loadingContent, setLoadingContent] = useState({});
 
   useEffect(() => {
     fetchPolicies();
@@ -50,17 +52,32 @@ const Policies = () => {
     return colors[source] || 'bg-gray-100 text-gray-800';
   };
 
-  const togglePolicy = (policyId) => {
-    setExpandedPolicy(expandedPolicy === policyId ? null : policyId);
+  const togglePolicy = async (policyId) => {
+    if (expandedPolicy === policyId) {
+      setExpandedPolicy(null);
+      return;
+    }
+    
+    setExpandedPolicy(policyId);
+    
+    // Fetch content if not already loaded
+    if (!policyContent[policyId]) {
+      setLoadingContent(prev => ({ ...prev, [policyId]: true }));
+      try {
+        const response = await fetch(`/api/policies/${policyId}/content`);
+        const data = await response.json();
+        setPolicyContent(prev => ({ ...prev, [policyId]: data.content }));
+      } catch (err) {
+        console.error('Error fetching policy content:', err);
+        setPolicyContent(prev => ({ ...prev, [policyId]: 'Error loading policy content. Please try again.' }));
+      } finally {
+        setLoadingContent(prev => ({ ...prev, [policyId]: false }));
+      }
+    }
   };
 
   const getPolicyContent = (policy) => {
-    const content = {
-      'demo_doc_aml': 'ANTI-MONEY LAUNDERING TRANSACTION MONITORING GUIDELINES\n\nVersion: 1.0\nSource: Internal Compliance Department\n\nTRANSACTION THRESHOLDS\n• Transactions exceeding USD 10,000 must be reported within 24 hours\n• Enhanced due diligence required for amounts above USD 50,000\n• Aggregated transactions totaling USD 25,000+ within 30 days require review\n\nRED FLAGS:\n1. Structuring: Multiple transactions below reporting thresholds\n2. High-Risk Jurisdictions: Transactions involving sanctioned countries\n3. Shell Companies: Payments without clear business purpose\n4. Cash-Intensive: Large cash deposits without explanation',
-      'demo_doc_sanctions': 'SANCTIONS COMPLIANCE POLICY\n\nVersion: 2.1\nSource: OFAC Compliance Unit\n\nPROHIBITED JURISDICTIONS:\n• Iran, North Korea, Syria, Crimea, Cuba\n\nAll transactions with these jurisdictions are PROHIBITED without regulatory approval.\n\nSCREENING REQUIREMENTS:\n✓ Screen all parties against OFAC SDN List\n✓ Check beneficial ownership structures\n✓ Verify correspondent banks\n✓ Daily reconciliation of processed transactions\n\nPENALTIES:\n• Civil: Up to $307,922 per violation\n• Criminal: Up to $1M and 20 years imprisonment',
-      'demo_doc_kyc': 'KNOW YOUR CUSTOMER (KYC) REQUIREMENTS\n\nVersion: 1.5\nSource: Internal Risk Management\n\nCUSTOMER IDENTIFICATION:\n• Full legal name and date of birth\n• Physical address (PO Box insufficient)\n• Government-issued photo ID\n• Tax identification number\n\nRISK CLASSIFICATION:\nLow Risk: Domestic individuals, transparent businesses\nMedium Risk: High-net-worth, cash-intensive businesses\nHigh Risk: PEPs, shell companies, high-risk jurisdictions\n\nONGOING MONITORING:\n• Low Risk: Annual review\n• Medium Risk: Semi-annual\n• High Risk: Quarterly or more'
-    };
-    return content[policy.doc_id] || 'Policy document content for ' + policy.title + ' would appear here.';
+    return policyContent[policy.doc_id] || 'Loading...';
   };
 
   return (
@@ -193,9 +210,16 @@ const Policies = () => {
                       <h4 className="font-semibold text-gray-900">Policy Document</h4>
                     </div>
                     <div className="bg-white rounded-lg p-6 border border-gray-200">
-                      <pre className="whitespace-pre-wrap font-sans text-sm text-gray-700 leading-relaxed">
-                        {getPolicyContent(policy)}
-                      </pre>
+                      {loadingContent[policy.doc_id] ? (
+                        <div className="text-center py-8">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                          <p className="mt-2 text-sm text-gray-600">Loading policy content...</p>
+                        </div>
+                      ) : (
+                        <pre className="whitespace-pre-wrap font-sans text-sm text-gray-700 leading-relaxed">
+                          {getPolicyContent(policy)}
+                        </pre>
+                      )}
                     </div>
                     <div className="mt-4 flex justify-end">
                       <button

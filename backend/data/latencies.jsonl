@@ -7,3 +7,10 @@
 {"timestamp": "2025-12-05T11:07:51.364708", "operation_type": "query", "latency_ms": 910.8963012695312, "transaction_id": "Policy?"}
 {"timestamp": "2025-12-05T17:33:08.629123", "operation_type": "query", "latency_ms": 1105.006217956543, "transaction_id": "Hi, AML means?"}
 {"timestamp": "2025-12-06T10:54:18.509894", "operation_type": "query", "latency_ms": 1141.2413120269775, "transaction_id": "AML?\n"}
+{"timestamp": "2025-12-08T16:04:15.567818", "operation_type": "query", "latency_ms": 1117.4604892730713, "transaction_id": "AML?\n"}
+{"timestamp": "2025-12-08T16:04:28.791708", "operation_type": "query", "latency_ms": 738.5776042938232, "transaction_id": "What are the transaction thresholds for AML reporting?"}
+{"timestamp": "2025-12-08T16:04:34.042471", "operation_type": "query", "latency_ms": 500.4611015319824, "transaction_id": "What documentation is required for enhanced due diligence?"}
+{"timestamp": "2025-12-08T16:04:39.284625", "operation_type": "query", "latency_ms": 484.8589897155762, "transaction_id": "Which countries are considered high-risk jurisdictions?"}
+{"timestamp": "2025-12-08T16:04:45.791250", "operation_type": "query", "latency_ms": 761.4836692810059, "transaction_id": "What are the transaction thresholds for AML reporting?"}
+{"timestamp": "2025-12-08T16:04:48.617632", "operation_type": "query", "latency_ms": 514.317512512207, "transaction_id": "What are the indicators of suspicious activity?"}
+{"timestamp": "2025-12-08T16:05:01.281432", "operation_type": "query", "latency_ms": 891.2010192871094, "transaction_id": "Why need AML?"}
