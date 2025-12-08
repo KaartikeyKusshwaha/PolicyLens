@@ -1,0 +1,34 @@
+{
+  "timestamp": "2025-12-08T17:57:41.104178",
+  "last_fetch_times": {
+    "OFAC": "2025-12-08T17:57:35.995871",
+    "FATF": "2025-12-08T17:57:39.555173",
+    "RBI": "2025-12-08T17:57:41.103973"
+  },
+  "recent_history": [
+    {
+      "timestamp": "2025-12-08T17:57:35.995848",
+      "source": "OFAC",
+      "status": "failed",
+      "duration_seconds": 0,
+      "records_fetched": 0,
+      "error": "HTTPSConnectionPool(host='wc2h-sls-prod-public-published.s3.us-gov-west-1.amazonaws.com', port=443): Max retries exceeded with url: /Published/08bc1f86-07f6-4889-8003-617ba470b900/2025-12-02/73742d5e-54da-46df-9844-7a9293c4922e/SDN.CSV?X-Amz-Expires=3600&X-Amz-Security-Token=FwoDYXdzENj%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaDE0aStVMRlyATT%2BDgiLsBDeIMu%2BxozQPd6g3tpiUyVE%2Fr4KaZywfnYn1HNlejR%2FxjVpLObeqO8EmXydMBSZwgWy4ti5X7stJjuX4kGgOcjtXN0MkPVvZOfi7TuFjyV52xFnOrizRTYtJZ7YgIXvofxg%2BwV%2BK6yYfyvNjQ2HqR6IgeLY5Qc7s6xyyniUKpNR4j6sdmSAt9Re9cBQqJyT%2F%2BEEux4%2BNiBlvFAxMxyRAoutmoLHiHNMV48W3n3RPyQqo0H5TMJ%2B4Yw%2FZL3tIaITxTgug6qii227taFcVSCIg6j58LIHcgrTrOoKdsVoR9xTg0kohKrBeoX1II3XoXRO9eX%2FKkym%2Fe7V5FlpVBjaKlaIzQpceyFIkRZkjgB272SlRvZjsOdoNtTR%2BoA3Z8AurPKX3%2FVTIIhQXY11HQwhwK26a4wsGSrJaILhpD3HFr%2B%2Bp4EiqlLrD4uhy1p6VQTM24nSSGvl7DEZqy35ANOrJ0Q0i1vGUYN3ykg5Akxun0gpd5fSRAxtoPWEw1RNfC6yCLn3cKdPVzyF1DDFvNSYJM6imhenU0XZFzPZJf7qP8VSE2BVni4FoHyD7hCnSDab9OkOU7zyvYuF31FrIcjVzTqrSHQyJlMBNayJ0iMovS2SVA2qgBEiqF2Yg9uo%2FO0U5mFV5eOejFa2%2FPGtKQCE99TddaFBrw8deE5sZUbzh4Nv2IOZ605UEnwmVXlshYFMhQPdXMP0z5ACrl%2BzYom53mUMxYH8eJOKMv350K8WwlLcD6l1SImMcOGOL3y7%2BhzJCQg672db0BMze1OFAOsKoyOjTWz7GS1Uwf6B03SGQmjJLdRtgFHmxX%2Furi1DRKPuf3MkGMkHRXLKso9tSilB3voN2FoL9pViHQ7EE9WnDXVVLmAUbkdcDye3RVq73IhvNUN7N9trroI%2BJhKYk5vin8e%2FHz%2BdvPA%3D%3D&response-content-disposition=attachment%3B%20filename%3D%22sdn.csv%22&response-content-type=text%2Fcsv&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIASARBLFPLLE652VJD%2F20251208%2Fus-gov-west-1%2Fs3%2Faws4_request&X-Amz-Date=20251208T175734Z&X-Amz-SignedHeaders=host&X-Amz-Signature=e919c7171829795fb729976fc92257e71490648d4ff2853059e02205871fc5e8 (Caused by NameResolutionError(\"HTTPSConnection(host='wc2h-sls-prod-public-published.s3.us-gov-west-1.amazonaws.com', port=443): Failed to resolve 'wc2h-sls-prod-public-published.s3.us-gov-west-1.amazonaws.com' ([Errno -2] Name or service not known)\"))"
+    },
+    {
+      "timestamp": "2025-12-08T17:57:39.555155",
+      "source": "FATF",
+      "status": "success",
+      "duration_seconds": 3.559164,
+      "records_fetched": 29,
+      "error": null
+    },
+    {
+      "timestamp": "2025-12-08T17:57:41.103957",
+      "source": "RBI",
+      "status": "success",
+      "duration_seconds": 1.548606,
+      "records_fetched": 50,
+      "error": null
+    }
+  ]
+}

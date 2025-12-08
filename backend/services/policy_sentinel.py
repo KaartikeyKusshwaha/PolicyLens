@@ -96,15 +96,49 @@ class PolicySentinel:
             logger.error(f"Error identifying impacted decisions: {e}")
             return []
     
-    def trigger_re_evaluation(self, decision_ids: List[str]) -> Dict[str, Any]:
+    def trigger_re_evaluation(self, decision_ids: List[str], batch_processor=None) -> Dict[str, Any]:
         """Trigger re-evaluation for impacted decisions"""
         
+        if not decision_ids:
+            return {
+                "timestamp": datetime.now().isoformat(),
+                "total_decisions": 0,
+                "decision_ids": [],
+                "status": "COMPLETED",
+                "message": "No decisions to re-evaluate"
+            }
+        
+        # If batch processor is available, execute re-evaluation
+        if batch_processor:
+            try:
+                import asyncio
+                # Run async re-evaluation
+                filter_by = {"trace_ids": decision_ids}
+                
+                # Create event loop if needed
+                try:
+                    loop = asyncio.get_event_loop()
+                except RuntimeError:
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                
+                result = loop.run_until_complete(
+                    batch_processor.reevaluate_all_decisions(filter_by)
+                )
+                
+                logger.info(f"Re-evaluated {len(decision_ids)} decisions: {result.get('verdicts_changed', 0)} changed")
+                return result
+            except Exception as e:
+                logger.error(f"Re-evaluation execution failed: {e}")
+                # Fall through to queueing
+        
+        # Fallback: just queue for later processing
         re_evaluation_queue = {
             "timestamp": datetime.now().isoformat(),
             "total_decisions": len(decision_ids),
             "decision_ids": decision_ids,
             "status": "QUEUED",
-            "message": f"Re-evaluation queued for {len(decision_ids)} decisions"
+            "message": f"Re-evaluation queued for {len(decision_ids)} decisions (batch processor not available)"
         }
         
         # Store re-evaluation queue

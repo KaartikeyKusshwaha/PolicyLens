@@ -7,3 +7,5 @@
 {"timestamp": "2025-12-05T11:07:51.364708", "operation_type": "query", "latency_ms": 910.8963012695312, "transaction_id": "Policy?"}
 {"timestamp": "2025-12-05T17:33:08.629123", "operation_type": "query", "latency_ms": 1105.006217956543, "transaction_id": "Hi, AML means?"}
 {"timestamp": "2025-12-06T10:54:18.509894", "operation_type": "query", "latency_ms": 1141.2413120269775, "transaction_id": "AML?\n"}
+{"timestamp": "2025-12-08T17:58:34.111523", "operation_type": "query", "latency_ms": 8706.68363571167, "transaction_id": "What are the requirements for reporting suspicious activity?"}
+{"timestamp": "2025-12-08T17:58:55.361835", "operation_type": "evaluation", "latency_ms": 7869.767189025879, "transaction_id": "TXN-2025-001"}

@@ -62,7 +62,10 @@ class ReportGenerator:
             trace_id = decision_data.get("trace_id", "N/A")
             transaction = decision_data.get("transaction", {})
             decision = decision_data.get("decision", {})
-            reasoning = decision.get("reasoning", {})
+            # Ensure dict for decision
+            if hasattr(decision, 'model_dump'):
+                decision = decision.model_dump()
+            reasoning_value = decision.get("reasoning", {})
             timestamp = decision_data.get("timestamp", datetime.now().isoformat())
             
             # Title
@@ -122,9 +125,10 @@ class ReportGenerator:
             risk_level = decision.get('risk_level', 'N/A')
             risk_score = decision.get('risk_score', 0)
             
-            # Color code verdict
-            verdict_color = colors.HexColor('#dc2626') if verdict == 'FLAG' else \
-                           colors.HexColor('#f59e0b') if verdict == 'NEEDS_REVIEW' else \
+            # Color code verdict (support both upper/lower forms)
+            v_norm = (verdict or '').lower()
+            verdict_color = colors.HexColor('#dc2626') if v_norm == 'flag' else \
+                           colors.HexColor('#f59e0b') if v_norm in ('needs_review', 'review') else \
                            colors.HexColor('#16a34a')
             
             decision_data_list = [
@@ -151,12 +155,21 @@ class ReportGenerator:
             
             # Reasoning
             story.append(Paragraph("Decision Reasoning", self.styles['SectionHeader']))
-            reasoning_text = reasoning.get('explanation', 'No explanation provided.')
+            if isinstance(reasoning_value, dict):
+                reasoning_text = reasoning_value.get('explanation', 'No explanation provided.')
+            elif isinstance(reasoning_value, str):
+                reasoning_text = reasoning_value
+            else:
+                reasoning_text = 'No explanation provided.'
             story.append(Paragraph(reasoning_text, self.styles['CustomBody']))
             story.append(Spacer(1, 0.2*inch))
             
             # Policy Citations
-            citations = reasoning.get('citations', [])
+            citations = []
+            if decision.get('policy_citations'):
+                citations = decision.get('policy_citations', [])
+            elif isinstance(reasoning_value, dict):
+                citations = reasoning_value.get('citations', [])
             if citations:
                 story.append(Paragraph("Policy Citations", self.styles['SectionHeader']))
                 

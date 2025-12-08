@@ -528,7 +528,7 @@ class ExternalDataManager:
                 )
         
         return result
-    
+
     def fetch_all_sources(self) -> Dict:
         """Fetch data from all external sources"""
         results = {
@@ -562,6 +562,26 @@ class ExternalDataManager:
             results['sources']['rbi_circulars'] = {'error': str(e)}
         
         return results
+
+    async def sync_all(self) -> Dict:
+        """Fetch all sources (no cache) and return a summary suitable for API."""
+        summary = {
+            'timestamp': datetime.utcnow().isoformat(),
+            'results': {}
+        }
+        try:
+            summary['results']['OFAC'] = await self.fetch_data('OFAC', use_cache=False)
+        except Exception as e:
+            summary['results']['OFAC'] = {'status': 'error', 'error': str(e)}
+        try:
+            summary['results']['FATF'] = await self.fetch_data('FATF', use_cache=False)
+        except Exception as e:
+            summary['results']['FATF'] = {'status': 'error', 'error': str(e)}
+        try:
+            summary['results']['RBI'] = await self.fetch_data('RBI', use_cache=False)
+        except Exception as e:
+            summary['results']['RBI'] = {'status': 'error', 'error': str(e)}
+        return summary
     
     def process_and_store(self, data: Dict) -> Dict:
         """

@@ -14,6 +14,7 @@ import json
 
 from services.external_data_sources import ExternalDataManager
 from services.storage_service import StorageService
+from models import PolicyDocument, PolicySource, PolicyTopic
 
 logger = logging.getLogger(__name__)
 
@@ -224,17 +225,38 @@ class DataScheduler:
             logger.error(f"Failed to save raw data for {source_name}: {e}")
     
     async def _process_as_policy(self, doc_id: str, title: str, content: str, source: str, topic: str):
-        """Process external data as a policy document"""
+        """Process external data as a policy document via DocumentProcessor"""
         try:
-            # Use document processor to chunk and embed
-            chunks = self.document_processor.chunk_document(content)
-            
-            # This would normally upload to Milvus
-            # For now, just log
+            if not self.document_processor:
+                logger.info("No document processor configured; skipping policy processing")
+                return
+
+            # Map enums
+            source_enum = {
+                'OFAC': PolicySource.OFAC,
+                'FATF': PolicySource.FATF,
+                'RBI': PolicySource.RBI,
+            }.get(source.upper(), PolicySource.INTERNAL)
+            topic_enum = {
+                'AML': PolicyTopic.AML,
+                'SANCTIONS': PolicyTopic.SANCTIONS,
+                'KYC': PolicyTopic.KYC,
+                'FRAUD': PolicyTopic.FRAUD,
+                'GENERAL': PolicyTopic.GENERAL,
+            }.get(topic.upper(), PolicyTopic.GENERAL)
+
+            document = PolicyDocument(
+                doc_id=doc_id,
+                title=title,
+                content=content,
+                source=source_enum,
+                topic=topic_enum,
+                version="1.0",
+                metadata={"source": source}
+            )
+
+            chunks = self.document_processor.process_document(document)
             logger.info(f"Processed {len(chunks)} chunks for {doc_id}")
-            
-            # Could trigger policy update here if needed
-            
         except Exception as e:
             logger.error(f"Failed to process policy {doc_id}: {e}")
     
@@ -307,3 +329,12 @@ class DataScheduler:
             asyncio.create_task(self.fetch_all_sources())
         
         logger.info(f"Manual fetch triggered for {source or 'all sources'}")
+
+    def trigger_job(self, source: str) -> Dict:
+        """Compatibility wrapper used by API to trigger jobs synchronously"""
+        self.trigger_manual_fetch(None if not source or source.upper() == 'ALL' else source.upper())
+        return {
+            'status': 'triggered',
+            'source': source or 'ALL',
+            'timestamp': datetime.utcnow().isoformat()
+        }

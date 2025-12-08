@@ -130,6 +130,24 @@ class StorageService:
         except Exception as e:
             logger.error(f"Error listing feedback: {e}")
             return []
+
+    def save_json(self, data: Dict[str, Any], relative_path: str) -> bool:
+        """Save arbitrary JSON data under the storage directory.
+
+        Args:
+            data: Serializable object
+            relative_path: Path relative to storage root (folders created as needed)
+        """
+        try:
+            target_path = self.storage_dir / relative_path
+            target_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(target_path, 'w', encoding='utf-8') as f:
+                json.dump(data, f, indent=2, default=str)
+            logger.info(f"Saved JSON to {target_path}")
+            return True
+        except Exception as e:
+            logger.error(f"Error saving JSON to {relative_path}: {e}")
+            return False
     
     def store_metrics(self, metrics_data: Dict[str, Any]) -> bool:
         """Store metrics to disk"""
@@ -248,6 +266,25 @@ class StorageService:
                 "total_feedback": 0,
                 "storage_path": str(self.storage_dir)
             }
+
+    def get_all_decisions(self) -> List[Dict[str, Any]]:
+        """Load all stored decisions.
+
+        Returns:
+            List of decisions (unsorted) loaded from all decision files.
+        """
+        try:
+            decisions = []
+            for file_path in self.decisions_dir.glob("*.json"):
+                try:
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        decisions.append(json.load(f))
+                except Exception:
+                    continue
+            return decisions
+        except Exception as e:
+            logger.error(f"Error loading all decisions: {e}")
+            return []
     
     def get_external_data_history(self, limit: int = 50) -> List[Dict[str, Any]]:
         """Get history of external data fetches"""
