@@ -285,7 +285,7 @@ class RBIConnector:
     """
     
     BASE_URL = "https://www.rbi.org.in"
-    CIRCULARS_URL = f"{BASE_URL}/Scripts/BS_ViewMasCirculardetails.aspx"
+    CIRCULARS_URL = f"{BASE_URL}/Scripts/BS_ViewListofstandalonecirculars.aspx"
     
     def __init__(self):
         self.session = requests.Session()
@@ -304,58 +304,89 @@ class RBIConnector:
         try:
             logger.info(f"Fetching RBI circulars for category: {category}")
             
-            # RBI circular search parameters
-            params = {
-                'Id': category,
-                'Mode': 'All'
-            }
-            
-            response = self.session.get(self.CIRCULARS_URL, params=params, timeout=30)
+            # Fetch standalone circulars page (no params needed)
+            response = self.session.get(self.CIRCULARS_URL, timeout=30)
             response.raise_for_status()
             
             parsed = self._parse_circulars_page(response.text, category, limit)
-            
-            # If no circulars found from scraping, return sample data
-            if parsed['count'] == 0:
-                logger.warning("No circulars found from RBI website, returning sample data")
-                return self._get_sample_circulars(category, limit)
             
             return parsed
             
         except Exception as e:
             logger.error(f"Error fetching RBI circulars: {e}")
-            # Return sample data on error
-            return self._get_sample_circulars(category, limit)
+            return {
+                'source': 'RBI_CIRCULARS',
+                'category': category,
+                'fetched_at': datetime.utcnow().isoformat(),
+                'count': 0,
+                'data': [],
+                'error': str(e)
+            }
     
     def _parse_circulars_page(self, html_content: str, category: str, limit: int) -> Dict:
-        """Parse RBI circulars HTML page"""
+        """Parse RBI standalone circulars HTML page"""
         soup = BeautifulSoup(html_content, 'html.parser')
         circulars = []
         
-        # Find circular entries in the page
-        # Note: RBI website structure may change, this is a basic scraper
+        # Find all tables on the page
         tables = soup.find_all('table')
         
-        for table in tables[:limit]:
+        for table in tables:
             rows = table.find_all('tr')
+            
             for row in rows:
-                cols = row.find_all('td')
-                if len(cols) >= 3:
-                    circular = {
-                        'date': cols[0].get_text(strip=True) if len(cols) > 0 else '',
-                        'title': cols[1].get_text(strip=True) if len(cols) > 1 else '',
-                        'circular_no': cols[2].get_text(strip=True) if len(cols) > 2 else '',
-                        'category': category,
-                        'url': ''
-                    }
+                cells = row.find_all(['td', 'th'])
+                
+                # Skip header rows and rows without enough cells
+                if len(cells) < 3:
+                    continue
+                
+                # Extract links from the row
+                links = [a for cell in cells for a in cell.find_all('a', href=True)]
+                if not links:
+                    continue
+                
+                # Get text from cells
+                cell_texts = [cell.get_text(strip=True) for cell in cells]
+                
+                # Extract title from link or cell text
+                title = links[0].get_text(strip=True) if links else cell_texts[1] if len(cell_texts) > 1 else ''
+                
+                # Filter for AML/KYC related circulars if category specified
+                if category in ['AML', 'KYC']:
+                    title_upper = title.upper()
+                    if not any(keyword in title_upper for keyword in ['AML', 'KYC', 'KNOW YOUR CUSTOMER', 'MONEY LAUNDERING', 'UAPA', 'SANCTIONS']):
+                        continue
+                
+                # Build full URL, handling both relative and absolute URLs
+                url = ''
+                if links and links[0].get('href'):
+                    href = links[0]['href']
+                    if href.startswith('http'):
+                        url = href
+                    elif href.startswith('/'):
+                        url = self.BASE_URL + href
+                    else:
+                        url = self.BASE_URL + '/' + href
+                
+                circular = {
+                    'date': cell_texts[0] if len(cell_texts) > 0 else '',
+                    'title': title,
+                    'circular_no': cell_texts[2] if len(cell_texts) > 2 else cell_texts[1] if len(cell_texts) > 1 else '',
+                    'category': category,
+                    'url': url
+                }
+                
+                if circular['title']:  # Only add if has content
+                    circulars.append(circular)
                     
-                    # Extract URL if available
-                    link = cols[1].find('a') if len(cols) > 1 else None
-                    if link and link.get('href'):
-                        circular['url'] = self.BASE_URL + link.get('href')
-                    
-                    if circular['title']:  # Only add if has content
-                        circulars.append(circular)
+                    if len(circulars) >= limit:
+                        break
+            
+            if len(circulars) >= limit:
+                break
+        
+        logger.info(f"Successfully parsed {len(circulars)} RBI circulars")
         
         return {
             'source': 'RBI_CIRCULARS',
@@ -375,60 +406,6 @@ class RBIConnector:
         except Exception as e:
             logger.error(f"Error downloading RBI circular: {e}")
             raise
-    
-    def _get_sample_circulars(self, category: str, limit: int) -> Dict:
-        """Return sample RBI circulars for demonstration"""
-        sample_circulars = [
-            {
-                'date': '2024-11-15',
-                'title': 'Master Direction - Know Your Customer (KYC) - Amendment',
-                'circular_no': 'RBI/2024-25/115',
-                'category': 'AML/KYC',
-                'url': f'{self.BASE_URL}/Scripts/NotificationUser.aspx?Id=12487',
-                'description': 'Amendments to KYC requirements for financial institutions'
-            },
-            {
-                'date': '2024-10-28',
-                'title': 'Prevention of Money Laundering - Customer Due Diligence',
-                'circular_no': 'RBI/2024-25/98',
-                'category': 'AML',
-                'url': f'{self.BASE_URL}/Scripts/NotificationUser.aspx?Id=12456',
-                'description': 'Enhanced CDD measures for high-risk customers'
-            },
-            {
-                'date': '2024-09-20',
-                'title': 'AML/CFT Guidelines - Risk Based Approach',
-                'circular_no': 'RBI/2024-25/76',
-                'category': 'AML',
-                'url': f'{self.BASE_URL}/Scripts/NotificationUser.aspx?Id=12398',
-                'description': 'Risk-based approach to AML/CFT compliance'
-            },
-            {
-                'date': '2024-08-12',
-                'title': 'Beneficial Ownership - Reporting Requirements',
-                'circular_no': 'RBI/2024-25/54',
-                'category': 'KYC',
-                'url': f'{self.BASE_URL}/Scripts/NotificationUser.aspx?Id=12345',
-                'description': 'Updated requirements for beneficial ownership identification'
-            },
-            {
-                'date': '2024-07-05',
-                'title': 'Suspicious Transaction Reporting - Updated Guidelines',
-                'circular_no': 'RBI/2024-25/32',
-                'category': 'AML',
-                'url': f'{self.BASE_URL}/Scripts/NotificationUser.aspx?Id=12289',
-                'description': 'Enhanced STR reporting mechanisms and timelines'
-            }
-        ]
-        
-        return {
-            'source': 'RBI_CIRCULARS',
-            'category': category,
-            'fetched_at': datetime.utcnow().isoformat(),
-            'count': len(sample_circulars),
-            'data': sample_circulars[:limit],
-            'note': 'Sample data - RBI website scraping currently unavailable'
-        }
 
 
 class ExternalDataManager:
