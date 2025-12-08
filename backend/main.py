@@ -904,19 +904,20 @@ async def get_risk_statistics():
 
 # External Data Sources Endpoints
 @app.post("/api/external-data/fetch")
-async def fetch_external_data(source: str):
+async def fetch_external_data(source: str, force_refresh: bool = False):
     """
     Manually fetch data from external sources
     
     Args:
         source: OFAC, FATF, or RBI
+        force_refresh: If True, bypass cache and fetch fresh data
     """
     try:
         if not external_data_manager:
             raise HTTPException(status_code=503, detail="External data manager not initialized")
         
-        logger.info(f"Manual fetch triggered for {source}")
-        result = await external_data_manager.fetch_data(source)
+        logger.info(f"Manual fetch triggered for {source} (force_refresh={force_refresh})")
+        result = await external_data_manager.fetch_data(source, use_cache=not force_refresh)
         return result
     except Exception as e:
         logger.error(f"External data fetch failed: {e}")
