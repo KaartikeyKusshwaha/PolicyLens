@@ -70,7 +70,11 @@ class OFACConnector:
         # Priority programs for importance sorting
         priority_programs = ['SDGT', 'SDNTK', 'IRAN', 'SYRIA', 'CUBA', 'UKRAINE-EO13662', 'RUSSIA']
         
-        csv_reader = csv.DictReader(io.StringIO(csv_content))
+        # OFAC CSV has no header row, define column names
+        # Format: ent_num, SDN_Name, SDN_Type, Program, Title, Call_Sign, Vess_type, Tonnage, GRT, Vess_flag, Vess_owner, Remarks
+        fieldnames = ['ent_num', 'SDN_Name', 'SDN_Type', 'Program', 'Title', 'Call_Sign', 'Vess_type', 'Tonnage', 'GRT', 'Vess_flag', 'Vess_owner', 'Remarks']
+        
+        csv_reader = csv.DictReader(io.StringIO(csv_content), fieldnames=fieldnames)
         priority_entries = []
         other_entries = []
         total_count = 0
@@ -78,21 +82,21 @@ class OFACConnector:
         # Fast collection of priority entries and first 200 others
         for row in csv_reader:
             total_count += 1
-            program = row.get('Program', '')
+            program = row.get('Program', '').strip().strip('"')
             
             entry = {
-                'entity_number': row.get('ent_num', ''),
-                'name': row.get('SDN_Name', ''),
-                'type': row.get('SDN_Type', ''),
+                'entity_number': row.get('ent_num', '').strip(),
+                'name': row.get('SDN_Name', '').strip().strip('"'),
+                'type': row.get('SDN_Type', '').strip().strip('"'),
                 'program': program,
-                'title': row.get('Title', ''),
-                'call_sign': row.get('Call_Sign', ''),
-                'vessel_type': row.get('Vess_type', ''),
-                'tonnage': row.get('Tonnage', ''),
-                'grt': row.get('GRT', ''),
-                'vessel_flag': row.get('Vess_flag', ''),
-                'vessel_owner': row.get('Vess_owner', ''),
-                'remarks': row.get('Remarks', '')
+                'title': row.get('Title', '').strip().strip('"'),
+                'call_sign': row.get('Call_Sign', '').strip().strip('"'),
+                'vessel_type': row.get('Vess_type', '').strip().strip('"'),
+                'tonnage': row.get('Tonnage', '').strip().strip('"'),
+                'grt': row.get('GRT', '').strip().strip('"'),
+                'vessel_flag': row.get('Vess_flag', '').strip().strip('"'),
+                'vessel_owner': row.get('Vess_owner', '').strip().strip('"'),
+                'remarks': row.get('Remarks', '').strip().strip('"')
             }
             
             # Prioritize important programs
