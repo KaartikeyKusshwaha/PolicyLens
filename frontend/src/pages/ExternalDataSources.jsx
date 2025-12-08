@@ -46,8 +46,8 @@ const ExternalDataSources = () => {
 
     try {
       const endpoint = source 
-        ? `/api/external-data/fetch?source=${source}`
-        : '/api/external-data/fetch';
+        ? `/api/external-data/fetch?source=${source}&force_refresh=true`
+        : '/api/external-data/fetch?force_refresh=true';
       
       const response = await fetch(endpoint, { method: 'POST' });
       const data = await response.json();
@@ -64,7 +64,8 @@ const ExternalDataSources = () => {
           setSourceData(data.data);
         }
         
-        loadData(); // Refresh data
+        // Immediately refresh history to show the new fetch
+        setTimeout(() => loadData(), 500); // Small delay to ensure backend has recorded it
       } else {
         setAlert({
           type: 'error',
@@ -361,7 +362,7 @@ const ExternalDataSources = () => {
         </div>
       )}
 
-      {/* Fetch History */}
+       {/* Fetch History */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <div className="flex items-center gap-3 mb-4">
           <Database className="w-6 h-6 text-gray-600" />
@@ -378,8 +379,7 @@ const ExternalDataSources = () => {
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Time</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Source</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Records</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Duration</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Message</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -401,11 +401,8 @@ const ExternalDataSources = () => {
                         {record.status}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-900">
-                      {record.records_fetched || 0}
-                    </td>
                     <td className="px-4 py-3 text-sm text-gray-600">
-                      {record.duration_seconds?.toFixed(2) || '0.00'}s
+                      {record.message || 'Data fetched successfully'}
                     </td>
                   </tr>
                 ))}
