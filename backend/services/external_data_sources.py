@@ -334,54 +334,59 @@ class RBIConnector:
         for table in tables:
             rows = table.find_all('tr')
             
-            for row in rows:
+            for row in rows[1:]:  # Skip header row
                 cells = row.find_all(['td', 'th'])
                 
-                # Skip header rows and rows without enough cells
-                if len(cells) < 3:
-                    continue
-                
-                # Extract links from the row
-                links = [a for cell in cells for a in cell.find_all('a', href=True)]
-                if not links:
+                # Need at least 4 cells: S.No, Circular Number, Title, Date
+                if len(cells) < 4:
                     continue
                 
                 # Get text from cells
                 cell_texts = [cell.get_text(strip=True) for cell in cells]
                 
-                # Extract title from link or cell text
-                title = links[0].get_text(strip=True) if links else cell_texts[1] if len(cell_texts) > 1 else ''
+                # RBI table structure: [0]=S.No, [1]=Circular Number, [2]=Title, [3]=Date
+                circular_no = cell_texts[1] if len(cell_texts) > 1 else ''
+                title = cell_texts[2] if len(cell_texts) > 2 else ''
+                date = cell_texts[3] if len(cell_texts) > 3 else ''
+                
+                # Skip if no title or circular number
+                if not title or not circular_no:
+                    continue
                 
                 # Filter for AML/KYC related circulars if category specified
                 if category in ['AML', 'KYC']:
                     title_upper = title.upper()
-                    if not any(keyword in title_upper for keyword in ['AML', 'KYC', 'KNOW YOUR CUSTOMER', 'MONEY LAUNDERING', 'UAPA', 'SANCTIONS']):
+                    circular_upper = circular_no.upper()
+                    if not any(keyword in title_upper or keyword in circular_upper 
+                              for keyword in ['AML', 'KYC', 'KNOW YOUR CUSTOMER', 'MONEY LAUNDERING', 'UAPA', 'SANCTIONS']):
                         continue
                 
-                # Build full URL, handling both relative and absolute URLs
+                # Extract URL from the circular number cell (cell[1])
                 url = ''
-                if links and links[0].get('href'):
-                    href = links[0]['href']
-                    if href.startswith('http'):
-                        url = href
-                    elif href.startswith('/'):
-                        url = self.BASE_URL + href
-                    else:
-                        url = self.BASE_URL + '/' + href
+                circular_cell = cells[1] if len(cells) > 1 else None
+                if circular_cell:
+                    link = circular_cell.find('a', href=True)
+                    if link and link.get('href'):
+                        href = link['href']
+                        if href.startswith('http'):
+                            url = href
+                        elif href.startswith('/'):
+                            url = self.BASE_URL + href
+                        else:
+                            url = self.BASE_URL + '/' + href
                 
                 circular = {
-                    'date': cell_texts[0] if len(cell_texts) > 0 else '',
+                    'date': date,
                     'title': title,
-                    'circular_no': cell_texts[2] if len(cell_texts) > 2 else cell_texts[1] if len(cell_texts) > 1 else '',
+                    'circular_no': circular_no,
                     'category': category,
                     'url': url
                 }
                 
-                if circular['title']:  # Only add if has content
-                    circulars.append(circular)
-                    
-                    if len(circulars) >= limit:
-                        break
+                circulars.append(circular)
+                
+                if len(circulars) >= limit:
+                    break
             
             if len(circulars) >= limit:
                 break
