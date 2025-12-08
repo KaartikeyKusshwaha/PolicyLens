@@ -402,24 +402,25 @@ async def list_policies():
 async def get_policy_content(doc_id: str):
     """Get full content of a specific policy document"""
     try:
-        if not milvus_service or not milvus_service.connected:
-            # Return demo content for demo policies
-            demo_content = {
+        # Demo content available anytime
+        demo_content = {
                 "demo_doc_aml": "ANTI-MONEY LAUNDERING TRANSACTION MONITORING GUIDELINES\n\nVersion: 1.0\nSource: Internal Compliance Department\n\nTRANSACTION THRESHOLDS\n• Transactions exceeding USD 10,000 must be reported within 24 hours\n• Enhanced due diligence required for amounts above USD 50,000\n• Aggregated transactions totaling USD 25,000+ within 30 days require review\n\nRED FLAGS:\n1. Structuring: Multiple transactions below reporting thresholds\n2. High-Risk Jurisdictions: Transactions involving sanctioned countries\n3. Shell Companies: Payments without clear business purpose\n4. Cash-Intensive: Large cash deposits without explanation",
                 "demo_doc_sanctions": "SANCTIONS COMPLIANCE POLICY\n\nVersion: 2.1\nSource: OFAC Compliance Unit\n\nPROHIBITED JURISDICTIONS:\n• Iran, North Korea, Syria, Crimea, Cuba\n\nAll transactions with these jurisdictions are PROHIBITED without regulatory approval.\n\nSCREENING REQUIREMENTS:\n✓ Screen all parties against OFAC SDN List\n✓ Check beneficial ownership structures\n✓ Verify correspondent banks\n✓ Daily reconciliation of processed transactions\n\nPENALTIES:\n• Civil: Up to $307,922 per violation\n• Criminal: Up to $1M and 20 years imprisonment",
                 "demo_doc_kyc": "KNOW YOUR CUSTOMER (KYC) REQUIREMENTS\n\nVersion: 1.5\nSource: Internal Risk Management\n\nCUSTOMER IDENTIFICATION:\n• Full legal name and date of birth\n• Physical address (PO Box insufficient)\n• Government-issued photo ID\n• Tax identification number\n\nRISK CLASSIFICATION:\nLow Risk: Domestic individuals, transparent businesses\nMedium Risk: High-net-worth, cash-intensive businesses\nHigh Risk: PEPs, shell companies, high-risk jurisdictions\n\nONGOING MONITORING:\n• Low Risk: Annual review\n• Medium Risk: Semi-annual\n• High Risk: Quarterly or more"
             }
-            
-            if doc_id in demo_content:
-                return {
-                    "doc_id": doc_id,
-                    "content": demo_content[doc_id],
-                    "mode": "demo"
-                }
-            else:
-                raise HTTPException(status_code=404, detail="Policy not found")
         
-        # Get content from Milvus
+        # Check if it's a demo doc first
+        if doc_id in demo_content:
+            return {
+                "doc_id": doc_id,
+                "content": demo_content[doc_id],
+                "mode": "demo"
+            }
+        
+        # Try to get content from Milvus if connected
+        if not milvus_service or not milvus_service.connected:
+            raise HTTPException(status_code=404, detail="Policy not found")
+            
         document = milvus_service.get_document_content(doc_id)
         if not document:
             raise HTTPException(status_code=404, detail="Policy not found")
