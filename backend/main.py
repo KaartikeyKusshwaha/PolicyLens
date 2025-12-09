@@ -48,12 +48,13 @@ batch_processor = None
 risk_scorer = None
 external_data_manager = None
 data_scheduler = None
+demo_mode = False  # Track if running in demo mode
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan context manager for startup and shutdown"""
-    global milvus_service, embedding_service, llm_service, document_processor, compliance_engine, storage_service, metrics_service, policy_sentinel, report_generator, batch_processor, risk_scorer, external_data_manager, data_scheduler
+    global milvus_service, embedding_service, llm_service, document_processor, compliance_engine, storage_service, metrics_service, policy_sentinel, report_generator, batch_processor, risk_scorer, external_data_manager, data_scheduler, demo_mode
     
     logger.info("Starting PolicyLens API...")
     
@@ -61,10 +62,12 @@ async def lifespan(app: FastAPI):
     try:
         milvus_service = MilvusService(host=settings.milvus_host, port=settings.milvus_port)
         milvus_service.connect()
+        demo_mode = False
         logger.info("✓ Milvus connected")
     except Exception as e:
         logger.warning(f"⚠ Milvus connection failed: {e}. Running in demo mode.")
         milvus_service = MilvusService()  # Will fail gracefully
+        demo_mode = True
     
     embedding_service = EmbeddingService()
     logger.info("✓ Embedding service initialized")
@@ -154,7 +157,16 @@ async def health_check():
         "service": "PolicyLens API",
         "version": "1.0.0",
         "status": "operational",
+        "demo_mode": demo_mode,
         "milvus_connected": milvus_service.connected if milvus_service else False,
+        "services": {
+            "milvus": "connected" if (milvus_service and milvus_service.connected) else "demo_mode",
+            "embedding": "ready" if embedding_service else "unavailable",
+            "llm": "ready" if llm_service else "unavailable",
+            "storage": "ready" if storage_service else "unavailable",
+            "batch_processor": "ready" if batch_processor else "unavailable",
+            "risk_scorer": "ready" if risk_scorer else "unavailable"
+        },
         "storage": storage_stats
     }
 
@@ -253,6 +265,9 @@ async def upload_policy_file(
 async def evaluate_transaction(request: TransactionEvaluationRequest):
     """Evaluate a transaction against compliance policies"""
     try:
+        if demo_mode:
+            logger.info("Running in demo mode - using fallback evaluation")
+        
         result = compliance_engine.evaluate_transaction(request.transaction)
         
         # Store decision for retrieval
@@ -263,7 +278,8 @@ async def evaluate_transaction(request: TransactionEvaluationRequest):
                     "transaction": request.transaction.model_dump(),
                     "decision": result["decision"].model_dump(),
                     "trace_id": result["trace_id"],
-                    "processing_time_ms": result["processing_time_ms"]
+                    "processing_time_ms": result["processing_time_ms"],
+                    "demo_mode": demo_mode
                 }
             )
         
@@ -276,6 +292,19 @@ async def evaluate_transaction(request: TransactionEvaluationRequest):
                 transaction_id=request.transaction.transaction_id
             )
         
+        # Store case for learning (if risk scorer available)
+        if risk_scorer and result["decision"].verdict.value in ["FLAG", "NEEDS_REVIEW"]:
+            try:
+                risk_scorer.store_case_for_learning(
+                    decision_id=result["trace_id"],
+                    transaction=request.transaction.model_dump(),
+                    verdict=result["decision"].verdict.value,
+                    risk_score=result["decision"].risk_score,
+                    reasoning=result["decision"].reasoning
+                )
+            except Exception as e:
+                logger.warning(f"Failed to store case for learning: {e}")
+        
         return TransactionEvaluationResponse(
             decision=result["decision"],
             trace_id=result["trace_id"],
@@ -283,8 +312,11 @@ async def evaluate_transaction(request: TransactionEvaluationRequest):
         )
     
     except Exception as e:
-        logger.error(f"Error evaluating transaction: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error evaluating transaction: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Transaction evaluation failed: {str(e)}"
+        )
 
 
 @app.post("/api/query", response_model=QueryResponse)
@@ -776,13 +808,15 @@ async def get_latency_metrics(operation_type: Optional[str] = None, hours: Optio
 
 
 @app.get("/api/feedback")
-async def list_feedback(limit: int = 50):
+async def list_feedback(limit: int = 50, trace_id: Optional[str] = None):
     """List recent feedback submissions"""
     try:
         if not storage_service:
             raise HTTPException(status_code=503, detail="Storage service unavailable")
         
         feedback_list = storage_service.list_all_feedback(limit=limit)
+        if trace_id:
+            feedback_list = [f for f in feedback_list if str(f.get("transaction_id")) == str(trace_id) or str(f.get("trace_id")) == str(trace_id)]
         
         return {
             "feedback": feedback_list,
@@ -841,13 +875,24 @@ async def reevaluate_all(filter_by: Optional[dict] = None):
     """
     try:
         if not batch_processor:
-            raise HTTPException(status_code=503, detail="Batch processor not initialized")
+            raise HTTPException(
+                status_code=503, 
+                detail="Batch processor service is not available. Please check system status."
+            )
+        
+        if demo_mode:
+            logger.warning("Batch re-evaluation in demo mode - results may be limited")
         
         result = await batch_processor.reevaluate_all_decisions(filter_by)
         return result
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Batch re-evaluation failed: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Batch re-evaluation failed: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Batch re-evaluation failed: {str(e)}"
+        )
 
 
 @app.get("/api/batch/candidates")
@@ -892,7 +937,7 @@ async def reevaluate_by_policy(policy_id: str):
         if not batch_processor:
             raise HTTPException(status_code=503, detail="Batch processor not initialized")
         
-        result = batch_processor.reevaluate_by_policy(policy_id)
+        result = await batch_processor.reevaluate_by_policy(policy_id)
         return result
     except Exception as e:
         logger.error(f"Policy-based re-evaluation failed: {e}")
@@ -932,13 +977,27 @@ async def get_risk_statistics():
     """
     try:
         if not risk_scorer:
-            raise HTTPException(status_code=503, detail="Risk scorer not initialized")
+            raise HTTPException(
+                status_code=503, 
+                detail="Risk scoring service is not available. Please check system status."
+            )
         
         stats = risk_scorer.get_risk_statistics()
+        
+        # Add demo mode indicator
+        if demo_mode:
+            stats["demo_mode"] = True
+            stats["note"] = "Running in demo mode - statistics based on local storage only"
+        
         return stats
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Failed to get risk statistics: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Failed to get risk statistics: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Failed to retrieve risk statistics: {str(e)}"
+        )
 
 
 # External Data Sources Endpoints

@@ -88,48 +88,42 @@ class RiskScorer:
             }
     
     def _find_similar_cases(
-        self, 
-        transaction: Dict[str, Any], 
+        self,
+        transaction: Dict[str, Any],
         top_k: int = 5
     ) -> List[Dict[str, Any]]:
-        """Find historically similar transactions"""
+        """Find historically similar transactions using MilvusService API"""
         try:
             if not self.milvus or not self.milvus.connected:
                 return []
-            
+
             # Create transaction description for embedding
             description = self._transaction_to_text(transaction)
-            
-            # Generate embedding
-            query_embedding = self.embeddings.embed_text(description)
-            
-            # Search Milvus cases collection
-            results = self.milvus.search_cases(
+
+            # Generate embedding using EmbeddingService
+            query_embedding = self.embeddings.generate_embedding(description)
+
+            # Search cases via MilvusService
+            results = self.milvus.search_similar_cases(
                 query_embedding=query_embedding,
-                top_k=top_k,
-                filter_expr="verdict in ['FLAG', 'REVIEW']"  # Only flagged cases
+                top_k=top_k
             )
-            
-            # Enrich with stored decision data
+
+            # Keep relevant fields and naming
             enriched_cases = []
             for result in results:
-                case_id = result.get("case_id")
-                similarity = result.get("distance", 0.0)
-                
-                # Convert distance to similarity score (assuming cosine distance)
-                similarity_score = 1 - similarity
-                
                 enriched_cases.append({
-                    "case_id": case_id,
-                    "similarity_score": round(similarity_score, 3),
-                    "verdict": result.get("verdict"),
-                    "risk_score": result.get("risk_score"),
-                    "reason": result.get("reason", "Historical case match"),
-                    "metadata": result.get("metadata", {})
+                    "case_id": result.get("case_id"),
+                    "transaction_id": result.get("transaction_id"),
+                    "similarity_score": round(float(result.get("similarity_score", 0.0)), 3),
+                    "verdict": result.get("decision"),
+                    "risk_score": result.get("risk_score", 0.0),
+                    "reason": result.get("reasoning", "Historical case"),
+                    "timestamp": result.get("timestamp")
                 })
-            
+
             return enriched_cases
-            
+
         except Exception as e:
             logger.warning(f"Case similarity search failed: {e}")
             return []
@@ -159,11 +153,11 @@ class RiskScorer:
     def _determine_verdict(self, composite_score: float) -> str:
         """Determine verdict from composite risk score"""
         if composite_score >= 0.75:
-            return "FLAG"
+            return "flag"
         elif composite_score >= 0.45:
-            return "REVIEW"
+            return "needs_review"
         else:
-            return "CLEAR"
+            return "acceptable"
     
     def _identify_risk_factors(
         self,
@@ -302,7 +296,7 @@ class RiskScorer:
             description = self._transaction_to_text(transaction)
             
             # Generate embedding
-            embedding = self.embeddings.embed_text(description)
+            embedding = self.embeddings.generate_embedding(description)
             
             # Prepare case data
             case_data = {
@@ -320,7 +314,15 @@ class RiskScorer:
             }
             
             # Insert into Milvus
-            self.milvus.insert_case(case_data)
+            self.milvus.insert_compliance_case({
+                "case_id": decision_id,
+                "transaction_id": transaction.get("transaction_id", decision_id),
+                "embedding": embedding,
+                "decision": verdict.lower(),
+                "reasoning": reasoning[:500],
+                "risk_score": risk_score,
+                "timestamp": datetime.now()
+            })
             
             logger.info(f"Stored case {decision_id} for future learning")
             return True
@@ -343,11 +345,18 @@ class RiskScorer:
                 }
             
             # Calculate statistics
-            flagged = [d for d in all_decisions if d.get("verdict") == "FLAG"]
-            reviewed = [d for d in all_decisions if d.get("verdict") == "REVIEW"]
-            cleared = [d for d in all_decisions if d.get("verdict") == "CLEAR"]
+            def _verdict_of(d):
+                dv = (d.get("decision") or {}).get("verdict")
+                return (dv or "").lower()
+
+            flagged = [d for d in all_decisions if _verdict_of(d) == "flag"]
+            reviewed = [d for d in all_decisions if _verdict_of(d) == "needs_review"]
+            cleared = [d for d in all_decisions if _verdict_of(d) == "acceptable"]
             
-            avg_risk = np.mean([d.get("risk_score", 0) for d in all_decisions])
+            def _risk(d):
+                return float((d.get("decision") or {}).get("risk_score", 0))
+
+            avg_risk = np.mean([_risk(d) for d in all_decisions]) if all_decisions else 0.0
             
             return {
                 "total_cases": len(all_decisions),
@@ -356,11 +365,11 @@ class RiskScorer:
                 "cleared_cases": len(cleared),
                 "average_risk_score": round(avg_risk, 3),
                 "verdict_distribution": {
-                    "FLAG": len(flagged),
-                    "REVIEW": len(reviewed),
-                    "CLEAR": len(cleared)
+                    "flag": len(flagged),
+                    "needs_review": len(reviewed),
+                    "acceptable": len(cleared)
                 },
-                "high_risk_percentage": round(len(flagged) / len(all_decisions) * 100, 1)
+                "high_risk_percentage": round((len(flagged) / len(all_decisions) * 100), 1) if all_decisions else 0.0
             }
             
         except Exception as e:

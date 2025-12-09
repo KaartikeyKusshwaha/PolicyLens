@@ -1,0 +1,164 @@
+{
+  "source": "FATF_MONITORED",
+  "fetched_at": "2025-12-08T16:32:46.103230",
+  "last_manual_update": "2024-12-01",
+  "count": 26,
+  "data": [
+    {
+      "country": "Albania",
+      "risk_level": "MEDIUM",
+      "status": "Increased Monitoring",
+      "description": "Jurisdiction under increased monitoring"
+    },
+    {
+      "country": "Barbados",
+      "risk_level": "MEDIUM",
+      "status": "Increased Monitoring",
+      "description": "Jurisdiction under increased monitoring"
+    },
+    {
+      "country": "Burkina Faso",
+      "risk_level": "MEDIUM",
+      "status": "Increased Monitoring",
+      "description": "Jurisdiction under increased monitoring"
+    },
+    {
+      "country": "Cambodia",
+      "risk_level": "MEDIUM",
+      "status": "Increased Monitoring",
+      "description": "Jurisdiction under increased monitoring"
+    },
+    {
+      "country": "Cayman Islands",
+      "risk_level": "MEDIUM",
+      "status": "Increased Monitoring",
+      "description": "Jurisdiction under increased monitoring"
+    },
+    {
+      "country": "Democratic Republic of Congo",
+      "risk_level": "MEDIUM",
+      "status": "Increased Monitoring",
+      "description": "Jurisdiction under increased monitoring"
+    },
+    {
+      "country": "Gibraltar",
+      "risk_level": "MEDIUM",
+      "status": "Increased Monitoring",
+      "description": "Jurisdiction under increased monitoring"
+    },
+    {
+      "country": "Haiti",
+      "risk_level": "MEDIUM",
+      "status": "Increased Monitoring",
+      "description": "Jurisdiction under increased monitoring"
+    },
+    {
+      "country": "Jamaica",
+      "risk_level": "MEDIUM",
+      "status": "Increased Monitoring",
+      "description": "Jurisdiction under increased monitoring"
+    },
+    {
+      "country": "Jordan",
+      "risk_level": "MEDIUM",
+      "status": "Increased Monitoring",
+      "description": "Jurisdiction under increased monitoring"
+    },
+    {
+      "country": "Mali",
+      "risk_level": "MEDIUM",
+      "status": "Increased Monitoring",
+      "description": "Jurisdiction under increased monitoring"
+    },
+    {
+      "country": "Morocco",
+      "risk_level": "MEDIUM",
+      "status": "Increased Monitoring",
+      "description": "Jurisdiction under increased monitoring"
+    },
+    {
+      "country": "Mozambique",
+      "risk_level": "MEDIUM",
+      "status": "Increased Monitoring",
+      "description": "Jurisdiction under increased monitoring"
+    },
+    {
+      "country": "Nigeria",
+      "risk_level": "MEDIUM",
+      "status": "Increased Monitoring",
+      "description": "Jurisdiction under increased monitoring"
+    },
+    {
+      "country": "Panama",
+      "risk_level": "MEDIUM",
+      "status": "Increased Monitoring",
+      "description": "Jurisdiction under increased monitoring"
+    },
+    {
+      "country": "Philippines",
+      "risk_level": "MEDIUM",
+      "status": "Increased Monitoring",
+      "description": "Jurisdiction under increased monitoring"
+    },
+    {
+      "country": "Senegal",
+      "risk_level": "MEDIUM",
+      "status": "Increased Monitoring",
+      "description": "Jurisdiction under increased monitoring"
+    },
+    {
+      "country": "South Africa",
+      "risk_level": "MEDIUM",
+      "status": "Increased Monitoring",
+      "description": "Jurisdiction under increased monitoring"
+    },
+    {
+      "country": "South Sudan",
+      "risk_level": "MEDIUM",
+      "status": "Increased Monitoring",
+      "description": "Jurisdiction under increased monitoring"
+    },
+    {
+      "country": "Syria",
+      "risk_level": "MEDIUM",
+      "status": "Increased Monitoring",
+      "description": "Jurisdiction under increased monitoring"
+    },
+    {
+      "country": "Tanzania",
+      "risk_level": "MEDIUM",
+      "status": "Increased Monitoring",
+      "description": "Jurisdiction under increased monitoring"
+    },
+    {
+      "country": "T\u00fcrkiye",
+      "risk_level": "MEDIUM",
+      "status": "Increased Monitoring",
+      "description": "Jurisdiction under increased monitoring"
+    },
+    {
+      "country": "Uganda",
+      "risk_level": "MEDIUM",
+      "status": "Increased Monitoring",
+      "description": "Jurisdiction under increased monitoring"
+    },
+    {
+      "country": "United Arab Emirates",
+      "risk_level": "MEDIUM",
+      "status": "Increased Monitoring",
+      "description": "Jurisdiction under increased monitoring"
+    },
+    {
+      "country": "Vietnam",
+      "risk_level": "MEDIUM",
+      "status": "Increased Monitoring",
+      "description": "Jurisdiction under increased monitoring"
+    },
+    {
+      "country": "Yemen",
+      "risk_level": "MEDIUM",
+      "status": "Increased Monitoring",
+      "description": "Jurisdiction under increased monitoring"
+    }
+  ]
+}

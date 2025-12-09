@@ -133,6 +133,33 @@ class MilvusService:
         collection.flush()
         logger.info(f"Inserted {len(chunks)} chunks into Milvus")
     
+    def insert_compliance_case(self, case_data: Dict[str, Any]):
+        """Insert a compliance case into Milvus for historical learning"""
+        if not self.connected:
+            logger.warning("Not connected to Milvus - skipping case insertion")
+            return
+        
+        try:
+            collection = Collection(self.cases_collection_name)
+            collection.load()
+            
+            # Prepare entity data
+            entities = [
+                [case_data["case_id"]],
+                [case_data["transaction_id"]],
+                [case_data["embedding"]],
+                [case_data["decision"]],
+                [case_data["reasoning"]],
+                [case_data["risk_score"]],
+                [int(case_data["timestamp"].timestamp()) if isinstance(case_data["timestamp"], datetime) else int(datetime.now().timestamp())],
+            ]
+            
+            collection.insert(entities)
+            collection.flush()
+            logger.info(f"Inserted compliance case: {case_data['case_id']}")
+        except Exception as e:
+            logger.error(f"Failed to insert compliance case: {e}")
+    
     def search_similar_policies(
         self, 
         query_embedding: List[float], 
