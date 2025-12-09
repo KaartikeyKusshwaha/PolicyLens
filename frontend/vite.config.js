@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 
 // Auto-detect environment: Docker uses 'backend' hostname, local uses 'localhost'
 const isDocker = process.env.DOCKER_ENV === 'true'
-const apiTarget = isDocker ? 'http://backend:8000' : 'http://localhost:8000'
+const apiTarget = process.env.VITE_API_URL || (isDocker ? 'http://backend:8000' : 'http://localhost:8000')
 
 export default defineConfig({
   plugins: [react()],

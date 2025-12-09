@@ -1,0 +1,28 @@
+services:
+  # Backend API Service (with embedded dependencies in demo mode)
+  - type: web
+    name: policylens-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    envVars:
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: MILVUS_HOST
+        value: ""
+      - key: DEMO_MODE
+        value: "true"
+    healthCheckPath: /
+
+  # Frontend Static Site
+  - type: web
+    name: policylens-frontend
+    runtime: static
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: ./frontend/dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://policylens-backend.onrender.com
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
