@@ -64,8 +64,11 @@ const Policies = () => {
     if (!policyContent[policyId]) {
       setLoadingContent(prev => ({ ...prev, [policyId]: true }));
       try {
+        console.log('Fetching content for:', policyId);
         const response = await fetch(`/api/policies/${policyId}/content`);
+        console.log('Response status:', response.status);
         const data = await response.json();
+        console.log('Received data:', data);
         setPolicyContent(prev => ({ ...prev, [policyId]: data.content }));
       } catch (err) {
         console.error('Error fetching policy content:', err);
