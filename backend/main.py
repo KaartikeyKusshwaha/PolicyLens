@@ -19,7 +19,9 @@ from services.embedding_service import EmbeddingService
 from services.llm_service import LLMService
 from services.document_processor import DocumentProcessor
 from services.compliance_engine import ComplianceEngine
-from services.storage_service import StorageService
+from services.db_storage_service import DatabaseStorageService as StorageService
+from database import engine, Base
+import models_db
 from services.metrics_service import MetricsService
 from services.policy_sentinel import PolicySentinel
 from services.report_generator import ReportGenerator
@@ -57,7 +59,11 @@ async def lifespan(app: FastAPI):
     global milvus_service, embedding_service, llm_service, document_processor, compliance_engine, storage_service, metrics_service, policy_sentinel, report_generator, batch_processor, risk_scorer, external_data_manager, data_scheduler, demo_mode
     
     logger.info("Starting PolicyLens API...")
-    
+
+    # Initialize database tables
+    Base.metadata.create_all(bind=engine)
+    logger.info("✓ Database tables initialized")
+
     # Initialize services
     try:
         milvus_service = MilvusService(host=settings.milvus_host, port=settings.milvus_port)

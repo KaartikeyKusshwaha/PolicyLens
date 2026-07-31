@@ -18,50 +18,75 @@ logger = logging.getLogger(__name__)
 
 class OFACConnector:
     """
-    Connector for OFAC Sanctions Lists
-    https://www.treasury.gov/ofac/downloads/
+    Connector for OFAC Sanctions Lists.
+    https://sanctionslistservice.ofac.treas.gov/
+
+    NOTE: OFAC migrated to a JS-rendered portal in 2024.
+    Programmatic bulk CSV downloads via requests are currently 403'd by
+    their CDN.  The connector attempts the download but returns a graceful
+    'unavailable' payload instead of raising, so the rest of the system
+    keeps running.  Use the OFAC Sanctions List Service web UI to download
+    the SDN list manually if needed.
     """
-    
-    BASE_URL = "https://www.treasury.gov/ofac/downloads"
-    
-    # OFAC SDN (Specially Designated Nationals) list
-    SDN_XML_URL = f"{BASE_URL}/sdn.xml"
-    SDN_CSV_URL = f"{BASE_URL}/sdn.csv"
-    
-    # Consolidated sanctions list
-    CONSOLIDATED_URL = f"{BASE_URL}/consolidated/consolidated.xml"
-    
+
+    # Updated SLS base URL (migrated from treasury.gov/ofac/downloads in 2024)
+    SLS_BASE = "https://sanctionslistservice.ofac.treas.gov/api"
+
+    SDN_CSV_URL = f"{SLS_BASE}/publicationpreview/exports/SDN.CSV"
+    SDN_XML_URL = f"{SLS_BASE}/publicationpreview/exports/SDN.XML"
+    CONSOLIDATED_URL = f"{SLS_BASE}/publicationpreview/exports/CONS_PRIM.XML"
+
     def __init__(self):
         self.session = requests.Session()
         self.session.headers.update({
-            'User-Agent': 'PolicyLens-Compliance-System/1.0'
+            'User-Agent': 'PolicyLens-Compliance-System/1.0',
+            'Accept': 'text/csv,application/xml,*/*',
         })
-    
+
     def fetch_sdn_list(self, format: str = 'csv') -> Dict:
         """
-        Fetch OFAC Specially Designated Nationals list
-        
+        Fetch OFAC Specially Designated Nationals list.
+
         Args:
             format: 'csv' or 'xml'
-            
+
         Returns:
-            Dict with sanctions data and metadata
+            Dict with sanctions data and metadata.
+            Returns an 'unavailable' payload (not a raise) if the download
+            is blocked (403), so callers can handle gracefully.
         """
+        url = self.SDN_CSV_URL if format == 'csv' else self.SDN_XML_URL
+        logger.info(f"Fetching OFAC SDN list from {url}")
         try:
-            url = self.SDN_CSV_URL if format == 'csv' else self.SDN_XML_URL
-            logger.info(f"Fetching OFAC SDN list from {url}")
-            
-            response = self.session.get(url, timeout=10, stream=True)
+            response = self.session.get(url, timeout=15, stream=True)
+            if response.status_code == 403:
+                logger.warning(
+                    "OFAC SDN download blocked (403). OFAC now requires browser-based "
+                    "access. Download the SDN list manually from "
+                    "https://sanctionslistservice.ofac.treas.gov/"
+                )
+                return {
+                    'source': 'OFAC_SDN',
+                    'fetched_at': datetime.utcnow().isoformat(),
+                    'status': 'unavailable',
+                    'reason': (
+                        'OFAC migrated to a browser-only portal in 2024. '
+                        'Programmatic CSV downloads return 403. '
+                        'Download manually from https://sanctionslistservice.ofac.treas.gov/'
+                    ),
+                    'count': 0,
+                    'data': [],
+                }
             response.raise_for_status()
-            
             if format == 'csv':
                 return self._parse_sdn_csv(response.text)
             else:
                 return self._parse_sdn_xml(response.text)
-                
+
         except Exception as e:
             logger.error(f"Error fetching OFAC SDN list: {e}")
             raise
+
     
     def _parse_sdn_csv(self, csv_content: str) -> Dict:
         """Parse OFAC SDN CSV format - limit to 50 most important entries for performance"""
@@ -181,107 +206,241 @@ class OFACConnector:
 
 class FATFConnector:
     """
-    Connector for FATF High-Risk and Monitored Jurisdictions
+    Connector for FATF High-Risk and Monitored Jurisdictions.
     https://www.fatf-gafi.org/
+
+    FATF does not provide a machine-readable API, so we maintain the
+    authoritative lists locally and enrich them with live World Bank
+    Governance Indicators data (free, no key required).
+    World Bank API docs: https://datahelpdesk.worldbank.org/knowledgebase/articles/898581
     """
-    
-    BASE_URL = "https://www.fatf-gafi.org"
-    HIGH_RISK_URL = f"{BASE_URL}/en/publications/high-risk-and-other-monitored-jurisdictions"
-    
+
+    # World Bank Governance Indicators — free JSON API (no key)
+    # Indicator GOV_WGI_RL.EST = Rule of Law estimate (source 3, WGI)
+    # Replaces old RL.EST which was archived in 2024
+    WB_GOVERNANCE_URL = (
+        "https://api.worldbank.org/v2/country/all/indicator/"
+        "{indicator}?format=json&per_page=300&mrv=1"
+    )
+
+    # Authoritative FATF "Call for Action" list (black list) — updated June 2024
+    _HIGH_RISK_COUNTRIES: List[Dict] = [
+        {"country": "Democratic People's Republic of Korea (DPRK)", "iso3": "PRK"},
+        {"country": "Iran",    "iso3": "IRN"},
+        {"country": "Myanmar", "iso3": "MMR"},
+    ]
+
+    # FATF "Increased Monitoring" list (grey list) — updated June 2024
+    _MONITORED_COUNTRIES: List[Dict] = [
+        {"country": "Albania",                      "iso3": "ALB"},
+        {"country": "Barbados",                     "iso3": "BRB"},
+        {"country": "Burkina Faso",                 "iso3": "BFA"},
+        {"country": "Cambodia",                     "iso3": "KHM"},
+        {"country": "Cayman Islands",               "iso3": "CYM"},
+        {"country": "Democratic Republic of Congo", "iso3": "COD"},
+        {"country": "Gibraltar",                    "iso3": "GIB"},
+        {"country": "Haiti",                        "iso3": "HTI"},
+        {"country": "Jamaica",                      "iso3": "JAM"},
+        {"country": "Jordan",                       "iso3": "JOR"},
+        {"country": "Mali",                         "iso3": "MLI"},
+        {"country": "Morocco",                      "iso3": "MAR"},
+        {"country": "Mozambique",                   "iso3": "MOZ"},
+        {"country": "Nigeria",                      "iso3": "NGA"},
+        {"country": "Panama",                       "iso3": "PAN"},
+        {"country": "Philippines",                  "iso3": "PHL"},
+        {"country": "Senegal",                      "iso3": "SEN"},
+        {"country": "South Africa",                 "iso3": "ZAF"},
+        {"country": "South Sudan",                  "iso3": "SSD"},
+        {"country": "Syria",                        "iso3": "SYR"},
+        {"country": "Tanzania",                     "iso3": "TZA"},
+        {"country": "Türkiye",                      "iso3": "TUR"},
+        {"country": "Uganda",                       "iso3": "UGA"},
+        {"country": "United Arab Emirates",         "iso3": "ARE"},
+        {"country": "Vietnam",                      "iso3": "VNM"},
+        {"country": "Yemen",                        "iso3": "YEM"},
+    ]
+
     def __init__(self):
         self.session = requests.Session()
         self.session.headers.update({
             'User-Agent': 'PolicyLens-Compliance-System/1.0'
         })
-        
-        # Manually maintained list (updated from FATF website)
-        # As of December 2024
-        self.high_risk_countries = [
-            "Democratic People's Republic of Korea (DPRK)",
-            "Iran",
-            "Myanmar"
-        ]
-        
-        self.monitored_countries = [
-            "Albania", "Barbados", "Burkina Faso", "Cambodia",
-            "Cayman Islands", "Democratic Republic of Congo",
-            "Gibraltar", "Haiti", "Jamaica", "Jordan",
-            "Mali", "Morocco", "Mozambique", "Nigeria",
-            "Panama", "Philippines", "Senegal", "South Africa",
-            "South Sudan", "Syria", "Tanzania", "Türkiye",
-            "Uganda", "United Arab Emirates", "Vietnam", "Yemen"
-        ]
-    
+        # Simple in-process cache so the API is not hammered on every call
+        self._wb_governance_cache: Optional[Dict[str, float]] = None
+        self._wb_cache_ts: Optional[datetime] = None
+        self._WB_CACHE_TTL_HOURS = 24
+
+    # ------------------------------------------------------------------
+    # Public helpers (backwards-compatible with existing callers)
+    # ------------------------------------------------------------------
+
+    @property
+    def high_risk_countries(self) -> List[str]:
+        """Legacy string-list for backwards compatibility."""
+        return [e["country"] for e in self._HIGH_RISK_COUNTRIES]
+
+    @property
+    def monitored_countries(self) -> List[str]:
+        """Legacy string-list for backwards compatibility."""
+        return [e["country"] for e in self._MONITORED_COUNTRIES]
+
+    # ------------------------------------------------------------------
+    # World Bank live data
+    # ------------------------------------------------------------------
+
+    def _fetch_wb_rule_of_law(self) -> Dict[str, float]:
+        """
+        Fetch World Bank Rule of Law estimates for all countries.
+        Returns {iso3: score} where score is a z-score (typically -2.5 to 2.5).
+        Lower scores → weaker rule of law → higher risk.
+        Results are cached for WB_CACHE_TTL_HOURS to avoid redundant calls.
+        """
+        now = datetime.utcnow()
+        if (
+            self._wb_governance_cache is not None
+            and self._wb_cache_ts is not None
+            and (now - self._wb_cache_ts).total_seconds() < self._WB_CACHE_TTL_HOURS * 3600
+        ):
+            return self._wb_governance_cache
+
+        scores: Dict[str, float] = {}
+        try:
+            url = self.WB_GOVERNANCE_URL.format(indicator="GOV_WGI_RL.EST")
+            logger.info("Fetching World Bank Rule of Law data from %s", url)
+            resp = self.session.get(url, timeout=15)
+            resp.raise_for_status()
+            payload = resp.json()
+            # payload is [metadata_dict, [data_entries…]]
+            if isinstance(payload, list) and len(payload) == 2:
+                for entry in payload[1] or []:
+                    iso3 = (entry.get("countryiso3code") or "").strip()
+                    value = entry.get("value")
+                    if iso3 and value is not None:
+                        scores[iso3] = float(value)
+            logger.info("World Bank Rule of Law: %d country scores loaded", len(scores))
+        except Exception as exc:
+            logger.warning("Could not fetch World Bank governance data: %s", exc)
+
+        self._wb_governance_cache = scores
+        self._wb_cache_ts = now
+        return scores
+
+    def fetch_world_bank_risk_enrichment(self) -> Dict:
+        """
+        Use World Bank Rule of Law scores to identify countries with very
+        weak governance (score < -1.0) that are NOT already on the FATF lists.
+        Returns enriched risk data alongside raw World Bank scores.
+        """
+        wb_scores = self._fetch_wb_rule_of_law()
+        fatf_iso3s = {e["iso3"] for e in self._HIGH_RISK_COUNTRIES + self._MONITORED_COUNTRIES}
+
+        additional_risk: List[Dict] = []
+        for iso3, score in wb_scores.items():
+            if iso3 not in fatf_iso3s and score < -1.0:
+                additional_risk.append({
+                    "iso3": iso3,
+                    "rule_of_law_score": round(score, 3),
+                    "risk_level": "HIGH" if score < -1.5 else "MEDIUM",
+                    "source": "World Bank Governance Indicators (RL.EST)",
+                    "note": "Not on FATF list but low Rule of Law score",
+                })
+
+        additional_risk.sort(key=lambda x: x["rule_of_law_score"])
+
+        return {
+            "source": "WORLD_BANK_GOVERNANCE",
+            "fetched_at": datetime.utcnow().isoformat(),
+            "indicator": "RL.EST (Rule of Law Estimate)",
+            "wb_countries_fetched": len(wb_scores),
+            "additional_risk_countries": len(additional_risk),
+            "data": additional_risk,
+        }
+
+    # ------------------------------------------------------------------
+    # FATF list methods (authoritative — no API, manually maintained)
+    # ------------------------------------------------------------------
+
     def fetch_high_risk_jurisdictions(self) -> Dict:
         """
-        Fetch FATF high-risk jurisdictions
-        Note: FATF doesn't provide an API, so we use a maintained list
+        Return FATF 'Call for Action' (black list) jurisdictions,
+        enriched with live World Bank Rule of Law scores where available.
         """
+        wb_scores = self._fetch_wb_rule_of_law()
+        data = []
+        for entry in self._HIGH_RISK_COUNTRIES:
+            item = {
+                "country": entry["country"],
+                "iso3": entry["iso3"],
+                "risk_level": "HIGH",
+                "status": "Call for Action",
+                "description": "Jurisdiction under FATF Call for Action",
+            }
+            if entry["iso3"] in wb_scores:
+                item["world_bank_rule_of_law"] = round(wb_scores[entry["iso3"]], 3)
+            data.append(item)
+
         return {
-            'source': 'FATF_HIGH_RISK',
-            'fetched_at': datetime.utcnow().isoformat(),
-            'last_manual_update': '2024-12-01',
-            'count': len(self.high_risk_countries),
-            'data': [
-                {
-                    'country': country,
-                    'risk_level': 'HIGH',
-                    'status': 'Call for Action',
-                    'description': 'Jurisdiction under FATF Call for Action'
-                }
-                for country in self.high_risk_countries
-            ]
+            "source": "FATF_HIGH_RISK",
+            "fetched_at": datetime.utcnow().isoformat(),
+            "fatf_list_date": "2024-06-01",
+            "count": len(data),
+            "data": data,
         }
-    
+
     def fetch_monitored_jurisdictions(self) -> Dict:
-        """Fetch FATF monitored jurisdictions (increased monitoring)"""
+        """
+        Return FATF 'Increased Monitoring' (grey list) jurisdictions,
+        enriched with live World Bank Rule of Law scores where available.
+        """
+        wb_scores = self._fetch_wb_rule_of_law()
+        data = []
+        for entry in self._MONITORED_COUNTRIES:
+            item = {
+                "country": entry["country"],
+                "iso3": entry["iso3"],
+                "risk_level": "MEDIUM",
+                "status": "Increased Monitoring",
+                "description": "Jurisdiction under FATF Increased Monitoring",
+            }
+            if entry["iso3"] in wb_scores:
+                item["world_bank_rule_of_law"] = round(wb_scores[entry["iso3"]], 3)
+            data.append(item)
+
         return {
-            'source': 'FATF_MONITORED',
-            'fetched_at': datetime.utcnow().isoformat(),
-            'last_manual_update': '2024-12-01',
-            'count': len(self.monitored_countries),
-            'data': [
-                {
-                    'country': country,
-                    'risk_level': 'MEDIUM',
-                    'status': 'Increased Monitoring',
-                    'description': 'Jurisdiction under increased monitoring'
-                }
-                for country in self.monitored_countries
-            ]
+            "source": "FATF_MONITORED",
+            "fetched_at": datetime.utcnow().isoformat(),
+            "fatf_list_date": "2024-06-01",
+            "count": len(data),
+            "data": data,
         }
-    
+
     def scrape_latest_updates(self) -> Dict:
         """
-        Scrape FATF website for latest updates
-        Returns the most recent publication data
+        Scrape FATF website for latest updates.
+        Returns the most recent publication data, falling back to cached lists.
         """
+        BASE_URL = "https://www.fatf-gafi.org"
+        HIGH_RISK_URL = f"{BASE_URL}/en/publications/high-risk-and-other-monitored-jurisdictions"
         try:
             logger.info("Scraping FATF website for updates")
-            response = self.session.get(self.HIGH_RISK_URL, timeout=10)
+            response = self.session.get(HIGH_RISK_URL, timeout=10)
             response.raise_for_status()
-            
+
             soup = BeautifulSoup(response.text, 'html.parser')
-            
-            # Extract publication date and content
-            updates = {
-                'source': 'FATF_WEBSITE',
-                'fetched_at': datetime.utcnow().isoformat(),
-                'url': self.HIGH_RISK_URL,
-                'content': soup.get_text()[:5000],  # First 5000 chars
-                'note': 'Scraped content - manual review recommended'
-            }
-            
-            return updates
-            
-        except Exception as e:
-            logger.error(f"Error scraping FATF website: {e}")
-            # Return cached data instead
             return {
-                'source': 'FATF_CACHED',
-                'error': str(e),
-                'high_risk': self.fetch_high_risk_jurisdictions(),
-                'monitored': self.fetch_monitored_jurisdictions()
+                "source": "FATF_WEBSITE",
+                "fetched_at": datetime.utcnow().isoformat(),
+                "url": HIGH_RISK_URL,
+                "content": soup.get_text()[:5000],
+                "note": "Scraped content — manual review recommended",
+            }
+        except Exception as exc:
+            logger.error("Error scraping FATF website: %s", exc)
+            return {
+                "source": "FATF_CACHED",
+                "error": str(exc),
+                "high_risk": self.fetch_high_risk_jurisdictions(),
+                "monitored": self.fetch_monitored_jurisdictions(),
             }
 
 

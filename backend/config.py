@@ -4,7 +4,7 @@ from typing import Optional
 
 class Settings(BaseSettings):
     # API Configuration - Groq (Free Llama Access)
-    openai_api_key: str = "GROQ_API_KEY_PLACEHOLDER"
+    openai_api_key: str = ""
     # Optional: support OpenRouter key if provided
     openrouter_api_key: Optional[str] = None
     api_base_url: str = "https://api.groq.com/openai/v1"
