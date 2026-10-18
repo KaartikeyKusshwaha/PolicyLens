@@ -1,123 +1,109 @@
-# PolicyLens - AI-Powered Compliance Intelligence
+# PolicyLens
 
-AI system that analyzes financial transactions against AML rules using RAG, vector search, and GPT-4.
+A local compliance research workspace built with **React, Python/FastAPI, and SQLite**. Add your policies, assess transactions, ask policy questions, and record human reviews with the original evidence attached.
 
-## Features
+No Docker, Milvus, GPU, embedding downloads, paid API requirement, demo decisions, provider switching, or fabricated fallback answers.
 
-- **Transaction Evaluation**: Real-time compliance checking with risk scoring
-- **Policy Management**: Upload and index compliance documents
-- **Query Assistant**: Natural language Q&A over policies
-- **RAG-based Analysis**: Retrieval-Augmented Generation with Milvus vector DB
-- **Explainable Decisions**: Full traces with policy citations
+## Start locally
 
-## Quick Start
+Install **Python 3.11+** and **Node.js 22.12+**, then run from the repository root:
 
-### Prerequisites
-- **Docker Desktop** (recommended) - [Download](https://www.docker.com/products/docker-desktop/)
-- Python 3.11+ (for local development)
-- Node.js 18+ (for local development)
-- OpenAI API key (optional - system works in demo mode without it)
-
-### 🚀 Quick Start (Recommended)
-
-**Using Docker Compose (All services in one command):**
-
-```powershell
-# Run the interactive startup script
-.\start.ps1
-# Choose Option 1: Quick Start (Docker + Auto-open browser)
+```sh
+python run.py
 ```
 
-The script will:
-- Start Milvus vector database (etcd + MinIO + Milvus)
-- Start FastAPI backend on port 8000
-- Start React frontend on port 3000
-- Run health checks
-- Auto-open browser to http://localhost:3000
+The launcher creates `.venv`, installs dependencies, builds the React app, and serves both frontend and API at **http://127.0.0.1:8000**. Dependency installation is skipped on subsequent starts unless the manifests change. Stop with Ctrl+C.
 
-**Or manually with Docker Compose:**
+1. Create a [free Groq API key](https://console.groq.com/keys).
+2. Set `GROQ_API_KEY` in `backend/.env` (created by the launcher). Restart after changing it.
+3. Open **Data sources → Connect & sync** to fetch the complete official OFAC SDN feed.
+4. Add your actual compliance documents in **Policy library**.
+5. Run an evaluation or ask the **Policy assistant** a question.
 
-```bash
-docker-compose up -d
-```
+The app opens with an empty policy library and assessment history. It can manage documents without an AI key; AI operations explicitly require one. Keys stay in the backend and are excluded from Git. Never place API keys in frontend code or chat messages.
 
-Wait 30 seconds for initialization, then access:
-- **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:8000
-- **API Docs**: http://localhost:8000/docs
+## What works
 
-### 🛠️ Local Development Setup
+- **Policy library:** searchable titles/topics; paste text or upload UTF-8 TXT, text-based PDF, or DOCX (including tables). Maximum 5 MB and 300,000 characters; PDFs are limited to 300 pages. Scanned PDFs need OCR before uploading.
+- **Policy updates:** new version numbers replace the searchable current document. Existing assessments preserve their original policy excerpts and citations.
+- **Retrieval:** SQLite FTS5 with BM25 ranking is the primary retrieval engine. It is lexical search, not semantic vector search; use terminology present in your documents. No matching evidence means no AI answer.
+- **Transaction assessments:** validated monetary amounts, live USD reference conversion, full OFAC SDN name/alias screening, schema-validated Groq output, and citations whose IDs and quotations are checked against the retrieved text.
+- **Policy assistant:** document-grounded Q&A, topic filters, verified quotes, and visible limitations.
+- **Decision history:** paginated records, search/filter within the displayed page, immutable original AI assessments, append-only human review records, and downloadable audit JSON containing inputs, model, quotes, retrieved passages, sanctions snapshot checksum/time, and exchange-rate evidence.
+- **Workspace:** real counts, audit activity, actionable setup, mobile navigation, keyboard labels/focus, and persistent light/dark appearance.
 
-**Backend Only (requires Docker for Milvus):**
+## Free web integrations
 
-```bash
-cd backend
-python -m venv venv
-.\venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-python -m uvicorn main:app --reload --port 8000
-```
+| Capability | Provider | Authentication / limits |
+| --- | --- | --- |
+| AI analysis | [Groq](https://console.groq.com/docs/rate-limits), default `openai/gpt-oss-20b` | Free-tier key required; account/model limits apply. No automatic paid upgrade or alternate provider. |
+| Sanctions evidence | [U.S. Treasury OFAC](https://ofac.treasury.gov/sanctions-list-service) official SDN XML feed | No key. Downloads every primary entry and alias; manually refresh in Data sources. |
+| Exchange rates | [Frankfurter v2](https://frankfurter.dev/) | Free, no key. Latest daily USD reference rate fetched for each non-USD evaluation. |
 
-**Frontend Only:**
+OFAC snapshots are valid for 24 hours after successful download by default. A stale/missing snapshot stops assessments until you sync. Failed syncs never replace the last downloaded snapshot or reset its age. The UI displays sync times and record counts. Download publication dates and SHA-256 checksums are retained in assessment evidence.
 
-```bash
-cd frontend
-npm install
-npm run dev
-```
+Non-USD evaluations stop if a valid reference rate is unavailable, older than seven days, or future-dated. USD uses the mathematical identity rate of 1. Dates are reference dates, not execution quotes. Failed AI requests, rate limits, incomplete responses, invalid scores, and unverified quotations return explicit errors and do not save decisions. A potential OFAC match cannot receive an acceptable AI verdict.
 
-### 🛑 Stop Services
+Groq output uses [strict structured outputs](https://console.groq.com/docs/structured-outputs). Set `GROQ_MODEL` only to a model supporting that capability; unsupported/retired models produce an explicit provider error, never an alternate model or canned assessment.
 
-```bash
-docker-compose down
-# Or use start.ps1 -> Option 5: Stop all services
-```
-
-## Tech Stack
-
-**Backend**: FastAPI, Milvus, OpenAI, Sentence-Transformers  
-**Frontend**: React 18, Vite, Tailwind CSS, React Router  
-**Infrastructure**: Docker, Docker Compose
+The previous hardcoded FATF country lists and RBI/EU scraping claims have been removed. Import the current policies you actually use; this app does not claim coverage for sources it does not retrieve.
 
 ## Configuration
 
-**Optional**: Create `backend/.env` for API keys:
-```env
-OPENAI_API_KEY=sk-...  # Optional - uses OpenRouter fallback
-OPENROUTER_API_KEY=sk-or-v1-...  # Optional
-MILVUS_HOST=localhost
-MILVUS_PORT=19530
+Copy `backend/.env.example` to `backend/.env` if starting manually:
+
+```dotenv
+GROQ_API_KEY=your_key_here
+GROQ_MODEL=openai/gpt-oss-20b
+SANCTIONS_MAX_AGE_HOURS=24
+# DATABASE_PATH=/absolute/path/to/policylens-v2.db
 ```
 
-✅ System works without API keys using rule-based fallback and local embeddings.
+The default database lives at `backend/data/policylens-v2.db`, resolved relative to the backend source rather than your shell directory. Back up the database with SQLite's backup API or stop the server before copying the database and its WAL files. The data folder and all local secrets are excluded from Git.
 
-## Docker Services
+This version uses a **new v2 database**, not the legacy schema or checked-in sample decisions. Legacy code/data remain recoverable from Git history. There is no implicit import of old or synthetic records. API response shapes have changed to match the new React client.
 
-The `docker-compose.yml` includes:
-- **Milvus** (v2.3.3): Vector database on port 19530
-- **etcd** (v3.5.5): Milvus metadata storage
-- **MinIO**: Milvus object storage
-- **Backend**: FastAPI on port 8000
-- **Frontend**: React/Vite on port 3000
+## Development
 
-All services start together with `docker-compose up -d` or using `start.ps1`.
+Backend (repository root):
 
-## Project Structure
-
-```
-PolicyLens/
-├── backend/           # FastAPI backend
-│   ├── services/      # Core services (Milvus, LLM, Compliance)
-│   ├── models.py      # Pydantic models
-│   ├── main.py        # FastAPI app
-│   └── requirements.txt
-├── frontend/          # React frontend
-│   ├── src/
-│   └── package.json
-├── docker-compose.yml # Docker orchestration
-└── start.ps1         # Interactive startup script
+```sh
+python -m venv .venv
+# Windows
+.venv\Scripts\python -m pip install -r backend/requirements-dev.txt
+cd backend
+..\.venv\Scripts\python -m uvicorn main:app --reload --host 127.0.0.1 --port 8000
+# macOS/Linux equivalent: ../.venv/bin/python -m uvicorn main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-## License
+Frontend (another terminal):
 
-MIT
+```sh
+cd frontend
+npm ci
+npm run dev
+```
+
+Open **http://127.0.0.1:3000**. Vite proxies `/api` to Python. Production builds are served directly by FastAPI on port 8000; frontend calls use the same origin. API documentation is at **http://127.0.0.1:8000/docs**.
+
+Checks (repository root; replace the Python executable for your platform):
+
+```sh
+.venv\Scripts\python -m pytest
+.venv\Scripts\python -m ruff check backend run.py
+cd frontend
+npm test
+npm run lint
+npm run build
+npm audit
+```
+
+Backend tests use isolated temporary SQLite databases and mocked provider HTTP responses, so CI requires no key or network feed. React tests cover onboarding, navigation, theme, policy input, offline errors, evaluation failures, and cited answers. CI runs both suites and builds the frontend.
+
+## Scope
+
+This is a **single-user local application**. It intentionally binds to loopback and has no user authentication or multi-tenant isolation. Do not expose it to the public internet without adding authentication, authorization, HTTPS, and operational controls. No cloud hosting or payments are configured.
+
+AI scores are estimates rather than calibrated probabilities. An `acceptable` result is advisory against supplied policies, never regulatory clearance or payment approval. Screening covers OFAC SDN names/aliases using normalized name similarity ≥ 0.88; it does not cover beneficial ownership, every sanctions list, or all transliterations. Human review is required. A lack of matches is not clearance.
+
+Relevant policy excerpts, questions, transaction details, and screening results are sent to Groq. Review its data terms before using confidential material. The app never executes transfers. Audit JSON is the supported report format; the old PDF report, automatic batch re-evaluation, and background scraping/scheduler paths were removed with their unreliable infrastructure.

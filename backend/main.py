@@ -1,1109 +1,306 @@
-from fastapi import FastAPI, HTTPException, UploadFile, File
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
-from contextlib import asynccontextmanager
+import asyncio
 import logging
+import sqlite3
+import time
 import uuid
-from datetime import datetime
-from typing import Optional
-import os
+from contextlib import asynccontextmanager
 
+import httpx
+from fastapi import FastAPI, File, Form, HTTPException, Query, UploadFile
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
+from pydantic import ValidationError
+from starlette.concurrency import run_in_threadpool
+
+from config import ROOT, Settings
 from models import (
-    PolicyDocument, Transaction, PolicySource, PolicyTopic,
-    TransactionEvaluationRequest, TransactionEvaluationResponse,
-    PolicyUploadRequest, QueryRequest, QueryResponse, FeedbackRequest
+    Answer,
+    Assessment,
+    EvaluationRequest,
+    PolicyInput,
+    QueryInput,
+    ReviewInput,
 )
-from services.milvus_service import MilvusService
-from services.embedding_service import EmbeddingService
-from services.llm_service import LLMService
-from services.document_processor import DocumentProcessor
-from services.compliance_engine import ComplianceEngine
-from services.db_storage_service import DatabaseStorageService as StorageService
-from database import engine, Base
-import models_db
-from services.metrics_service import MetricsService
-from services.policy_sentinel import PolicySentinel
-from services.report_generator import ReportGenerator
-from services.external_data_sources import ExternalDataManager
-from services.data_scheduler import DataScheduler
-from config import settings
+from providers import Providers, extract_document, problem, verify_citations
+from store import Store, now
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
-
-# Global service instances
-milvus_service = None
-embedding_service = None
-llm_service = None
-document_processor = None
-compliance_engine = None
-storage_service = None
-metrics_service = None
-policy_sentinel = None
-report_generator = None
-batch_processor = None
-risk_scorer = None
-external_data_manager = None
-data_scheduler = None
-demo_mode = False  # Track if running in demo mode
+logger = logging.getLogger("policylens")
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    """Lifespan context manager for startup and shutdown"""
-    global milvus_service, embedding_service, llm_service, document_processor, compliance_engine, storage_service, metrics_service, policy_sentinel, report_generator, batch_processor, risk_scorer, external_data_manager, data_scheduler, demo_mode
-    
-    logger.info("Starting PolicyLens API...")
+def create_app(settings=None, transport=None):
+    settings = settings or Settings()
 
-    # Initialize database tables
-    Base.metadata.create_all(bind=engine)
-    logger.info("✓ Database tables initialized")
+    @asynccontextmanager
+    async def lifespan(app):
+        app.state.store = Store(settings.database_path)
+        async with httpx.AsyncClient(
+            transport=transport,
+            follow_redirects=True,
+            headers={"User-Agent": "PolicyLens/2.0"},
+        ) as client:
+            app.state.providers = Providers(settings, app.state.store, client)
+            app.state.sync_lock = asyncio.Lock()
+            yield
 
-    # Initialize services
-    try:
-        milvus_service = MilvusService(host=settings.milvus_host, port=settings.milvus_port)
-        milvus_service.connect()
-        demo_mode = False
-        logger.info("✓ Milvus connected")
-    except Exception as e:
-        logger.warning(f"⚠ Milvus connection failed: {e}. Running in demo mode.")
-        milvus_service = MilvusService()  # Will fail gracefully
-        demo_mode = True
-    
-    embedding_service = EmbeddingService()
-    logger.info("✓ Embedding service initialized")
-    
-    llm_service = LLMService()
-    logger.info("✓ LLM service initialized")
-    
-    document_processor = DocumentProcessor(embedding_service, milvus_service)
-    logger.info("✓ Document processor initialized")
-    
-    compliance_engine = ComplianceEngine(embedding_service, milvus_service, llm_service)
-    logger.info("✓ Compliance engine initialized")
-    
-    storage_service = StorageService()
-    logger.info("✓ Storage service initialized")
-    
-    # Initialize policy sentinel for change detection
-    policy_sentinel = PolicySentinel(milvus_service, storage_service)
-    logger.info("✓ Policy sentinel initialized")
-    
-    # Initialize report generator
-    report_generator = ReportGenerator()
-    logger.info("✓ Report generator initialized")
-    
-    # Initialize metrics with storage and Milvus services
-    demo_mode = not (milvus_service and milvus_service.connected)
-    metrics_service = MetricsService(
-        storage_service=storage_service,
-        milvus_service=milvus_service,
-        demo_mode=demo_mode
-    )
-    logger.info("✓ Metrics service initialized")
-    
-    # Initialize batch processor
-    from services.batch_processor import BatchProcessor
-    batch_processor = BatchProcessor(compliance_engine, storage_service)
-    logger.info("✓ Batch processor initialized")
-    
-    # Initialize risk scorer
-    from services.risk_scorer import RiskScorer
-    risk_scorer = RiskScorer(milvus_service, embedding_service, storage_service)
-    logger.info("✓ Risk scorer initialized")
-    
-    # Initialize external data manager with Milvus caching
-    external_data_manager = ExternalDataManager(document_processor, storage_service, milvus_service)
-    logger.info("✓ External data manager initialized")
-    
-    # Initialize data scheduler
-    data_scheduler = DataScheduler(external_data_manager, storage_service, document_processor)
-    data_scheduler.start()
-    logger.info("✓ Data scheduler started")
-    
-    logger.info("🚀 PolicyLens API ready!")
-    
-    yield
-    
-    # Cleanup
-    if data_scheduler:
-        data_scheduler.stop()
-    if milvus_service and milvus_service.connected:
-        milvus_service.disconnect()
-    logger.info("Shutdown complete")
+    app = FastAPI(title="PolicyLens", version="2.0.0", lifespan=lifespan)
 
-
-app = FastAPI(
-    title="PolicyLens API",
-    description="AI-powered compliance intelligence system",
-    version="1.0.0",
-    lifespan=lifespan
-)
-
-# CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Configure appropriately for production
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-
-@app.get("/api/health")
-async def health_check():
-    """Health check endpoint"""
-    storage_stats = storage_service.get_statistics() if storage_service else {}
-    return {
-        "service": "PolicyLens API",
-        "version": "1.0.0",
-        "status": "operational",
-        "demo_mode": demo_mode,
-        "milvus_connected": milvus_service.connected if milvus_service else False,
-        "services": {
-            "milvus": "connected" if (milvus_service and milvus_service.connected) else "demo_mode",
-            "embedding": "ready" if embedding_service else "unavailable",
-            "llm": "ready" if llm_service else "unavailable",
-            "storage": "ready" if storage_service else "unavailable",
-            "batch_processor": "ready" if batch_processor else "unavailable",
-            "risk_scorer": "ready" if risk_scorer else "unavailable"
-        },
-        "storage": storage_stats
-    }
-
-
-@app.post("/api/policies/upload")
-async def upload_policy(policy_request: PolicyUploadRequest):
-    """Upload and process a new policy document (JSON format)"""
-    try:
-        doc_id = str(uuid.uuid4())
-        
-        document = PolicyDocument(
-            doc_id=doc_id,
-            title=policy_request.title,
-            content=policy_request.content,
-            source=policy_request.source,
-            topic=policy_request.topic,
-            version=policy_request.version,
-            metadata=policy_request.metadata
-        )
-        
-        chunks = document_processor.process_document(document)
-        
-        # Track metrics
-        if metrics_service:
-            metrics_service.record_policy_upload()
-        
-        return {
-            "doc_id": doc_id,
-            "title": document.title,
-            "chunks_created": len(chunks),
-            "status": "processed",
-            "message": "Policy document uploaded and indexed successfully"
-        }
-    
-    except Exception as e:
-        logger.error(f"Error uploading policy: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.post("/api/policies/upload-file")
-async def upload_policy_file(
-    file: UploadFile = File(...),
-    title: str = None,
-    source: str = "UPLOADED",
-    topic: str = "GENERAL",
-    version: str = "1.0"
-):
-    """Upload and process a policy document from file (PDF, DOCX, TXT)"""
-    try:
-        # Read file content
-        file_content = await file.read()
-        
-        # Extract text from file
-        extracted_text = document_processor.extract_text_from_file(file_content, file.filename)
-        
-        if not extracted_text or len(extracted_text.strip()) < 100:
-            raise HTTPException(status_code=400, detail="Extracted text is too short or empty")
-        
-        # Create document
-        doc_id = str(uuid.uuid4())
-        doc_title = title or file.filename.rsplit('.', 1)[0]
-        
-        document = PolicyDocument(
-            doc_id=doc_id,
-            title=doc_title,
-            content=extracted_text,
-            source=source,
-            topic=topic,
-            version=version,
-            metadata={"original_filename": file.filename, "file_size": len(file_content)}
-        )
-        
-        # Process and store
-        chunks = document_processor.process_document(document)
-        
-        # Track metrics
-        if metrics_service:
-            metrics_service.record_policy_upload()
-        
-        return {
-            "doc_id": doc_id,
-            "title": doc_title,
-            "filename": file.filename,
-            "text_length": len(extracted_text),
-            "chunks_created": len(chunks),
-            "status": "processed",
-            "message": f"Policy document '{file.filename}' uploaded and indexed successfully"
-        }
-    
-    except Exception as e:
-        logger.error(f"Error uploading policy: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.post("/api/transactions/evaluate", response_model=TransactionEvaluationResponse)
-async def evaluate_transaction(request: TransactionEvaluationRequest):
-    """Evaluate a transaction against compliance policies"""
-    try:
-        if demo_mode:
-            logger.info("Running in demo mode - using fallback evaluation")
-        
-        result = compliance_engine.evaluate_transaction(request.transaction)
-        
-        # Store decision for retrieval
-        if storage_service:
-            storage_service.store_decision(
-                trace_id=result["trace_id"],
-                decision_data={
-                    "transaction": request.transaction.model_dump(),
-                    "decision": result["decision"].model_dump(),
-                    "trace_id": result["trace_id"],
-                    "processing_time_ms": result["processing_time_ms"],
-                    "demo_mode": demo_mode
+    @app.exception_handler(Exception)
+    async def unexpected_error(request, exc):
+        logger.exception("Request failed: %s", request.url.path)
+        return JSONResponse(
+            status_code=500,
+            content={
+                "detail": {
+                    "code": "internal_error",
+                    "message": "The operation failed. Check server logs; no substitute result was generated.",
                 }
-            )
-        
-        # Track metrics
-        if metrics_service:
-            metrics_service.record_evaluation(
-                verdict=result["decision"].verdict.value,
-                risk_level=result["decision"].risk_level.value,
-                latency_ms=result["processing_time_ms"],
-                transaction_id=request.transaction.transaction_id
-            )
-        
-        # Store case for learning (if risk scorer available)
-        if risk_scorer and result["decision"].verdict.value in ["FLAG", "NEEDS_REVIEW"]:
-            try:
-                risk_scorer.store_case_for_learning(
-                    decision_id=result["trace_id"],
-                    transaction=request.transaction.model_dump(),
-                    verdict=result["decision"].verdict.value,
-                    risk_score=result["decision"].risk_score,
-                    reasoning=result["decision"].reasoning
-                )
-            except Exception as e:
-                logger.warning(f"Failed to store case for learning: {e}")
-        
-        return TransactionEvaluationResponse(
-            decision=result["decision"],
-            trace_id=result["trace_id"],
-            processing_time_ms=result["processing_time_ms"]
-        )
-    
-    except Exception as e:
-        logger.error(f"Error evaluating transaction: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=500, 
-            detail=f"Transaction evaluation failed: {str(e)}"
-        )
-
-
-@app.post("/api/query", response_model=QueryResponse)
-async def query_compliance(request: QueryRequest):
-    """Answer a compliance-related query"""
-    try:
-        import time
-        start_time = time.time()
-        
-        result = compliance_engine.answer_compliance_query(
-            query=request.query,
-            topic=request.topic.value if request.topic else None
-        )
-        
-        # Track metrics
-        if metrics_service:
-            latency_ms = (time.time() - start_time) * 1000
-            metrics_service.record_query(latency_ms, request.query)
-        
-        return QueryResponse(
-            query=result["query"],
-            answer=result["answer"],
-            citations=result["citations"],
-            confidence=result["confidence"]
-        )
-    
-    except Exception as e:
-        logger.error(f"Error processing query: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.post("/api/feedback")
-async def submit_feedback(feedback: FeedbackRequest):
-    """Submit human feedback for a compliance decision"""
-    try:
-        # Store feedback persistently
-        if storage_service:
-            storage_service.store_feedback(feedback.model_dump())
-        
-        # Track metrics
-        if metrics_service:
-            metrics_service.record_feedback()
-        
-        logger.info(
-            f"Feedback received for transaction {feedback.transaction_id}: "
-            f"Corrected to {feedback.corrected_verdict}"
-        )
-        
-        return {
-            "status": "success",
-            "message": "Feedback recorded successfully",
-            "transaction_id": feedback.transaction_id
-        }
-    
-    except Exception as e:
-        logger.error(f"Error recording feedback: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.get("/api/policies")
-async def list_policies():
-    """Get list of all policies"""
-    try:
-        if not milvus_service or not milvus_service.connected:
-            # Return demo policies in demo mode
-            demo_policies = [
-                {
-                    "doc_id": "demo_doc_aml",
-                    "title": "AML Transaction Monitoring Guidelines",
-                    "source": "INTERNAL",
-                    "topic": "AML",
-                    "version": "1.0",
-                    "description": "Guidelines for monitoring transactions for anti-money laundering compliance",
-                    "chunks": 5
-                },
-                {
-                    "doc_id": "demo_doc_sanctions",
-                    "title": "Sanctions Compliance Policy",
-                    "source": "OFAC",
-                    "topic": "SANCTIONS",
-                    "version": "2.1",
-                    "description": "Policy for screening transactions against sanctions lists",
-                    "chunks": 4
-                },
-                {
-                    "doc_id": "demo_doc_kyc",
-                    "title": "Know Your Customer (KYC) Requirements",
-                    "source": "INTERNAL",
-                    "topic": "KYC",
-                    "version": "1.5",
-                    "description": "Customer identification and verification requirements",
-                    "chunks": 6
-                }
-            ]
-            return {
-                "policies": demo_policies,
-                "total": len(demo_policies),
-                "mode": "demo"
-            }
-        
-        # Query Milvus for actual policy documents
-        policies = milvus_service.get_all_documents()
-        return {
-            "policies": policies,
-            "total": len(policies),
-            "mode": "live"
-        }
-    
-    except Exception as e:
-        logger.error(f"Error listing policies: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.get("/api/policies/{doc_id}/content")
-async def get_policy_content(doc_id: str):
-    """Get full content of a specific policy document"""
-    try:
-        # Demo content available anytime
-        demo_content = {
-                "demo_doc_aml": "ANTI-MONEY LAUNDERING TRANSACTION MONITORING GUIDELINES\n\nVersion: 1.0\nSource: Internal Compliance Department\n\nTRANSACTION THRESHOLDS\n• Transactions exceeding USD 10,000 must be reported within 24 hours\n• Enhanced due diligence required for amounts above USD 50,000\n• Aggregated transactions totaling USD 25,000+ within 30 days require review\n\nRED FLAGS:\n1. Structuring: Multiple transactions below reporting thresholds\n2. High-Risk Jurisdictions: Transactions involving sanctioned countries\n3. Shell Companies: Payments without clear business purpose\n4. Cash-Intensive: Large cash deposits without explanation",
-                "demo_doc_sanctions": "SANCTIONS COMPLIANCE POLICY\n\nVersion: 2.1\nSource: OFAC Compliance Unit\n\nPROHIBITED JURISDICTIONS:\n• Iran, North Korea, Syria, Crimea, Cuba\n\nAll transactions with these jurisdictions are PROHIBITED without regulatory approval.\n\nSCREENING REQUIREMENTS:\n✓ Screen all parties against OFAC SDN List\n✓ Check beneficial ownership structures\n✓ Verify correspondent banks\n✓ Daily reconciliation of processed transactions\n\nPENALTIES:\n• Civil: Up to $307,922 per violation\n• Criminal: Up to $1M and 20 years imprisonment",
-                "demo_doc_kyc": "KNOW YOUR CUSTOMER (KYC) REQUIREMENTS\n\nVersion: 1.5\nSource: Internal Risk Management\n\nCUSTOMER IDENTIFICATION:\n• Full legal name and date of birth\n• Physical address (PO Box insufficient)\n• Government-issued photo ID\n• Tax identification number\n\nRISK CLASSIFICATION:\nLow Risk: Domestic individuals, transparent businesses\nMedium Risk: High-net-worth, cash-intensive businesses\nHigh Risk: PEPs, shell companies, high-risk jurisdictions\n\nONGOING MONITORING:\n• Low Risk: Annual review\n• Medium Risk: Semi-annual\n• High Risk: Quarterly or more"
-            }
-        
-        # Check if it's a demo doc first
-        if doc_id in demo_content:
-            return {
-                "doc_id": doc_id,
-                "content": demo_content[doc_id],
-                "mode": "demo"
-            }
-        
-        # Try to get content from Milvus if connected
-        if not milvus_service or not milvus_service.connected:
-            raise HTTPException(status_code=404, detail="Policy not found")
-            
-        document = milvus_service.get_document_content(doc_id)
-        if not document:
-            raise HTTPException(status_code=404, detail="Policy not found")
-        
-        return {
-            **document,
-            "mode": "live"
-        }
-    
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error getting policy content: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.get("/api/policies/stats")
-async def get_policy_stats():
-    """Get statistics about loaded policies"""
-    try:
-        if not milvus_service or not milvus_service.connected:
-            return {
-                "total_documents": 3,
-                "total_chunks": 15,
-                "sources": {"INTERNAL": 2, "OFAC": 1},
-                "topics": {"AML": 1, "SANCTIONS": 1, "KYC": 1},
-                "mode": "demo"
-            }
-        
-        # Query Milvus for actual statistics
-        from pymilvus import Collection
-        collection = Collection(milvus_service.collection_name)
-        collection.load()
-        
-        total_chunks = collection.num_entities
-        
-        # Get cases collection stats
-        cases_collection = Collection(milvus_service.cases_collection_name)
-        cases_collection.load()
-        total_cases = cases_collection.num_entities
-        
-        return {
-            "total_chunks": total_chunks,
-            "total_cases": total_cases,
-            "collection_name": milvus_service.collection_name,
-            "message": "Real-time stats from Milvus"
-        }
-    
-    except Exception as e:
-        logger.error(f"Error getting policy stats: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.post("/api/policies/{doc_id}/update")
-async def update_policy(doc_id: str, policy_request: PolicyUploadRequest):
-    """Update an existing policy and trigger change detection"""
-    try:
-        # Get old document content
-        old_docs = milvus_service.get_all_documents() if milvus_service.connected else []
-        old_doc = next((d for d in old_docs if d["doc_id"] == doc_id), None)
-        
-        if not old_doc:
-            raise HTTPException(status_code=404, detail=f"Policy {doc_id} not found")
-        
-        # Create new version
-        new_doc_id = f"{doc_id}_v{policy_request.version}"
-        
-        new_document = PolicyDocument(
-            doc_id=new_doc_id,
-            title=policy_request.title,
-            content=policy_request.content,
-            source=policy_request.source,
-            topic=policy_request.topic,
-            version=policy_request.version,
-            metadata=policy_request.metadata
-        )
-        
-        # Process new document
-        chunks = document_processor.process_document(new_document)
-        
-        # Detect changes (simplified - in production, fetch old content from storage)
-        change_data = policy_sentinel.detect_policy_change(
-            doc_id, 
-            new_doc_id, 
-            old_doc.get("title", ""), 
-            policy_request.content
-        )
-        
-        # Identify impacted decisions
-        impacted_decisions = policy_sentinel.identify_impacted_decisions(doc_id)
-        
-        # Generate impact report
-        impact_report = policy_sentinel.generate_change_impact_report(change_data, impacted_decisions)
-        
-        # Trigger re-evaluation if significant change
-        if change_data.get("change_magnitude", 0) > 0.10:
-            re_eval_queue = policy_sentinel.trigger_re_evaluation(impacted_decisions)
-        else:
-            re_eval_queue = {"message": "Change too minor to trigger re-evaluation"}
-        
-        # Deactivate old version
-        milvus_service.deactivate_document_chunks(doc_id)
-        
-        return {
-            "doc_id": new_doc_id,
-            "old_doc_id": doc_id,
-            "status": "updated",
-            "chunks_created": len(chunks),
-            "change_detection": change_data,
-            "impact_report": impact_report,
-            "re_evaluation": re_eval_queue
-        }
-    
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error updating policy: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.get("/api/policies/changes")
-async def get_policy_changes(limit: int = 10):
-    """Get recent policy changes"""
-    try:
-        changes = policy_sentinel.get_recent_changes(limit=limit)
-        return {
-            "changes": changes,
-            "count": len(changes)
-        }
-    except Exception as e:
-        logger.error(f"Error retrieving policy changes: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.get("/api/policies/impact-reports")
-async def get_impact_reports(limit: int = 10):
-    """Get recent change impact reports"""
-    try:
-        reports = policy_sentinel.get_impact_reports(limit=limit)
-        return {
-            "reports": reports,
-            "count": len(reports)
-        }
-    except Exception as e:
-        logger.error(f"Error retrieving impact reports: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.get("/api/decisions/{trace_id}")
-async def get_decision(trace_id: str):
-    """Retrieve a decision by trace ID"""
-    try:
-        if not storage_service:
-            raise HTTPException(status_code=503, detail="Storage service unavailable")
-        
-        decision = storage_service.get_decision(trace_id)
-        
-        if not decision:
-            raise HTTPException(status_code=404, detail=f"Decision not found: {trace_id}")
-        
-        return decision
-    
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error retrieving decision {trace_id}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.get("/api/decisions")
-async def list_decisions(limit: int = 50, skip: int = 0):
-    """List recent decisions"""
-    try:
-        if not storage_service:
-            raise HTTPException(status_code=503, detail="Storage service unavailable")
-        
-        decisions = storage_service.list_decisions(limit=limit, skip=skip)
-        
-        return {
-            "decisions": decisions,
-            "count": len(decisions),
-            "limit": limit,
-            "skip": skip
-        }
-    
-    except Exception as e:
-        logger.error(f"Error listing decisions: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.get("/api/audit/report/{trace_id}")
-async def generate_audit_report(trace_id: str, format: str = "json"):
-    """Generate audit report for a specific decision (JSON or PDF)"""
-    from fastapi.responses import Response
-    
-    try:
-        if not storage_service:
-            raise HTTPException(status_code=503, detail="Storage service unavailable")
-        
-        decision_data = storage_service.get_decision(trace_id)
-        
-        if not decision_data:
-            raise HTTPException(status_code=404, detail=f"Decision not found: {trace_id}")
-        
-        # Build comprehensive audit report
-        decision = decision_data.get("decision", {})
-        transaction = decision_data.get("transaction", {})
-        
-        audit_report = {
-            "report_generated_at": datetime.now().isoformat(),
-            "trace_id": trace_id,
-            "transaction_details": transaction,
-            "compliance_decision": {
-                "verdict": decision.get("verdict"),
-                "risk_level": decision.get("risk_level"),
-                "risk_score": decision.get("risk_score"),
-                "confidence": decision.get("confidence"),
-                "reasoning": decision.get("reasoning"),
-                "timestamp": decision.get("timestamp")
             },
-            "policy_citations": decision.get("policy_citations", []),
-            "similar_cases": decision.get("similar_cases", []),
-            "processing_metrics": {
-                "processing_time_ms": decision_data.get("processing_time_ms"),
-                "stored_at": decision_data.get("stored_at")
+        )
+
+    @app.get("/api/health")
+    def health():
+        provider = app.state.providers
+        with app.state.store.connect() as db:
+            db.execute("SELECT 1").fetchone()
+        return {
+            "status": "ok",
+            "version": "2.0.0",
+            "storage": "sqlite_fts5",
+            "ai": {
+                "status": "configured" if provider.ai_configured else "needs_key",
+                "model": settings.groq_model,
             },
-            "audit_trail": {
-                "system_version": "1.0.0",
-                "model_used": settings.llm_model,
-                "embedding_model": settings.embedding_model
-            }
+            "sanctions": provider.sanctions_status(),
         }
-        
-        # Return PDF if requested
-        if format.lower() == "pdf":
-            pdf_bytes = report_generator.generate_decision_report(decision_data)
-            return Response(
-                content=pdf_bytes,
-                media_type="application/pdf",
-                headers={"Content-Disposition": f"attachment; filename=audit_report_{trace_id}.pdf"}
-            )
-        
-        # Default: return JSON
-        return audit_report
-    
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error generating audit report for {trace_id}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
 
-
-@app.get("/api/audit/impact-report/{report_id}")
-async def get_impact_report_pdf(report_id: str, format: str = "json"):
-    """Get policy change impact report (JSON or PDF)"""
-    from fastapi.responses import Response
-    
-    try:
-        # Get the impact report
-        reports = policy_sentinel.get_impact_reports(limit=100)
-        report = next((r for r in reports if r.get("report_id") == report_id), None)
-        
-        if not report:
-            raise HTTPException(status_code=404, detail=f"Impact report not found: {report_id}")
-        
-        # Return PDF if requested
-        if format.lower() == "pdf":
-            pdf_bytes = report_generator.generate_impact_report(report)
-            return Response(
-                content=pdf_bytes,
-                media_type="application/pdf",
-                headers={"Content-Disposition": f"attachment; filename={report_id}.pdf"}
-            )
-        
-        # Default: return JSON
-        return report
-    
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error retrieving impact report: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.get("/api/metrics")
-async def get_metrics():
-    """Get system metrics"""
-    try:
-        if not metrics_service:
-            raise HTTPException(status_code=503, detail="Metrics service unavailable")
-        
-        return metrics_service.get_metrics()
-    
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error retrieving metrics: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.get("/api/metrics/counters")
-async def get_counters():
-    """Get operation counters (total counts only)"""
-    try:
-        if not metrics_service:
-            raise HTTPException(status_code=503, detail="Metrics service unavailable")
-        
+    @app.get("/api/dashboard")
+    def dashboard():
+        store = app.state.store
         return {
-            "total_evaluations": metrics_service.total_evaluations,
-            "total_queries": metrics_service.total_queries,
-            "total_policy_uploads": metrics_service.total_policy_uploads
+            **store.dashboard(),
+            "policies": len(store.policies()),
+            "recent": store.decisions(6),
+            "health": health(),
         }
-    except Exception as e:
-        logger.error(f"Error retrieving counters: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
 
+    @app.get("/api/policies")
+    def policies():
+        return app.state.store.policies()
 
-@app.get("/api/metrics/latency")
-async def get_latency_metrics(operation_type: Optional[str] = None, hours: Optional[int] = None):
-    """Get persisted latency statistics from storage
-    
-    Args:
-        operation_type: Filter by operation type ('evaluation' or 'query'). If None, returns all.
-        hours: Number of hours to look back. If None, returns all-time data.
-    """
-    try:
-        if not metrics_service:
-            raise HTTPException(status_code=503, detail="Metrics service unavailable")
-        
-        # Get persisted latency stats
-        if operation_type:
-            stats = metrics_service.get_persisted_latency_stats(operation_type, hours)
-            return {
-                "operation_type": operation_type,
-                "hours": hours,
-                "statistics": stats
-            }
-        else:
-            # Get stats for all operation types (all-time by default)
-            eval_stats = metrics_service.get_persisted_latency_stats("evaluation", hours)
-            query_stats = metrics_service.get_persisted_latency_stats("query", hours)
-            
-            return {
-                "evaluation": eval_stats,
-                "query": query_stats
-            }
-    
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error retrieving latency metrics: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+    @app.post("/api/policies", status_code=201)
+    def add_policy(data: PolicyInput):
+        return app.state.store.save_policy(data)
 
-
-@app.get("/api/feedback")
-async def list_feedback(limit: int = 50, trace_id: Optional[str] = None):
-    """List recent feedback submissions"""
-    try:
-        if not storage_service:
-            raise HTTPException(status_code=503, detail="Storage service unavailable")
-        
-        feedback_list = storage_service.list_all_feedback(limit=limit)
-        if trace_id:
-            feedback_list = [f for f in feedback_list if str(f.get("transaction_id")) == str(trace_id) or str(f.get("trace_id")) == str(trace_id)]
-        
-        return {
-            "feedback": feedback_list,
-            "count": len(feedback_list)
-        }
-    
-    except Exception as e:
-        logger.error(f"Error listing feedback: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-# Mount static files (frontend build)
-frontend_dist = os.path.join(os.path.dirname(__file__), "..", "frontend", "dist")
-if os.path.exists(frontend_dist):
-    # Mount assets directory
-    app.mount("/assets", StaticFiles(directory=os.path.join(frontend_dist, "assets")), name="assets")
-    
-    # Serve frontend - needs to be added AFTER all API routes
-    from fastapi.responses import HTMLResponse
-    
-    @app.get("/", response_class=HTMLResponse)
-    async def serve_root():
-        """Serve frontend root"""
-        index_path = os.path.join(frontend_dist, "index.html")
-        with open(index_path, "r", encoding="utf-8") as f:
-            return f.read()
-    
-    @app.get("/{full_path:path}", response_class=HTMLResponse)
-    async def serve_frontend(full_path: str):
-        """Serve frontend for all non-API routes (SPA routing)"""
-        # Don't intercept API routes
-        if full_path.startswith("api"):
-            raise HTTPException(status_code=404, detail="Not found")
-        
-        # Check if it's a file request
-        file_path = os.path.join(frontend_dist, full_path)
-        if os.path.isfile(file_path):
-            return FileResponse(file_path)
-        
-        # For all other routes, serve index.html (SPA routing)
-        index_path = os.path.join(frontend_dist, "index.html")
-        with open(index_path, "r", encoding="utf-8") as f:
-            return f.read()
-
-
-# Batch Re-evaluation Endpoints
-@app.post("/api/batch/reevaluate")
-async def reevaluate_all(filter_by: Optional[dict] = None):
-    """
-    Re-evaluate all stored decisions with current policies
-    
-    Optional filters:
-    - verdict: Filter by verdict (FLAG, REVIEW, CLEAR)
-    - date_from: ISO date string
-    - date_to: ISO date string
-    """
-    try:
-        if not batch_processor:
-            raise HTTPException(
-                status_code=503, 
-                detail="Batch processor service is not available. Please check system status."
+    @app.post("/api/policies/file", status_code=201)
+    async def upload_policy(
+        file: UploadFile = File(...),
+        title: str = Form(...),
+        topic: str = Form("general"),
+        version: str = Form("1.0"),
+        source_url: str = Form(""),
+    ):
+        try:
+            content = await file.read(5_000_001)
+            if len(content) > 5_000_000:
+                raise problem(413, "file_too_large", "Files are limited to 5 MB.")
+            text = await run_in_threadpool(
+                extract_document, content, file.filename or ""
             )
-        
-        if demo_mode:
-            logger.warning("Batch re-evaluation in demo mode - results may be limited")
-        
-        result = await batch_processor.reevaluate_all_decisions(filter_by)
+            data = PolicyInput(
+                title=title,
+                content=text,
+                topic=topic,
+                version=version,
+                source_url=source_url,
+            )
+        except ValidationError as exc:
+            raise problem(
+                422,
+                "invalid_document",
+                "The document needs a title, valid topic, and 50–300,000 characters of selectable text. Scanned PDFs need OCR before upload.",
+            ) from exc
+        except HTTPException:
+            raise
+        except Exception as exc:
+            raise problem(
+                422,
+                "unreadable_document",
+                "Could not read this file. Use an unencrypted, text-based PDF, DOCX, or UTF-8 TXT file.",
+            ) from exc
+        finally:
+            await file.close()
+        return app.state.store.save_policy(data)
+
+    @app.get("/api/policies/{policy_id}")
+    def policy(policy_id: str):
+        result = app.state.store.policy(policy_id)
+        if not result:
+            raise problem(404, "not_found", "Policy not found.")
         return result
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Batch re-evaluation failed: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=500, 
-            detail=f"Batch re-evaluation failed: {str(e)}"
+
+    @app.put("/api/policies/{policy_id}")
+    def update_policy(policy_id: str, data: PolicyInput):
+        policy(policy_id)
+        try:
+            return app.state.store.save_policy(data, policy_id)
+        except ValueError as exc:
+            raise problem(409, "version_conflict", str(exc)) from exc
+
+    @app.get("/api/sources")
+    def sources():
+        return {
+            "groq": {
+                "status": "configured"
+                if app.state.providers.ai_configured
+                else "needs_key",
+                "model": settings.groq_model,
+                "url": "https://console.groq.com/docs/rate-limits",
+            },
+            "ofac": app.state.providers.sanctions_status(),
+            "frankfurter": {
+                "status": "on_demand",
+                "url": "https://frankfurter.dev/",
+                "description": "Live daily reference rates; fetched during non-USD evaluations.",
+            },
+            "max_age_hours": settings.sanctions_max_age_hours,
+        }
+
+    @app.post("/api/sources/ofac/sync")
+    async def sync_ofac():
+        if app.state.sync_lock.locked():
+            raise problem(
+                409, "sync_in_progress", "An OFAC sync is already in progress."
+            )
+        async with app.state.sync_lock:
+            return await app.state.providers.sync_sanctions()
+
+    @app.post("/api/query")
+    async def query(data: QueryInput):
+        provider = app.state.providers
+        provider.require_ai()
+        chunks = app.state.store.search(data.query, data.topic)
+        if not chunks:
+            raise problem(
+                409,
+                "no_policy_evidence",
+                "No matching policy evidence was found. Add a relevant policy or use terms from your documents.",
+            )
+        result = await provider.complete(
+            Answer,
+            {
+                "task": "Answer the question using only these policies. State when they do not establish the answer.",
+                "question": data.query,
+                "policies": chunks,
+            },
+        )
+        result["citations"] = verify_citations(result, chunks)
+        return result
+
+    @app.post("/api/transactions/evaluate", status_code=201)
+    async def evaluate(data: EvaluationRequest):
+        started = time.perf_counter()
+        store, provider = app.state.store, app.state.providers
+        provider.require_ai()
+        txn = data.transaction
+        if store.has_transaction(txn.transaction_id):
+            raise problem(
+                409,
+                "duplicate_transaction",
+                "This transaction ID already has an assessment. Open it in Decision history.",
+            )
+        chunks = store.search(
+            f"{txn.description} {txn.sender_country} {txn.receiver_country} transaction transfer sanctions AML KYC"
+        )
+        if not chunks:
+            raise problem(
+                409,
+                "no_policy_evidence",
+                "Add relevant compliance policies before evaluating a transaction.",
+            )
+        screening = await run_in_threadpool(provider.screen, txn)
+        exchange = await provider.exchange(txn.currency, txn.amount)
+        assessment = await provider.complete(
+            Assessment,
+            {
+                "task": "Assess this transaction against the policies. Identify missing facts and coverage limitations. Require human review of potential sanctions matches.",
+                "transaction": txn.model_dump(mode="json"),
+                "policies": chunks,
+                "sanctions_screening": screening,
+                "usd_reference": exchange,
+            },
+        )
+        assessment["citations"] = verify_citations(assessment, chunks)
+        if screening["matches"] and assessment["verdict"] == "acceptable":
+            raise problem(
+                502,
+                "inconsistent_assessment",
+                "The AI assessment conflicts with potential sanctions matches. No decision was recorded.",
+            )
+        result = {
+            "id": str(uuid.uuid4()),
+            "created_at": now(),
+            "transaction": txn.model_dump(mode="json"),
+            "assessment": assessment,
+            "screening": screening,
+            "exchange": exchange,
+            "model": settings.groq_model,
+            "processing_time_ms": round((time.perf_counter() - started) * 1000),
+            "policy_evidence": chunks,
+        }
+        try:
+            store.save_decision(result)
+        except sqlite3.IntegrityError as exc:
+            raise problem(
+                409,
+                "duplicate_transaction",
+                "Another request already assessed this transaction ID. Open Decision history.",
+            ) from exc
+        return result
+
+    @app.get("/api/decisions")
+    def decisions(limit: int = Query(50, ge=1, le=200), offset: int = Query(0, ge=0)):
+        return app.state.store.decisions(limit, offset)
+
+    @app.get("/api/decisions/{decision_id}")
+    def decision(decision_id: str):
+        record = app.state.store.decision(decision_id)
+        if not record:
+            raise problem(404, "not_found", "Assessment not found.")
+        return {**record, "reviews": app.state.store.reviews(decision_id)}
+
+    @app.get("/api/decisions/{decision_id}/export")
+    def export(decision_id: str):
+        record = decision(decision_id)
+        return JSONResponse(
+            record,
+            headers={
+                "Content-Disposition": f'attachment; filename="policylens-{record["id"]}.json"'
+            },
         )
 
+    @app.post("/api/decisions/{decision_id}/reviews", status_code=201)
+    def review(decision_id: str, data: ReviewInput):
+        decision(decision_id)
+        return app.state.store.review(decision_id, data)
 
-@app.get("/api/batch/candidates")
-async def get_reevaluation_candidates(
-    days_old: int = 30,
-    verdict: Optional[str] = None
-):
-    """
-    Get list of decisions that should be re-evaluated
-    
-    Args:
-        days_old: Consider decisions older than this many days (default: 30)
-        verdict: Filter by verdict (FLAG, REVIEW, CLEAR)
-    """
-    try:
-        if not batch_processor:
-            raise HTTPException(status_code=503, detail="Batch processor not initialized")
-        
-        candidates = batch_processor.get_reevaluation_candidates(days_old, verdict)
-        return {
-            "candidates": candidates,
-            "total": len(candidates),
-            "filters": {
-                "days_old": days_old,
-                "verdict": verdict
-            }
-        }
-    except Exception as e:
-        logger.error(f"Failed to get candidates: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+    # Built frontend and API share one origin. No CORS wildcard or hard-coded deployment URL.
+    dist = ROOT.parent / "frontend" / "dist"
+    if (dist / "assets").is_dir():
+        app.mount("/assets", StaticFiles(directory=dist / "assets"), name="assets")
 
-
-@app.post("/api/batch/reevaluate-by-policy/{policy_id}")
-async def reevaluate_by_policy(policy_id: str):
-    """
-    Re-evaluate decisions affected by a specific policy
-    
-    Args:
-        policy_id: ID of the policy that changed
-    """
-    try:
-        if not batch_processor:
-            raise HTTPException(status_code=503, detail="Batch processor not initialized")
-        
-        result = await batch_processor.reevaluate_by_policy(policy_id)
-        return result
-    except Exception as e:
-        logger.error(f"Policy-based re-evaluation failed: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.post("/api/batch/impact-report")
-async def generate_impact_report(reevaluation_summary: dict):
-    """
-    Generate human-readable impact report from re-evaluation results
-    
-    Args:
-        reevaluation_summary: Result from reevaluate_all endpoint
-    """
-    try:
-        if not batch_processor:
-            raise HTTPException(status_code=503, detail="Batch processor not initialized")
-        
-        report = batch_processor.generate_impact_report(reevaluation_summary)
-        return {
-            "report": report,
-            "timestamp": datetime.now().isoformat()
-        }
-    except Exception as e:
-        logger.error(f"Impact report generation failed: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-# Risk Scoring Endpoints
-@app.get("/api/risk/statistics")
-async def get_risk_statistics():
-    """
-    Get comprehensive risk statistics across all decisions
-    
-    Returns:
-        Statistics including total cases, verdict distribution, average risk scores
-    """
-    try:
-        if not risk_scorer:
-            raise HTTPException(
-                status_code=503, 
-                detail="Risk scoring service is not available. Please check system status."
+    @app.get("/{path:path}", include_in_schema=False)
+    def frontend(path: str):
+        if path == "api" or path.startswith("api/"):
+            raise problem(404, "not_found", "API endpoint not found.")
+        if not (dist / "index.html").is_file():
+            raise problem(
+                503,
+                "frontend_not_built",
+                "Run npm ci and npm run build in frontend, then restart the server.",
             )
-        
-        stats = risk_scorer.get_risk_statistics()
-        
-        # Add demo mode indicator
-        if demo_mode:
-            stats["demo_mode"] = True
-            stats["note"] = "Running in demo mode - statistics based on local storage only"
-        
-        return stats
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Failed to get risk statistics: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=500, 
-            detail=f"Failed to retrieve risk statistics: {str(e)}"
-        )
+        return FileResponse(dist / "index.html")
+
+    return app
 
 
-# External Data Sources Endpoints
-@app.post("/api/external-data/fetch")
-async def fetch_external_data(source: str, force_refresh: bool = False):
-    """
-    Manually fetch data from external sources
-    
-    Args:
-        source: OFAC, FATF, or RBI
-        force_refresh: If True, bypass cache and fetch fresh data
-    """
-    try:
-        if not external_data_manager:
-            raise HTTPException(status_code=503, detail="External data manager not initialized")
-        
-        logger.info(f"Manual fetch triggered for {source} (force_refresh={force_refresh})")
-        result = await external_data_manager.fetch_data(source, use_cache=not force_refresh)
-        return result
-    except Exception as e:
-        logger.error(f"External data fetch failed: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.post("/api/external-data/sync")
-async def sync_all_external_data():
-    """
-    Sync all external data sources (OFAC, FATF, RBI)
-    """
-    try:
-        if not external_data_manager:
-            raise HTTPException(status_code=503, detail="External data manager not initialized")
-        
-        logger.info("Full sync triggered for all external data sources")
-        results = await external_data_manager.sync_all()
-        return {
-            "status": "completed",
-            "results": results,
-            "timestamp": datetime.now().isoformat()
-        }
-    except Exception as e:
-        logger.error(f"External data sync failed: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.get("/api/external-data/scheduler/status")
-async def get_scheduler_status():
-    """
-    Get data scheduler status and scheduled jobs
-    """
-    try:
-        if not data_scheduler:
-            raise HTTPException(status_code=503, detail="Data scheduler not initialized")
-        
-        status = data_scheduler.get_status()
-        return status
-    except Exception as e:
-        logger.error(f"Failed to get scheduler status: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.post("/api/external-data/scheduler/trigger")
-async def trigger_scheduled_fetch(source: str):
-    """
-    Manually trigger a scheduled data fetch job
-    
-    Args:
-        source: OFAC, FATF, RBI, or ALL
-    """
-    try:
-        if not data_scheduler:
-            raise HTTPException(status_code=503, detail="Data scheduler not initialized")
-        
-        logger.info(f"Manual trigger for {source} scheduled fetch")
-        result = data_scheduler.trigger_job(source)
-        return result
-    except Exception as e:
-        logger.error(f"Failed to trigger scheduled fetch: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.get("/api/external-data/history")
-async def get_fetch_history(limit: int = 50):
-    """
-    Get history of external data fetches
-    
-    Args:
-        limit: Maximum number of records to return
-    """
-    try:
-        if not storage_service:
-            raise HTTPException(status_code=503, detail="Storage service not initialized")
-        
-        history = storage_service.get_external_data_history(limit)
-        return history
-    except Exception as e:
-        logger.error(f"Failed to get fetch history: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=settings.api_port)
+app = create_app()

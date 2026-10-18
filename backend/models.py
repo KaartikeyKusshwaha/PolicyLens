@@ -1,156 +1,69 @@
-from pydantic import BaseModel, Field
-from typing import List, Optional, Dict, Any
-from datetime import datetime
-from enum import Enum
+from decimal import Decimal
+from typing import Literal
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
-class PolicySource(str, Enum):
-    INTERNAL = "internal"
-    OFAC = "ofac"
-    FATF = "fatf"
-    RBI = "rbi"
-    EU_AML = "eu_aml"
+class Input(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
 
-class PolicyTopic(str, Enum):
-    AML = "aml"
-    KYC = "kyc"
-    SANCTIONS = "sanctions"
-    FRAUD = "fraud"
-    GENERAL = "general"
+class PolicyInput(Input):
+    title: str = Field(min_length=3, max_length=180)
+    content: str = Field(min_length=50, max_length=300_000)
+    topic: Literal["aml", "kyc", "sanctions", "fraud", "general"] = "general"
+    version: str = Field(default="1.0", min_length=1, max_length=30)
+    source_url: str = Field(default="", max_length=1000)
+
+    @field_validator("source_url")
+    @classmethod
+    def source_is_link(cls, value):
+        if value and not value.startswith(("https://", "http://")):
+            raise ValueError("Use an http or https source link.")
+        return value
 
 
-class RiskLevel(str, Enum):
-    HIGH = "high"
-    MEDIUM = "medium"
-    LOW = "low"
-    ACCEPTABLE = "acceptable"
+class Transaction(Input):
+    transaction_id: str = Field(min_length=1, max_length=100)
+    amount: Decimal = Field(gt=0, max_digits=18, decimal_places=2)
+    currency: str = Field(pattern=r"^[A-Z]{3}$")
+    sender: str = Field(min_length=2, max_length=200)
+    receiver: str = Field(min_length=2, max_length=200)
+    sender_country: str = Field(min_length=2, max_length=100)
+    receiver_country: str = Field(min_length=2, max_length=100)
+    description: str = Field(min_length=10, max_length=2000)
 
 
-class DecisionVerdict(str, Enum):
-    FLAG = "flag"
-    NEEDS_REVIEW = "needs_review"
-    ACCEPTABLE = "acceptable"
-
-
-class PolicyDocument(BaseModel):
-    doc_id: str
-    title: str
-    content: str
-    source: PolicySource
-    topic: PolicyTopic
-    version: str = "1.0"
-    valid_from: datetime = Field(default_factory=datetime.now)
-    valid_to: Optional[datetime] = None
-    is_active: bool = True
-    metadata: Dict[str, Any] = {}
-
-
-class PolicyChunk(BaseModel):
-    chunk_id: str
-    doc_id: str
-    text: str
-    embedding: Optional[List[float]] = None
-    doc_title: str
-    section: Optional[str] = None
-    source: PolicySource
-    topic: PolicyTopic
-    version: str
-    valid_from: datetime
-    valid_to: Optional[datetime] = None
-    is_active: bool = True
-
-
-class Transaction(BaseModel):
-    transaction_id: str
-    amount: float
-    currency: str
-    sender: str
-    receiver: str
-    sender_country: Optional[str] = None
-    receiver_country: Optional[str] = None
-    timestamp: datetime = Field(default_factory=datetime.now)
-    description: Optional[str] = None
-    metadata: Dict[str, Any] = {}
-
-
-class PolicyCitation(BaseModel):
-    doc_id: str
-    doc_title: str
-    section: Optional[str] = None
-    text: str
-    relevance_score: float
-    version: str
-
-
-class SimilarCase(BaseModel):
-    case_id: str
-    transaction_id: str
-    similarity_score: float
-    decision: DecisionVerdict
-    reasoning: str
-    timestamp: datetime
-
-
-class ComplianceDecision(BaseModel):
-    transaction_id: str
-    verdict: DecisionVerdict
-    risk_level: RiskLevel
-    risk_score: float
-    reasoning: str
-    policy_citations: List[PolicyCitation]
-    similar_cases: List[SimilarCase] = []
-    confidence: float
-    timestamp: datetime = Field(default_factory=datetime.now)
-    reviewed_by: Optional[str] = None
-    override_notes: Optional[str] = None
-
-
-class TransactionEvaluationRequest(BaseModel):
+class EvaluationRequest(Input):
     transaction: Transaction
 
 
-class TransactionEvaluationResponse(BaseModel):
-    decision: ComplianceDecision
-    trace_id: str
-    processing_time_ms: float
+class QueryInput(Input):
+    query: str = Field(min_length=5, max_length=2000)
+    topic: Literal["aml", "kyc", "sanctions", "fraud", "general"] | None = None
 
 
-class PolicyUploadRequest(BaseModel):
-    title: str
-    content: str
-    source: PolicySource
-    topic: PolicyTopic
-    version: str = "1.0"
-    metadata: Dict[str, Any] = {}
+class Citation(Input):
+    chunk_id: str
+    quote: str = Field(min_length=15, max_length=1500)
 
 
-class PolicyUpdateNotification(BaseModel):
-    doc_id: str
-    old_version: str
-    new_version: str
-    changes_detected: List[str]
-    impacted_transactions: int
-    timestamp: datetime = Field(default_factory=datetime.now)
+class Answer(Input):
+    answer: str = Field(min_length=20, max_length=10000)
+    citations: list[Citation] = Field(min_length=1, max_length=8)
+    limitations: list[str] = Field(max_length=10)
 
 
-class FeedbackRequest(BaseModel):
-    transaction_id: str
-    decision_id: str
-    corrected_verdict: DecisionVerdict
-    corrected_reasoning: str
-    reviewer_notes: str
-    reviewer_id: str
+class Assessment(Input):
+    verdict: Literal["flag", "needs_review", "acceptable"]
+    risk_score: int = Field(ge=0, le=100)
+    reasoning: str = Field(min_length=30, max_length=10000)
+    citations: list[Citation] = Field(min_length=1, max_length=8)
+    risk_factors: list[str] = Field(max_length=12)
+    limitations: list[str] = Field(min_length=1, max_length=10)
 
 
-class QueryRequest(BaseModel):
-    query: str
-    topic: Optional[PolicyTopic] = None
-    top_k: int = 5
-
-
-class QueryResponse(BaseModel):
-    query: str
-    answer: str
-    citations: List[PolicyCitation]
-    confidence: float
+class ReviewInput(Input):
+    verdict: Literal["flag", "needs_review", "acceptable"]
+    reviewer: str = Field(min_length=2, max_length=100)
+    notes: str = Field(min_length=10, max_length=3000)

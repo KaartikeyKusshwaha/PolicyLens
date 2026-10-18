@@ -1,41 +1,209 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { ThemeProvider } from './contexts/ThemeContext';
-import Navbar from './components/Navbar';
-import Dashboard from './pages/Dashboard';
-import EvaluateTransaction from './pages/EvaluateTransaction';
-import Policies from './pages/Policies';
-import QueryAssistant from './pages/QueryAssistant';
-import UploadPolicy from './pages/UploadPolicy';
-import DecisionHistory from './pages/DecisionHistory';
-import Metrics from './pages/Metrics';
-import FeedbackViewer from './pages/FeedbackViewer';
-import ExternalDataSources from './pages/ExternalDataSources';
+import { createContext, useContext, useEffect, useState } from "react";
+import {
+  BrowserRouter,
+  Link,
+  NavLink,
+  Route,
+  Routes,
+  useLocation,
+} from "react-router-dom";
+import {
+  Activity,
+  ArrowUpRight,
+  BookOpen,
+  ChevronRight,
+  Database,
+  FileCheck2,
+  HelpCircle,
+  LayoutDashboard,
+  Menu,
+  Moon,
+  PanelLeftClose,
+  ScanLine,
+  ShieldCheck,
+  Sparkles,
+  Sun,
+  X,
+} from "lucide-react";
+import { useResource } from "./components";
+import Overview from "./pages/Overview";
+import Evaluate from "./pages/Evaluate";
+import { Policies, PolicyEditor } from "./pages/Policies";
+import Assistant from "./pages/Assistant";
+import { Decisions, DecisionDetail } from "./pages/Decisions";
+import Sources from "./pages/Sources";
 
-function App() {
+const WorkspaceContext = createContext(null);
+export const useWorkspace = () => useContext(WorkspaceContext);
+const navigation = [
+  { to: "/", label: "Overview", icon: LayoutDashboard },
+  { to: "/evaluate", label: "Evaluate transaction", icon: ScanLine },
+  { to: "/policies", label: "Policy library", icon: BookOpen },
+  { to: "/assistant", label: "Policy assistant", icon: Sparkles },
+  { to: "/decisions", label: "Decision history", icon: FileCheck2 },
+  { to: "/sources", label: "Data sources", icon: Database },
+];
+
+function Workspace() {
+  const health = useResource("/health");
+  const [open, setOpen] = useState(false);
+  const [dark, setDark] = useState(
+    () => localStorage.getItem("policylens-theme") === "dark",
+  );
+  const location = useLocation();
+  useEffect(() => {
+    document.documentElement.dataset.theme = dark ? "dark" : "light";
+    localStorage.setItem("policylens-theme", dark ? "dark" : "light");
+  }, [dark]);
+  const active = navigation.find((n) =>
+    n.to === "/"
+      ? location.pathname === "/"
+      : location.pathname.startsWith(n.to),
+  );
+  const closeMenu = () => setOpen(false);
   return (
-    <ThemeProvider>
-      <Router>
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 transition-colors duration-200">
-          <Navbar />
-          <main className="container mx-auto px-4 py-8">
+    <WorkspaceContext.Provider value={{ health }}>
+      <div className="app-shell">
+        {open && (
+          <button
+            className="sidebar-scrim"
+            aria-label="Close navigation"
+            onClick={closeMenu}
+          />
+        )}
+        <aside className={`sidebar ${open ? "is-open" : ""}`}>
+          <Link className="brand" to="/" onClick={closeMenu}>
+            <span className="brand-mark">
+              <ScanLine size={24} />
+            </span>
+            <span>
+              Policy<span className="brand-light">Lens</span>
+              <small>COMPLIANCE INTELLIGENCE</small>
+            </span>
+          </Link>
+          <div className="workspace-picker">
+            <span className="workspace-avatar">PL</span>
+            <span>
+              Personal workspace<small>Local environment</small>
+            </span>
+          </div>
+          <div className="nav-label">WORKSPACE</div>
+          <nav aria-label="Main navigation">
+            {navigation.map(({ to, label, icon: Icon }) => (
+              <NavLink key={to} to={to} end={to === "/"} onClick={closeMenu}>
+                <Icon size={19} />
+                <span>{label}</span>
+                {to === "/assistant" && <span className="ai-tag">AI</span>}
+              </NavLink>
+            ))}
+          </nav>
+          <div className="sidebar-bottom">
+            <div className="sidebar-note">
+              <ShieldCheck size={20} />
+              <strong>Evidence at every step.</strong>
+              <p>Trace an assessment back to the policy that supports it.</p>
+              <Link to="/policies" onClick={closeMenu}>
+                Explore your library <ArrowUpRight size={14} />
+              </Link>
+            </div>
+            <div className="sidebar-footer">
+              <span className={`status-dot ${health.data ? "green" : ""}`} />
+              <span>
+                {health.error
+                  ? "API unreachable"
+                  : health.data
+                    ? "Local storage connected"
+                    : "Connecting…"}
+              </span>
+              <span className="version">v2.0</span>
+            </div>
+          </div>
+        </aside>
+        <div className="main-shell">
+          <div className="topbar">
+            <div className="breadcrumbs">
+              <button
+                className="icon-button mobile-menu"
+                aria-label="Open navigation"
+                onClick={() => setOpen(true)}
+              >
+                <Menu size={20} />
+              </button>
+              <span>Workspace</span>
+              <ChevronRight size={13} />
+              <strong>{active?.label || "PolicyLens"}</strong>
+            </div>
+            <div className="topbar-actions">
+              <Link className="connection-chip" to="/sources">
+                <Activity size={14} />
+                {health.data?.ai.status === "configured"
+                  ? "AI configured"
+                  : "Setup required"}
+              </Link>
+              <a
+                href="/docs"
+                target="_blank"
+                rel="noreferrer"
+                className="icon-button"
+                aria-label="API documentation"
+              >
+                <HelpCircle size={18} />
+              </a>
+              <button
+                className="icon-button"
+                aria-label={dark ? "Use light theme" : "Use dark theme"}
+                onClick={() => setDark(!dark)}
+              >
+                {dark ? <Sun size={18} /> : <Moon size={18} />}
+              </button>
+              <span className="profile-avatar" title="Personal workspace">
+                PL
+              </span>
+            </div>
+          </div>
+          <main key={location.pathname} id="main-content">
             <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/evaluate" element={<EvaluateTransaction />} />
+              <Route path="/" element={<Overview />} />
+              <Route path="/evaluate" element={<Evaluate />} />
               <Route path="/policies" element={<Policies />} />
-              <Route path="/query" element={<QueryAssistant />} />
-              <Route path="/upload" element={<UploadPolicy />} />
-              <Route path="/decisions" element={<DecisionHistory />} />
-              <Route path="/external-data" element={<ExternalDataSources />} />
-              <Route path="/metrics" element={<Metrics />} />
-              <Route path="/feedback" element={<FeedbackViewer />} />
-              <Route path="/external-data" element={<ExternalDataSources />} />
+              <Route path="/policies/new" element={<PolicyEditor />} />
+              <Route path="/policies/:id/edit" element={<PolicyEditor />} />
+              <Route path="/assistant" element={<Assistant />} />
+              <Route path="/query" element={<Assistant />} />
+              <Route path="/decisions" element={<Decisions />} />
+              <Route path="/decisions/:id" element={<DecisionDetail />} />
+              <Route path="/sources" element={<Sources />} />
+              <Route path="/external-data" element={<Sources />} />
+              <Route
+                path="*"
+                element={
+                  <div className="empty">
+                    <X size={30} />
+                    <h1>Page not found</h1>
+                    <Link to="/">Back to overview</Link>
+                  </div>
+                }
+              />
             </Routes>
+            <footer className="page-footer">
+              <span>
+                <ShieldCheck size={13} /> PolicyLens · Evidence-led compliance
+              </span>
+              <span>AI assessments require human review.</span>
+            </footer>
           </main>
         </div>
-      </Router>
-    </ThemeProvider>
+      </div>
+    </WorkspaceContext.Provider>
   );
 }
-
-export default App;
+export default function App() {
+  return (
+    <BrowserRouter>
+      <a className="skip-link" href="#main-content">
+        Skip to content
+      </a>
+      <Workspace />
+    </BrowserRouter>
+  );
+}
