@@ -5,6 +5,7 @@ import sqlite3
 import time
 import uuid
 from contextlib import asynccontextmanager, suppress
+from pathlib import Path
 from urllib.parse import urlparse
 
 import httpx
@@ -31,6 +32,7 @@ from operations import Operations, audit
 from product_models import NamedWorkspace
 from providers import extract_document, problem, verify_citations
 from store import Store, now
+from runtime import InstallationLock
 
 logger = logging.getLogger("policylens")
 
@@ -46,11 +48,19 @@ def create_app(settings=None, transport=None, *, start_worker=True):
     settings = settings or Settings()
 
     @asynccontextmanager
-    async def lifespan(app):
+    async def application_state(app):
         app.state.settings = settings
+        app.state.hub = Hub(settings)
+        with app.state.hub.connect() as db:
+            registered_paths = [
+                row[0] for row in db.execute("SELECT db_path FROM organizations")
+            ]
+        if any(not Path(path).is_file() for path in registered_paths):
+            raise RuntimeError(
+                "A registered workspace database is missing. Restore the installation before starting; no replacement workspace database was created."
+            )
         app.state.store = Store(settings.database_path)
         Operations(app.state.store)
-        app.state.hub = Hub(settings)
         if app.state.hub.needs_setup():
             logger.warning(
                 "First workspace setup required. Bootstrap key file: %s",
@@ -75,7 +85,21 @@ def create_app(settings=None, transport=None, *, start_worker=True):
                 with suppress(asyncio.CancelledError):
                     await worker
 
-    app = FastAPI(title="PolicyLens Operations", version="3.0.0", lifespan=lifespan)
+    @asynccontextmanager
+    async def lifespan(app):
+        with InstallationLock(settings.database_path.parent):
+            async with application_state(app):
+                yield
+
+    public_deployment = settings.deployment_mode == "public"
+    app = FastAPI(
+        title="PolicyLens Operations",
+        version="3.0.0",
+        lifespan=lifespan,
+        docs_url=None if public_deployment else "/docs",
+        redoc_url=None if public_deployment else "/redoc",
+        openapi_url=None if public_deployment else "/openapi.json",
+    )
     app.add_middleware(
         TrustedHostMiddleware,
         allowed_hosts=[
@@ -84,6 +108,7 @@ def create_app(settings=None, transport=None, *, start_worker=True):
     )
     public = {
         "/api/health",
+        "/api/ready",
         "/api/auth/status",
         "/api/auth/login",
         "/api/auth/setup",
@@ -96,16 +121,42 @@ def create_app(settings=None, transport=None, *, start_worker=True):
         writing = request.method not in ("GET", "HEAD", "OPTIONS")
         try:
             if (
+                public_deployment
+                and request.url.scheme != "https"
+                and path not in ("/api/health", "/api/ready")
+            ):
+                raise problem(
+                    403,
+                    "https_required",
+                    "Public deployments require HTTPS. Configure your trusted reverse proxy before signing in.",
+                )
+            if (
                 request.headers.get("content-length", "").isdigit()
                 and int(request.headers["content-length"]) > 6_000_000
             ):
                 raise problem(413, "request_too_large", "Request body exceeds 6 MB.")
+            if (
+                writing
+                and path.startswith("/api/")
+                and not path.startswith("/api/webhooks/")
+            ):
+                body = bytearray()
+                async for chunk in request.stream():
+                    body.extend(chunk)
+                    if len(body) > 6_000_000:
+                        raise problem(
+                            413, "request_too_large", "Request body exceeds 6 MB."
+                        )
+                request._body = bytes(body)
             if path.startswith("/api/") and not path.startswith("/api/webhooks/"):
                 origin = request.headers.get("origin")
                 if (
                     writing
                     and origin
-                    and urlparse(origin).netloc != request.headers.get("host")
+                    and (
+                        urlparse(origin).netloc != request.headers.get("host")
+                        or urlparse(origin).scheme != request.url.scheme
+                    )
                 ):
                     raise problem(
                         403, "origin_denied", "Cross-origin mutations are not allowed."
@@ -154,6 +205,18 @@ def create_app(settings=None, transport=None, *, start_worker=True):
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["Permissions-Policy"] = (
+            "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+        )
+        if path not in ("/docs", "/redoc", "/docs/oauth2-redirect"):
+            response.headers["Content-Security-Policy"] = (
+                "default-src 'self'; script-src 'self'; connect-src 'self'; "
+                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+                "font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; "
+                "object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+            )
+        if public_deployment and request.url.scheme == "https":
+            response.headers["Strict-Transport-Security"] = "max-age=31536000"
         if path.startswith("/api/"):
             response.headers["Cache-Control"] = "no-store"
         return response
@@ -286,12 +349,25 @@ def create_app(settings=None, transport=None, *, start_worker=True):
                 "model": settings.groq_model,
             },
             "sanctions": provider.sanctions_status(),
+            "api_docs_enabled": not public_deployment,
             "agent_worker": "disabled"
             if app.state.worker is None
             else "failed"
             if app.state.worker.done()
             else "running",
         }
+
+    @app.get("/api/ready")
+    def readiness():
+        worker = app.state.worker
+        try:
+            with app.state.hub.connect() as db:
+                db.execute("SELECT 1 FROM organizations LIMIT 1").fetchone()
+            if worker is not None and worker.done():
+                return JSONResponse({"status": "not_ready"}, status_code=503)
+        except sqlite3.Error:
+            return JSONResponse({"status": "not_ready"}, status_code=503)
+        return {"status": "ready"}
 
     @app.get("/api/dashboard")
     def dashboard(request: Request):
@@ -549,6 +625,15 @@ def create_app(settings=None, transport=None, *, start_worker=True):
 
     @app.get("/{path:path}", include_in_schema=False)
     def frontend(path: str):
+        if public_deployment and path in (
+            "docs",
+            "redoc",
+            "openapi.json",
+            "docs/oauth2-redirect",
+        ):
+            raise problem(
+                404, "not_found", "API documentation is disabled on public deployments."
+            )
         if path == "api" or path.startswith("api/"):
             raise problem(404, "not_found", "API endpoint not found.")
         if not (dist / "index.html").is_file():

@@ -9,14 +9,22 @@ The supported deployment is one native Python process serving the React build an
 | Your own computer | Recommended card-free pilot. Run `python run.py`; data remains on your disk. Agents and scheduled screening run only while the process and computer remain awake. It is not public hosting. |
 | Cloudflare Quick Tunnel + your computer | Recommended temporary card-free sharing option after local setup. No Cloudflare account/domain is required. Your computer still runs the application and stores SQLite; the URL changes on restart and has no uptime guarantee. This is a development/demo option. |
 | Oracle Always Free VM | A potential full pilot host if phone/card verification and capacity availability are acceptable. Use only resources explicitly marked Always Free, not trial credits. Keep separate backups; free resources have no SLA and idle accounts/resources can be reclaimed. |
+| AWS EC2 Free plan | A capable native VM alternative for an eligible new-account pilot, using its free credits. The Free plan ends after six months or when credits run out, whichever is first; it is not permanent free hosting. Do not convert to paid or activate paid-only services without reviewing costs. |
+| Google Compute Engine Free Tier | One eligible `e2-micro` VM and 30 GB-months standard persistent disk in selected US regions. A billing account is required; network/public-IP charges and usage outside the allowance can still apply. |
+| Railway free | Supports a small persistent volume and Python, with a $5 trial for up to 30 days, followed by $1 monthly free usage credit. That credit is not a guarantee of continuous monthly runtime for this app. |
 | Render free | Unsuitable for SQLite persistence: local files are lost on restart/redeploy/spindown, free services cannot attach a persistent disk, and sleeping stops the scheduler. |
 | PythonAnywhere free | Candidate for a limited experiment only: ASGI remains beta, outbound APIs are allowlisted, accounts have storage/CPU limits and web apps expire unless renewed. Verify every source endpoint and long-running worker behavior before choosing it. No deployment compatibility is claimed. |
 | alwaysdata free | Advertises card-free signup, 1 GB storage and 256 MB RAM, with personal/non-profit use restrictions and no separate services. Not recommended for this commercial product's full feeds/background workload. |
 | Netlify | React preview only. Static hosting does not run the Python process or preserve SQLite. A successful frontend preview is not a full application deployment. |
+| Vercel | Can serve the React frontend, but function filesystems cannot preserve the application's local SQLite database. The free Hobby plan permits personal, non-commercial use only. This application would still require a separate backend/storage host or an architecture change. |
 
 Official references: [Oracle resources and signup](https://docs.oracle.com/en-us/iaas/Content/FreeTier/freetier.htm), [Oracle FAQ](https://www.oracle.com/cloud/free/faq/), [Render free limits](https://render.com/docs/free), [PythonAnywhere ASGI](https://help.pythonanywhere.com/pages/ASGICommandLine/), [free account features](https://help.pythonanywhere.com/pages/FreeAccountsFeatures/), [outbound access](https://help.pythonanywhere.com/pages/403ForbiddenError/), [alwaysdata limits](https://help.alwaysdata.com/en/docs/admin-billing/billing/public-cloud-prices/), [alwaysdata signup description](https://www.alwaysdata.com/en/).
 
 No cloud account, payment method, public deployment or domain is created by this change. There is no verified card-free managed host here that provides all of this application's persistence, background execution and commercial-use requirements. A limited public demo must be described as such and use fictional records.
+
+Additional official references: [AWS Free plan terms](https://aws.amazon.com/free/), [Google free allowances](https://docs.cloud.google.com/free/docs/free-cloud-features), [Google networking prices](https://cloud.google.com/vpc/network-pricing), and [Railway pricing](https://railway.com/pricing). Render's paid service plus persistent disk is another compatible option; its free service remains unsuitable for local SQLite.
+
+Vercel references: [SQLite support](https://vercel.com/kb/guide/is-sqlite-supported-in-vercel) and [Hobby plan restrictions](https://vercel.com/docs/plans/hobby).
 
 ## Card-free temporary sharing
 
@@ -24,7 +32,7 @@ No cloud account, payment method, public deployment or domain is created by this
 
 1. Finish the owner-account setup locally first and use fictional records for a demo. Install `cloudflared` from the official download instructions linked in Cloudflare's documentation.
 2. With PolicyLens running, start `cloudflared tunnel --url http://127.0.0.1:8000` in a separate terminal. It prints a temporary `https://...trycloudflare.com` address. The default hostname protection will reject access until the next step.
-3. Add that exact hostname (without scheme/path) to `ALLOWED_HOSTS` in the private `backend/.env`, retaining `127.0.0.1,localhost`. Set `COOKIE_SECURE=true`, restart PolicyLens, and open the HTTPS URL. Sign in with your local account. Do not use a wildcard hostname allowance.
+3. Add that exact hostname (without scheme/path) to `ALLOWED_HOSTS` in the private `backend/.env`, retaining `127.0.0.1,localhost`. Set `DEPLOYMENT_MODE=public` and `COOKIE_SECURE=true`. Configure Uvicorn to trust forwarded headers only from the loopback tunnel proxy, restart PolicyLens, and open the HTTPS URL. Sign in with your local account. Do not use a wildcard hostname allowance.
 4. Keep the app, tunnel and computer running while sharing. The app's authentication remains required. Stop `cloudflared` when finished; restarting it creates a different hostname that must be allowed explicitly. Restore your local-only settings when returning to local development.
 
 No tunnel is started automatically by PolicyLens or by `run.py`. Review who should have access before sharing the URL; generated app invitations also require an authenticated owner to create them. The cloud VM template below is a separate option for a server you control.
@@ -42,6 +50,7 @@ The files in `deploy/` are templates, not an installed service. Use a Linux serv
    GROQ_API_KEY=your_own_key
    GROQ_MODEL=openai/gpt-oss-20b
    COOKIE_SECURE=true
+   DEPLOYMENT_MODE=public
    ALLOWED_HOSTS=your.actual.domain,127.0.0.1,localhost
    SANCTIONS_MAX_AGE_HOURS=24
    SESSION_HOURS=12
@@ -58,18 +67,34 @@ This template has been reviewed locally; it has not been provisioned or tested o
 
 ## Back up and recover
 
+The operator CLI now supports a complete, verified snapshot and restore drill. It shares an OS-level installation lock with the server and refuses to snapshot while that installation is running. It includes identity and all workspace databases, checks SHA-256 hashes and SQLite integrity, rebases workspace paths when restored, and revokes sessions in the restored copy. It never overwrites an existing destination.
+
+Stop the Python server, then run these commands from the repository root (use `.venv/bin/python` on Linux/macOS):
+
+```sh
+.venv\Scripts\python manage.py backup --output /private/backups/policylens-snapshot-UNIQUE
+.venv\Scripts\python manage.py verify /private/backups/policylens-snapshot-UNIQUE
+.venv\Scripts\python manage.py restore /private/backups/policylens-snapshot-UNIQUE --destination /private/restore-drills/policylens-UNIQUE
+```
+
+Restart the live server after taking the snapshot. A restore drill can run while the live server is back online because it creates a separate destination. The private environment/API-key file is intentionally excluded; preserve it separately. Backups contain confidential records and integration secrets: protect directory permissions and encrypt them before sending to an off-machine destination. Checksums detect corruption but do not authenticate a backup against a malicious administrator who can replace both the files and manifest.
+
+Before using a restored installation, point `DATABASE_PATH` at its restored primary database and start only that copy. Existing login passwords remain valid; browser sessions must sign in again. Running jobs become interrupted. Neither the source backup nor live installation is changed by the restore command.
+
 The UI backup is scoped to one workspace. It includes confidential customer/integration data and must be stored privately. It does not include central accounts or other workspaces.
 
-For a consistent whole-installation snapshot, stop the Python process, copy the complete configured data directory (including `identity.db`, workspace databases and any WAL/SHM files), copy the private environment file separately, then restart. Use a private encrypted off-machine destination and verify the copy; the repository is not a backup destination. Retain audit checkpoints outside the database if you need independent integrity evidence.
+Use the CLI for whole-installation recovery: it updates absolute workspace paths and invalidates restored sessions automatically. Preserve the old installation separately, restore service ownership/permissions, then sign in to the restored copy, check workspace membership/data and inspect interrupted jobs before explicitly resuming or starting a new run. Missing registered workspace files now prevent startup or return a storage error. Retain audit checkpoints outside the database if you need independent integrity evidence.
 
-To recover on the same filesystem paths: stop the server, preserve the current data as a separate recovery copy, restore the full data directory and private environment, restore service ownership/permissions, run `PRAGMA integrity_check` against each restored database, then start one process. Sign in, check workspace membership/data and inspect interrupted jobs before explicitly resuming or starting a new run.
-
-`identity.db` stores absolute workspace file paths. If moving to a different filesystem location, first preserve an untouched backup, then update `organizations.db_path` in the restored identity database to the new locations while the app is stopped. Do not use an identity database with missing workspace files: SQLite could create a new empty file at an outdated path.
-
-Test restoration with fictional data before depending on a backup. The automated suite downloads a workspace backup, restores it, and verifies SQLite integrity and customer records; full-host operational recovery remains the operator's responsibility.
+Test restoration with fictional data before depending on a backup. The automated suite covers both workspace backups and a complete multi-workspace restore, including SQLite integrity, customer records, session revocation and checksum tampering. Full-host operational recovery, automated scheduling, retention and off-machine encrypted storage remain the operator's responsibility.
 
 ## Operational limits
 
+For public deployment set `DEPLOYMENT_MODE=public` and `COOKIE_SECURE=true`, use explicit `ALLOWED_HOSTS`, and configure a trusted HTTPS reverse proxy. Public mode rejects plain HTTP except liveness/readiness probes and hides API documentation. The frontend hides its API-documentation link in that mode. CSP limits browser scripts/connections to this origin, allows only the named Google Fonts styles/font endpoints, blocks framing/plugins, and restrictive browser permission headers disable camera/microphone/location/payment/USB access.
+
+Use `/api/ready` for the host's readiness check. It returns 503 when central storage cannot be queried or the agent worker has stopped, without exposing account or configuration details. `/api/health` is the minimal public liveness endpoint. One installation lock prevents a second worker or recovery tool from starting against the same data directory. Missing registered workspace databases produce an explicit storage error instead of a new empty database.
+
 Free Groq quotas and public-source availability can interrupt workflows. They are surfaced as errors; there is no fabricated answer or alternate provider. Durable jobs retain completed steps, but a model attempt interrupted after dispatch cannot be repeated within the same run. New runs count against the daily budget.
+
+AI completions are bounded to 4,096 output tokens per call. Policy agents return up to five prioritized obligation themes with exact evidence and explicit coverage limitations; they do not claim exhaustive extraction. Provider failure logs contain schema/status/error-code metadata, never request bodies, policy text or credentials.
 
 Scheduled screening checks at the configured interval while the server is running. Source downloads are not a legal/regulatory change-monitoring service. Names, aliases and supplied LEIs do not replace KYC, ownership analysis or jurisdiction-specific professional interpretation. Configure incident response, access reviews, retention, encryption, monitoring and independently tested backups before a production launch.

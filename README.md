@@ -74,6 +74,7 @@ GROQ_API_KEY=
 GROQ_MODEL=openai/gpt-oss-20b
 SANCTIONS_MAX_AGE_HOURS=24
 COOKIE_SECURE=false
+DEPLOYMENT_MODE=local
 ALLOWED_HOSTS=127.0.0.1,localhost,testserver
 SESSION_HOURS=12
 AGENT_DAILY_RUNS=30
@@ -86,6 +87,10 @@ The existing filename `backend/data/policylens-v2.db` is retained to preserve v2
 Sessions use HttpOnly, SameSite=Strict cookies, hashed session IDs and per-session CSRF tokens. Passwords use scrypt; login attempts are throttled in SQLite. Production requires HTTPS, `COOKIE_SECURE=true`, an explicit hostname allowlist and a trusted reverse proxy. Invitation tokens expire after 48 hours and are single-use/email-bound; share the generated invitation link yourself. The app does not send email.
 
 Use **Audit & analytics -> Create backup** for an administrator-only workspace backup. A full disaster-recovery backup must also include `identity.db` and every workspace database. See [deployment and recovery](docs/DEPLOYMENT.md). Hash-linked audits detect changes against a retained checkpoint, but a database administrator can rewrite or truncate the entire chain. Store checkpoints separately when stronger assurance is needed.
+
+The operator command `python manage.py backup --output <new-private-folder>` takes a verified full snapshot while the server is stopped. `manage.py verify` checks it, and `manage.py restore ... --destination <new-folder>` performs a separate restore with rebased workspace paths and revoked sessions. The OS installation lock rejects concurrent server/backup writers. Private environment/API keys are excluded from snapshots.
+
+Public hosting must explicitly set `DEPLOYMENT_MODE=public` and `COOKIE_SECURE=true`. Public mode requires HTTPS, hides API docs, and applies restrictive browser headers; `/api/ready` exposes minimal readiness for storage and the background worker. See the [generated fictional acceptance pack](examples/fintech-pilot/README.md) for a complete test policy, customer/payment scenarios and independent-review workflow.
 
 ## Development and checks
 
@@ -109,6 +114,7 @@ Vite serves **http://127.0.0.1:3000** and proxies `/api` to Python. Production u
 ```sh
 .venv\Scripts\python -m pytest
 .venv\Scripts\python -m ruff check backend run.py
+.venv\Scripts\python -m ruff check manage.py
 cd frontend
 npm test
 npm run lint
@@ -117,6 +123,8 @@ npm audit
 ```
 
 CI uses isolated SQLite databases and mocked provider responses; no key or network is required. Tests cover access boundaries, cross-tenant isolation, source and AI failures, rules/approvals, late arrivals, simulations, case review, webhooks/replay, policy changes, durable agents, backups and audit tampering, plus React onboarding/forms/errors/citations/navigation. Live integrations should also be checked with fictional data before deploying.
+
+See the [dated validation record](docs/VALIDATION.md) for the generated live workflow, recovery drill and outstanding browser/deployment checks.
 
 ## Deployment scope
 

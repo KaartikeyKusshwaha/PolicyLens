@@ -361,7 +361,7 @@ class AgentEngine:
                         policy, 10000 if kind == "policy_change" else 14000
                     )
                     context = {
-                        "task": "Extract obligations from supplied policy excerpts. Identify exceptions, ambiguity, and missing coverage. All proposed controls require human review. Do not invent legal requirements or thresholds.",
+                        "task": "Extract up to five prioritized obligation themes from supplied policy excerpts, grouping closely related requirements. Keep the summary under 120 words, each obligation concise, and each quotation to one exact supporting sentence. Identify exceptions, ambiguity, omitted requirements, and missing coverage in limitations. This is not an exhaustive obligation inventory. All proposed controls require human review. Do not invent legal requirements or thresholds.",
                         "policies": chunks,
                         "coverage": coverage,
                         **extra,
@@ -483,6 +483,7 @@ class AgentEngine:
                 verified = {
                     **result,
                     "obligations": obligations,
+                    "output_scope": "Prioritized suggested obligations, not an exhaustive inventory. Review the full source document before implementation.",
                     "coverage": context.get("coverage", {}),
                     "requires_approval": True,
                 }

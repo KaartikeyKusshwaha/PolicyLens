@@ -166,15 +166,17 @@ function Workspace() {
                   ? "AI configured"
                   : "Setup required"}
               </Link>
-              <a
-                href="/docs"
-                target="_blank"
-                rel="noreferrer"
-                className="icon-button"
-                aria-label="API documentation"
-              >
-                <HelpCircle size={18} />
-              </a>
+              {health.data?.api_docs_enabled !== false && (
+                <a
+                  href="/docs"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="icon-button"
+                  aria-label="API documentation"
+                >
+                  <HelpCircle size={18} />
+                </a>
+              )}
               <button
                 className="icon-button"
                 aria-label={dark ? "Use light theme" : "Use dark theme"}

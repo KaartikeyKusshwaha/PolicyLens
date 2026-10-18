@@ -3,6 +3,7 @@
 import hashlib
 import io
 import json
+import logging
 import re
 import unicodedata
 from datetime import date, datetime, timedelta, timezone
@@ -275,8 +276,11 @@ class Providers:
                     "schema": output_schema,
                 },
             },
-            "max_completion_tokens": 2800,
+            "max_completion_tokens": 4096,
         }
+        response_status = None
+        finish_reason = None
+        provider_error_code = None
         try:
             response = await self.client.post(
                 GROQ_URL,
@@ -286,6 +290,18 @@ class Providers:
                 },
                 timeout=60,
             )
+            response_status = response.status_code
+            if response.is_error:
+                try:
+                    code = response.json().get("error", {}).get("code", "unknown")
+                    provider_error_code = (
+                        code
+                        if isinstance(code, str)
+                        and re.fullmatch(r"[a-zA-Z0-9_]{1,100}", code)
+                        else "unknown"
+                    )
+                except (ValueError, AttributeError):
+                    provider_error_code = "unknown"
             if response.status_code == 429:
                 raise problem(
                     429,
@@ -300,6 +316,7 @@ class Providers:
                 )
             response.raise_for_status()
             choice = response.json()["choices"][0]
+            finish_reason = choice.get("finish_reason")
             if choice["finish_reason"] != "stop":
                 raise ValueError("Incomplete AI response")
             return schema.model_validate_json(choice["message"]["content"]).model_dump()
@@ -311,6 +328,14 @@ class Providers:
             TypeError,
             ValidationError,
         ) as exc:
+            logging.getLogger("policylens.providers").warning(
+                "Groq response rejected: schema=%s http=%s finish=%s code=%s cause=%s",
+                schema.__name__,
+                response_status,
+                finish_reason,
+                provider_error_code,
+                type(exc).__name__,
+            )
             raise problem(
                 502,
                 "invalid_ai_response",

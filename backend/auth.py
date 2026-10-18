@@ -232,6 +232,12 @@ class Hub:
             return [dict(r) for r in db.execute("SELECT id,name FROM organizations")]
 
     def store(self, org_id):
+        if org_id in self.stores and not self.stores[org_id].path.is_file():
+            raise problem(
+                503,
+                "workspace_storage_missing",
+                "Workspace storage is missing. Restore its database; no replacement database was created.",
+            )
         if org_id not in self.stores:
             with self.connect() as db:
                 row = db.execute(
@@ -241,7 +247,14 @@ class Hub:
                 raise problem(404, "workspace_not_found", "Workspace not found.")
             from operations import Operations
 
-            store = Store(Path(row[0]))
+            path = Path(row[0])
+            if not path.is_file():
+                raise problem(
+                    503,
+                    "workspace_storage_missing",
+                    "Workspace storage is missing. Restore its database before restarting; no replacement database was created.",
+                )
+            store = Store(path)
             Operations(store)
             self.stores[org_id] = store
         return self.stores[org_id]
@@ -308,6 +321,9 @@ class Hub:
     def create_workspace(self, user_id, name):
         org_id = str(uuid.uuid4())
         path = self.path.parent / "workspaces" / (org_id + ".db")
+        from operations import Operations
+
+        Operations(Store(path))
         with self.connect() as db:
             db.execute(
                 "INSERT INTO organizations VALUES (?,?,?,?)",

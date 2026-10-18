@@ -17,7 +17,7 @@ jobs:
           cache-dependency-path: backend/requirements*.txt
       - run: python -m pip install -r backend/requirements-dev.txt
       - run: python -m pytest
-      - run: python -m ruff check backend run.py
+      - run: python -m ruff check backend run.py manage.py
   frontend:
     runs-on: ubuntu-latest
     defaults:

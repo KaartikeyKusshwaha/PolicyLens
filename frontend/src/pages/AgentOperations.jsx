@@ -363,6 +363,10 @@ export function AgentRun() {
               {result.obligations && (
                 <>
                   <h3>Proposed obligations</h3>
+                  <p className="section-copy">
+                    {result.output_scope ||
+                      "Prioritized suggestions for human review; review the full source policy."}
+                  </p>
                   {result.obligations.map((o, i) => (
                     <article className="obligation-card" key={i}>
                       <span className="count-pill">{i + 1}</span>
