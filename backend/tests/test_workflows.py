@@ -121,6 +121,30 @@ def workspace(tmp_path):
                     "citations": citations,
                     "limitations": ["Test fixture only."],
                 }
+            elif body["response_format"]["json_schema"]["name"] == "investigationbrief":
+                content = {
+                    "summary": "This test investigation requires identity evidence before a human can reach a conclusion.",
+                    "recommendation": "review_for_closure"
+                    if state["mode"] == "unsafe_clear"
+                    else "investigate",
+                    "findings": ["Identity records are not supplied."],
+                    "missing_evidence": ["Verified sender and receiver identity."],
+                    "citations": citations,
+                    "limitations": ["Illustrative test policy only."],
+                }
+            elif body["response_format"]["json_schema"]["name"] == "policyanalysis":
+                content = {
+                    "summary": "The policy requires documented identity verification for international transfers.",
+                    "obligations": [
+                        {
+                            "obligation": "Verify the identity of sender and receiver before an international transfer.",
+                            "control_kind": "kyc",
+                            "citation": citations[0],
+                            "requires_human_interpretation": True,
+                        }
+                    ],
+                    "limitations": ["Only supplied excerpts were considered."],
+                }
             else:
                 content = {
                     "verdict": "acceptable"
@@ -157,8 +181,9 @@ def workspace(tmp_path):
         groq_api_key="test-secret-not-real",
         database_path=tmp_path / "test.db",
     )
-    app = create_app(settings, httpx.MockTransport(handler))
+    app = create_app(settings, httpx.MockTransport(handler), start_worker=False)
     with TestClient(app) as client:
+        authenticate(client)
         yield client, app.state.store, state, settings
 
 
@@ -173,7 +198,8 @@ def test_empty_workspace_and_missing_key(tmp_path):
     settings = Settings(
         _env_file=None, groq_api_key="", database_path=tmp_path / "empty.db"
     )
-    with TestClient(create_app(settings)) as client:
+    with TestClient(create_app(settings, start_worker=False)) as client:
+        authenticate(client)
         assert client.get("/api/health").json()["ai"]["status"] == "needs_key"
         assert client.get("/api/dashboard").json()["total"] == 0
         assert client.get("/api/policies").json() == []
@@ -475,3 +501,31 @@ def test_text_pdf_upload(workspace):
     )
     assert response.status_code == 201, response.text
     assert "verified sender" in response.json()["content"]
+
+
+def authenticate(client):
+    hub = client.app.state.hub
+    response = client.post(
+        "/api/auth/setup",
+        json={
+            "email": "owner@example.invalid",
+            "password": "Test-only-password-2026",
+            "name": "Authenticated Owner",
+            "workspace": "Test workspace",
+            "bootstrap_token": hub.bootstrap_file.read_text(),
+        },
+    )
+    assert response.status_code == 201, response.text
+    client.headers["X-CSRF-Token"] = response.json()["csrf"]
+    assert (
+        client.put(
+            "/api/preferences",
+            json={
+                "enabled_sources": ["ofac"],
+                "monitoring_enabled": False,
+                "monitoring_interval_hours": 6,
+            },
+        ).status_code
+        == 200
+    )
+    return response.json()

@@ -1,82 +1,102 @@
-# PolicyLens
+# PolicyLens Operations
 
-A local compliance research workspace built with **React, Python/FastAPI, and SQLite**. Add your policies, assess transactions, ask policy questions, and record human reviews with the original evidence attached.
+A cross-border fintech compliance pilot built with **React 19, Python/FastAPI, and SQLite**. Connect customer activity to documented controls, investigate exceptions, and retain the evidence behind human decisions.
 
-No Docker, Milvus, GPU, embedding downloads, paid API requirement, demo decisions, provider switching, or fabricated fallback answers.
+No Docker, Milvus, GPU, vector service, fabricated answers, alternate-provider fallback, or seeded business records. SQLite FTS5/BM25 is the primary document retrieval engine.
 
-## Start locally
+## Run locally
 
-Install **Python 3.11+** and **Node.js 22.12+**, then run from the repository root:
+Install Python 3.11+ and Node.js 22.12+, then run:
 
 ```sh
 python run.py
 ```
 
-The launcher creates `.venv`, installs dependencies, builds the React app, and serves both frontend and API at **http://127.0.0.1:8000**. Dependency installation is skipped on subsequent starts unless the manifests change. Stop with Ctrl+C.
+The launcher installs dependencies when their manifests change, builds React, and serves the app and API at **http://127.0.0.1:8000**. Stop with Ctrl+C.
 
-1. Create a [free Groq API key](https://console.groq.com/keys).
-2. Set `GROQ_API_KEY` in `backend/.env` (created by the launcher). Restart after changing it.
-3. Open **Data sources → Connect & sync** to fetch the complete official OFAC SDN feed.
-4. Add your actual compliance documents in **Policy library**.
-5. Run an evaluation or ask the **Policy assistant** a question.
+1. Open the local app. Read `backend/data/.bootstrap-token` locally and use it to create your owner account and first workspace. With a custom database path, the file is beside that database. The token is consumed after setup; never commit or share it.
+2. Add `GROQ_API_KEY` to ignored `backend/.env` and restart. Obtain your own [free-tier key](https://console.groq.com/keys); no other integration requires an API key.
+3. Sync the enabled feeds in **Data sources**. All three official feeds are enabled initially.
+4. Add your actual operating policies and customer records.
+5. Invite a second person from **Workspace settings**. An independent administrator or reviewer must approve a drafted control before it becomes active.
+6. Ingest transactions manually, by CSV, or through a signed webhook. Investigate triggered alerts and use agents to prepare reviewable drafts.
 
-The app opens with an empty policy library and assessment history. It can manage documents without an AI key; AI operations explicitly require one. Keys stay in the backend and are excluded from Git. Never place API keys in frontend code or chat messages.
+Business data starts empty. Offline/provider failures remain visible and never produce substitute decisions. The app can manage documents and deterministic monitoring without an AI key. Agent analysis and policy Q&A require Groq.
 
-## What works
+## Product workflows
 
-- **Policy library:** searchable titles/topics; paste text or upload UTF-8 TXT, text-based PDF, or DOCX (including tables). Maximum 5 MB and 300,000 characters; PDFs are limited to 300 pages. Scanned PDFs need OCR before uploading.
-- **Policy updates:** new version numbers replace the searchable current document. Existing assessments preserve their original policy excerpts and citations.
-- **Retrieval:** SQLite FTS5 with BM25 ranking is the primary retrieval engine. It is lexical search, not semantic vector search; use terminology present in your documents. No matching evidence means no AI answer.
-- **Transaction assessments:** validated monetary amounts, live USD reference conversion, full OFAC SDN name/alias screening, schema-validated Groq output, and citations whose IDs and quotations are checked against the retrieved text.
-- **Policy assistant:** document-grounded Q&A, topic filters, verified quotes, and visible limitations.
-- **Decision history:** paginated records, search/filter within the displayed page, immutable original AI assessments, append-only human review records, and downloadable audit JSON containing inputs, model, quotes, retrieved passages, sanctions snapshot checksum/time, and exchange-rate evidence.
-- **Workspace:** real counts, audit activity, actionable setup, mobile navigation, keyboard labels/focus, and persistent light/dark appearance.
+| Area | Working capabilities |
+| --- | --- |
+| Team access | Owner bootstrap; invite-only membership; administrator, analyst, reviewer and read-only auditor roles; password changes; access revocation; workspace switching and separate tenant databases. |
+| Customers | Individuals and companies, country, internal risk tier, recorded due diligence status, notes, public LEI lookup, sanctions screening, and an observed transaction relationship graph. |
+| Monitoring | Validated money and UTC timestamps, idempotent external IDs, CSV validation/import results, signed webhook ingestion, explicit internal controls, immutable alert snapshots and customer case grouping. |
+| Control workbench | Amount, transaction velocity, same-currency aggregate, corridor and due diligence conditions; draft versions; independent approval; historical simulation without live alerts. No regulatory thresholds are supplied or inferred. |
+| Investigations | Assignment, status transitions, escalation, notes, tasks, linked alerts and evidence, independent resolution review, and downloadable JSON case packs. Agents cannot close cases. |
+| Policy library | Text, text PDF and DOCX upload, lexical retrieval, archived versions, grounded Q&A and verified verbatim citations. Scanned PDFs need OCR before upload. |
+| Policy change impact | Archived version diff, linked controls, explicitly unconfirmed customer candidates, an analyst draft, human approval/dismissal and applicability review tasks. |
+| Agents | Investigation, screening, policy analyst, policy change and report roles; fixed tool sequence, durable jobs, recorded steps, pause/resume/cancel, budget limits, and deterministic evidence verification. |
+| Continuous screening | Opt-in scheduled refresh of selected sanctions feeds and customer name screening. Creates review cases for potential matches; uses no model calls. Requires the Python process to stay running. |
+| Audit and operations | Real counts, corridor/disposition analytics, overdue cases, hash-linked audit events, downloadable checkpoints, workspace SQLite backup and integrity verification. |
 
-## Free web integrations
+React supplies the interactive interface, with responsive layouts, light/dark themes, loading/error/empty states, accessible form labels and source provenance.
 
-| Capability | Provider | Authentication / limits |
+## Public integrations
+
+| Provider | Purpose | Account / scope |
 | --- | --- | --- |
-| AI analysis | [Groq](https://console.groq.com/docs/rate-limits), default `openai/gpt-oss-20b` | Free-tier key required; account/model limits apply. No automatic paid upgrade or alternate provider. |
-| Sanctions evidence | [U.S. Treasury OFAC](https://ofac.treasury.gov/sanctions-list-service) official SDN XML feed | No key. Downloads every primary entry and alias; manually refresh in Data sources. |
-| Exchange rates | [Frankfurter v2](https://frankfurter.dev/) | Free, no key. Latest daily USD reference rate fetched for each non-USD evaluation. |
+| [Groq](https://console.groq.com/docs/structured-outputs) | Strict schema AI drafts and Q&A; default `openai/gpt-oss-20b` | Free-tier key required; [account/model limits](https://console.groq.com/docs/rate-limits) apply. No automatic paid upgrade or model/provider switching. |
+| [OFAC](https://ofac.treasury.gov/sanctions-list-service) | Official full SDN XML names and aliases | Key-free. |
+| [United Nations](https://main.un.org/securitycouncil/en/content/un-sc-consolidated-list) | Official consolidated XML names and aliases | Key-free. |
+| [UK FCDO](https://www.gov.uk/government/publications/the-uk-sanctions-list) | Official UK Sanctions List XML names and aliases | Key-free. |
+| [GLEIF](https://www.gleif.org/en/lei-data/gleif-api) | Reference lookup for a supplied LEI | Key-free; reference data, not identity verification or complete ownership coverage. |
+| [Frankfurter](https://frankfurter.dev/) | Daily USD reference conversion for individual AI assessments | Key-free. USD uses identity rate 1; no unsupported currency substitution. Monitoring controls operate in their configured currency. |
 
-OFAC snapshots are valid for 24 hours after successful download by default. A stale/missing snapshot stops assessments until you sync. Failed syncs never replace the last downloaded snapshot or reset its age. The UI displays sync times and record counts. Download publication dates and SHA-256 checksums are retained in assessment evidence.
+Every enabled sanctions source must have a valid snapshot, fresh within 24 hours by default. Failed syncs preserve the previous snapshot and its original age. Download/publication times and SHA-256 checksums are recorded. Source selection is explicit in settings; disabled lists are outside screening coverage.
 
-Non-USD evaluations stop if a valid reference rate is unavailable, older than seven days, or future-dated. USD uses the mathematical identity rate of 1. Dates are reference dates, not execution quotes. Failed AI requests, rate limits, incomplete responses, invalid scores, and unverified quotations return explicit errors and do not save decisions. A potential OFAC match cannot receive an acceptable AI verdict.
+Matching uses normalized name/alias similarity >= 0.88. Potential matches require identity review. No match is not clearance. Beneficial ownership rules, PEP/adverse-media datasets, every sanctions list and every transliteration are outside this implementation. No hardcoded FATF lists or unimplemented regulatory scraping claims are included.
 
-Groq output uses [strict structured outputs](https://console.groq.com/docs/structured-outputs). Set `GROQ_MODEL` only to a model supporting that capability; unsupported/retired models produce an explicit provider error, never an alternate model or canned assessment.
+Non-USD assessments stop if reference rates are unavailable, invalid, older than seven days or future-dated. Invalid AI schemas, unverified quotations and inconsistent clearance recommendations fail visibly. A potential sanctions match cannot receive an acceptable assessment.
 
-The previous hardcoded FATF country lists and RBI/EU scraping claims have been removed. Import the current policies you actually use; this app does not claim coverage for sources it does not retrieve.
+## Agent boundaries
 
-## Configuration
+The Python orchestrator controls available tools and ordering. Policy text and transaction descriptions cannot grant tool permissions. Each workflow records evidence collection, optional sanctions screening, model draft and evidence verification. Verification checks citations and constraints; it does not prove every narrative inference.
 
-Copy `backend/.env.example` to `backend/.env` if starting manually:
+The default limit is 30 new agent runs per workspace per UTC day and one model attempt per run. Pausing takes effect at a step boundary; an already-sent API request may finish. Restarted running jobs become interrupted and require explicit resume. A consumed/failed model attempt requires a new run, retaining the failed history. Completed steps may be reused only within the same run; expired or changed sanctions evidence prevents resume.
+
+Context is limited to 18,000 characters. Investigation samples use up to 50 recent transactions, reduced explicitly to 10 if needed. Policy analysis uses an explicit partial-document coverage summary; large cases fail instead of silently dropping evidence. Policy impact candidates are not confirmed affected customers. Agent drafts never activate controls, approve customers, execute payments, submit filings or resolve investigations.
+
+## Configuration and persistence
+
+Copy `backend/.env.example` if starting manually. Relevant settings:
 
 ```dotenv
-GROQ_API_KEY=your_key_here
+GROQ_API_KEY=
 GROQ_MODEL=openai/gpt-oss-20b
 SANCTIONS_MAX_AGE_HOURS=24
-# DATABASE_PATH=/absolute/path/to/policylens-v2.db
+COOKIE_SECURE=false
+ALLOWED_HOSTS=127.0.0.1,localhost,testserver
+SESSION_HOURS=12
+AGENT_DAILY_RUNS=30
+AGENT_MAX_CONTEXT_CHARS=18000
+# DATABASE_PATH=/absolute/persistent/path/policylens-v2.db
 ```
 
-The default database lives at `backend/data/policylens-v2.db`, resolved relative to the backend source rather than your shell directory. Back up the database with SQLite's backup API or stop the server before copying the database and its WAL files. The data folder and all local secrets are excluded from Git.
+The existing filename `backend/data/policylens-v2.db` is retained to preserve v2 data. The first created workspace adopts that database. Later workspaces have separate files under `data/workspaces/`; central identities, memberships and sessions live in `data/identity.db`. Original pre-v2 sample data is not imported. All data, local environment files and generated exports are ignored by Git.
 
-This version uses a **new v2 database**, not the legacy schema or checked-in sample decisions. Legacy code/data remain recoverable from Git history. There is no implicit import of old or synthetic records. API response shapes have changed to match the new React client.
+Sessions use HttpOnly, SameSite=Strict cookies, hashed session IDs and per-session CSRF tokens. Passwords use scrypt; login attempts are throttled in SQLite. Production requires HTTPS, `COOKIE_SECURE=true`, an explicit hostname allowlist and a trusted reverse proxy. Invitation tokens expire after 48 hours and are single-use/email-bound; share the generated invitation link yourself. The app does not send email.
 
-## Development
+Use **Audit & analytics -> Create backup** for an administrator-only workspace backup. A full disaster-recovery backup must also include `identity.db` and every workspace database. See [deployment and recovery](docs/DEPLOYMENT.md). Hash-linked audits detect changes against a retained checkpoint, but a database administrator can rewrite or truncate the entire chain. Store checkpoints separately when stronger assurance is needed.
 
-Backend (repository root):
+## Development and checks
 
 ```sh
 python -m venv .venv
-# Windows
+# Windows; use .venv/bin/python on Linux/macOS
 .venv\Scripts\python -m pip install -r backend/requirements-dev.txt
-cd backend
-..\.venv\Scripts\python -m uvicorn main:app --reload --host 127.0.0.1 --port 8000
-# macOS/Linux equivalent: ../.venv/bin/python -m uvicorn main:app --reload --host 127.0.0.1 --port 8000
+.venv\Scripts\python -m uvicorn main:app --app-dir backend --reload --host 127.0.0.1 --port 8000
 ```
 
-Frontend (another terminal):
+In another terminal:
 
 ```sh
 cd frontend
@@ -84,9 +104,7 @@ npm ci
 npm run dev
 ```
 
-Open **http://127.0.0.1:3000**. Vite proxies `/api` to Python. Production builds are served directly by FastAPI on port 8000; frontend calls use the same origin. API documentation is at **http://127.0.0.1:8000/docs**.
-
-Checks (repository root; replace the Python executable for your platform):
+Vite serves **http://127.0.0.1:3000** and proxies `/api` to Python. Production uses the React build served by FastAPI. Interactive API documentation: **http://127.0.0.1:8000/docs**.
 
 ```sh
 .venv\Scripts\python -m pytest
@@ -98,12 +116,12 @@ npm run build
 npm audit
 ```
 
-Backend tests use isolated temporary SQLite databases and mocked provider HTTP responses, so CI requires no key or network feed. React tests cover onboarding, navigation, theme, policy input, offline errors, evaluation failures, and cited answers. CI runs both suites and builds the frontend.
+CI uses isolated SQLite databases and mocked provider responses; no key or network is required. Tests cover access boundaries, cross-tenant isolation, source and AI failures, rules/approvals, late arrivals, simulations, case review, webhooks/replay, policy changes, durable agents, backups and audit tampering, plus React onboarding/forms/errors/citations/navigation. Live integrations should also be checked with fictional data before deploying.
 
-## Scope
+## Deployment scope
 
-This is a **single-user local application**. It intentionally binds to loopback and has no user authentication or multi-tenant isolation. Do not expose it to the public internet without adding authentication, authorization, HTTPS, and operational controls. No cloud hosting or payments are configured.
+This is a working single-process product pilot, not a certification of regulatory compliance. Scheduled screening supports at most 2,000 customers per run. Historical control simulations support 10,000 transactions, and one late event can recheck at most 1,000 subsequent windows. CSV imports allow 500 rows / 1 MB; policy uploads allow 5 MB / 300,000 characters / 300 PDF pages. Lists and graphs state their sample bounds. These are operational limits, not claims of enterprise scale.
 
-AI scores are estimates rather than calibrated probabilities. An `acceptable` result is advisory against supplied policies, never regulatory clearance or payment approval. Screening covers OFAC SDN names/aliases using normalized name similarity ≥ 0.88; it does not cover beneficial ownership, every sanctions list, or all transliterations. Human review is required. A lack of matches is not clearance.
+Run one Python worker on one machine with persistent disk. Horizontal replicas and multiple Uvicorn workers are unsupported because scheduling and local SQLite ownership assume one process. Netlify can preview the React build, but it cannot host this persistent Python/SQLite backend. Free hosts that erase local files are unsuitable.
 
-Relevant policy excerpts, questions, transaction details, and screening results are sent to Groq. Review its data terms before using confidential material. The app never executes transfers. Audit JSON is the supported report format; the old PDF report, automatic batch re-evaluation, and background scraping/scheduler paths were removed with their unreliable infrastructure.
+SSO/MFA, verified KYC, external notification delivery, transaction blocking, regulatory filing, automated retention/deletion policies, database encryption at rest and high availability are not implemented. Relevant selected evidence is sent to Groq; evaluate its data terms before using confidential records. AI risk scores are estimates, not calibrated probabilities or legal/payment approval. Use synthetic data for a public demonstration until your operational and data-handling requirements are satisfied.

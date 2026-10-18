@@ -26,6 +26,7 @@ import {
   verdictLabel,
 } from "../components";
 import { api } from "../services/api";
+import { useSession } from "../session";
 
 export function Decisions() {
   const [offset, setOffset] = useState(0);
@@ -120,6 +121,7 @@ export function Decisions() {
 }
 
 export function DecisionDetail() {
+  const { user } = useSession();
   const { id } = useParams();
   const { data, loading, error, reload } = useResource(`/decisions/${id}`);
   const [reviewError, setReviewError] = useState("");
@@ -231,8 +233,9 @@ export function DecisionDetail() {
               <div>
                 <h2>Sanctions screening</h2>
                 <p>
-                  Official OFAC SDN snapshot ·{" "}
-                  {screening.source.count.toLocaleString()} entries
+                  {(screening.sources || [screening.source])
+                    .map((s) => s.name || s.id)
+                    .join(" · ")}
                 </p>
               </div>
               <Badge
@@ -252,8 +255,9 @@ export function DecisionDetail() {
                     {m.party}: {m.input_name} · Matched name: {m.matched_name}
                   </p>
                   <small>
-                    {(m.similarity * 100).toFixed(1)}% name similarity · OFAC ID{" "}
-                    {m.entity_id} · {m.programs.join(", ")}
+                    {(m.similarity * 100).toFixed(1)}% name similarity ·{" "}
+                    {m.source_id || "ofac"} ID {m.entity_id} ·{" "}
+                    {m.programs.join(", ")}
                   </small>
                 </div>
               ))}
@@ -309,13 +313,7 @@ export function DecisionDetail() {
               <form onSubmit={review} className="review-form">
                 <div className="form-grid">
                   <Field label="Reviewer name">
-                    <input
-                      name="reviewer"
-                      minLength={2}
-                      maxLength={100}
-                      required
-                      placeholder="Your name"
-                    />
+                    <input name="reviewer" value={user.name} readOnly />
                   </Field>
                   <Field label="Your assessment">
                     <select name="verdict" defaultValue="needs_review">

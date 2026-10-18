@@ -1,0 +1,23 @@
+[Unit]
+Description=PolicyLens compliance operations
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=policylens
+Group=policylens
+WorkingDirectory=/opt/policylens/backend
+EnvironmentFile=/etc/policylens.env
+ExecStart=/opt/policylens/.venv/bin/python -m uvicorn main:app --host 127.0.0.1 --port 8000 --workers 1 --proxy-headers --forwarded-allow-ips 127.0.0.1
+Restart=on-failure
+RestartSec=5
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/policylens
+
+[Install]
+WantedBy=multi-user.target

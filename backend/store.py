@@ -33,6 +33,8 @@ class Store:
                     id TEXT PRIMARY KEY, fetched_at TEXT, payload TEXT);
                 CREATE TABLE IF NOT EXISTS events (
                     id TEXT PRIMARY KEY, created_at TEXT, kind TEXT, payload TEXT);
+                CREATE TABLE IF NOT EXISTS policy_versions(policy_id TEXT,version TEXT,created_at TEXT,payload TEXT,PRIMARY KEY(policy_id,version));
+                CREATE TABLE IF NOT EXISTS records(kind TEXT,id TEXT PRIMARY KEY,created_at TEXT,updated_at TEXT,payload TEXT);
             """)
 
     @contextmanager
@@ -59,11 +61,50 @@ class Store:
         policy_id = policy_id or str(uuid.uuid4())
         words = data["content"].split()
         with self.connect() as db:
+            db.execute("BEGIN IMMEDIATE")
             old = db.execute(
                 "SELECT * FROM policies WHERE id=?", (policy_id,)
             ).fetchone()
             if old and old["version"] == data["version"]:
                 raise ValueError("Use a new version when updating a policy.")
+            if db.execute(
+                "SELECT 1 FROM policy_versions WHERE policy_id=? AND version=?",
+                (policy_id, data["version"]),
+            ).fetchone():
+                raise ValueError("A historical version number cannot be reused.")
+            if old:
+                db.execute(
+                    "INSERT OR IGNORE INTO policy_versions VALUES (?,?,?,?)",
+                    (
+                        policy_id,
+                        old["version"],
+                        old["updated_at"],
+                        json.dumps(dict(old)),
+                    ),
+                )
+                change = {
+                    "id": str(uuid.uuid4()),
+                    "policy_id": policy_id,
+                    "title": data["title"],
+                    "old_version": old["version"],
+                    "new_version": data["version"],
+                    "status": "pending_review",
+                    "created_at": stamp,
+                    "updated_at": stamp,
+                }
+                db.execute(
+                    "INSERT INTO records VALUES (?,?,?,?,?)",
+                    ("policy_change", change["id"], stamp, stamp, json.dumps(change)),
+                )
+            db.execute(
+                "INSERT INTO policy_versions VALUES (?,?,?,?)",
+                (
+                    policy_id,
+                    data["version"],
+                    stamp,
+                    json.dumps({"id": policy_id, **data}),
+                ),
+            )
             db.execute(
                 "INSERT OR REPLACE INTO policies VALUES (?,?,?,?,?,?,?,?)",
                 (
@@ -176,6 +217,14 @@ class Store:
                 "INSERT OR REPLACE INTO sources VALUES (?,?,?)",
                 (source_id, payload["fetched_at"], json.dumps(payload)),
             )
+
+    def source_metadata(self, source_id):
+        with self.connect() as db:
+            row = db.execute(
+                "SELECT json_remove(payload,'$.entries') FROM sources WHERE id=?",
+                (source_id,),
+            ).fetchone()
+        return json.loads(row[0]) if row else None
 
     def decision(self, decision_id):
         with self.connect() as db:

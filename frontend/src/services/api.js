@@ -1,13 +1,21 @@
+let csrfToken = "";
+export function setSessionToken(value) {
+  csrfToken = value || "";
+}
+
 export async function api(path, { method = "GET", body, signal } = {}) {
   let response;
   try {
     response = await fetch(`/api${path}`, {
       method,
       signal,
-      headers:
-        body && !(body instanceof FormData)
+      credentials: "same-origin",
+      headers: {
+        ...(body && !(body instanceof FormData)
           ? { "Content-Type": "application/json" }
-          : undefined,
+          : {}),
+        ...(method !== "GET" && csrfToken ? { "X-CSRF-Token": csrfToken } : {}),
+      },
       body:
         body instanceof FormData
           ? body
@@ -21,8 +29,17 @@ export async function api(path, { method = "GET", body, signal } = {}) {
       "Cannot reach PolicyLens. Check that the Python server is running.",
     );
   }
-  const data = await response.json();
+  let data;
+  try {
+    data = await response.json();
+  } catch {
+    throw new Error(
+      "The Python API did not return a valid response. This deployment needs the PolicyLens backend connected at /api.",
+    );
+  }
   if (!response.ok) {
+    if (response.status === 401 && !path.startsWith("/auth/"))
+      window.dispatchEvent(new Event("policylens-session-expired"));
     const detail = data.detail;
     const message =
       typeof detail === "string"
@@ -32,7 +49,10 @@ export async function api(path, { method = "GET", body, signal } = {}) {
               .map((item) => `${item.loc.slice(1).join(" → ")}: ${item.msg}`)
               .join("; ")
           : detail?.message || "The request failed. Please try again.";
-    throw new Error(message);
+    const error = new Error(message);
+    error.status = response.status;
+    error.details = detail;
+    throw error;
   }
   return data;
 }

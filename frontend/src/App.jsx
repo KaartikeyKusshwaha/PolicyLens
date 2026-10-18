@@ -24,27 +24,52 @@ import {
   Sparkles,
   Sun,
   X,
+  Users,
+  Workflow,
+  Bot,
+  SlidersHorizontal,
+  GitCompareArrows,
+  Settings2,
+  Fingerprint,
+  LogOut,
 } from "lucide-react";
 import { useResource } from "./components";
-import Overview from "./pages/Overview";
 import Evaluate from "./pages/Evaluate";
 import { Policies, PolicyEditor } from "./pages/Policies";
 import Assistant from "./pages/Assistant";
 import { Decisions, DecisionDetail } from "./pages/Decisions";
 import Sources from "./pages/Sources";
+import { SessionProvider, AuthGate, useSession } from "./session";
+import { api } from "./services/api";
+import CommandCenter from "./pages/CommandCenter";
+import { Customers, CustomerEditor, CustomerDetail } from "./pages/Customers";
+import Monitoring from "./pages/Monitoring";
+import { Cases, CaseDetail } from "./pages/Cases";
+import { AgentOperations, AgentRun } from "./pages/AgentOperations";
+import { Controls, ControlEditor, ControlDetail } from "./pages/Controls";
+import { PolicyChanges, ChangeDetail } from "./pages/PolicyChanges";
+import AuditAnalytics from "./pages/AuditAnalytics";
+import WorkspaceSettings from "./pages/WorkspaceSettings";
 
 const WorkspaceContext = createContext(null);
 export const useWorkspace = () => useContext(WorkspaceContext);
 const navigation = [
-  { to: "/", label: "Overview", icon: LayoutDashboard },
-  { to: "/evaluate", label: "Evaluate transaction", icon: ScanLine },
+  { to: "/", label: "Command center", icon: LayoutDashboard },
+  { to: "/customers", label: "Customers & entities", icon: Users },
+  { to: "/monitoring", label: "Transaction monitoring", icon: Activity },
+  { to: "/cases", label: "Investigations", icon: Workflow },
+  { to: "/agents", label: "Agent operations", icon: Bot },
+  { to: "/rules", label: "Control workbench", icon: SlidersHorizontal },
   { to: "/policies", label: "Policy library", icon: BookOpen },
+  { to: "/changes", label: "Policy change impact", icon: GitCompareArrows },
   { to: "/assistant", label: "Policy assistant", icon: Sparkles },
-  { to: "/decisions", label: "Decision history", icon: FileCheck2 },
   { to: "/sources", label: "Data sources", icon: Database },
+  { to: "/audit", label: "Audit & analytics", icon: Fingerprint },
+  { to: "/settings", label: "Workspace settings", icon: Settings2 },
 ];
 
 function Workspace() {
+  const session = useSession();
   const health = useResource("/health");
   const [open, setOpen] = useState(false);
   const [dark, setDark] = useState(
@@ -84,7 +109,8 @@ function Workspace() {
           <div className="workspace-picker">
             <span className="workspace-avatar">PL</span>
             <span>
-              Personal workspace<small>Local environment</small>
+              {session.user.workspace}
+              <small>{session.user.role} · Cross-border compliance</small>
             </span>
           </div>
           <div className="nav-label">WORKSPACE</div>
@@ -115,7 +141,7 @@ function Workspace() {
                     ? "Local storage connected"
                     : "Connecting…"}
               </span>
-              <span className="version">v2.0</span>
+              <span className="version">v3.0</span>
             </div>
           </div>
         </aside>
@@ -156,14 +182,45 @@ function Workspace() {
               >
                 {dark ? <Sun size={18} /> : <Moon size={18} />}
               </button>
-              <span className="profile-avatar" title="Personal workspace">
-                PL
+              <span className="profile-avatar" title={session.user.name}>
+                {session.user.name
+                  .split(" ")
+                  .map((v) => v[0])
+                  .slice(0, 2)
+                  .join("")}
               </span>
+              <button
+                className="icon-button"
+                aria-label="Sign out"
+                onClick={async () => {
+                  await api("/auth/logout", { method: "POST" });
+                  session.setUser(null);
+                }}
+              >
+                <LogOut size={17} />
+              </button>
             </div>
           </div>
           <main key={location.pathname} id="main-content">
             <Routes>
-              <Route path="/" element={<Overview />} />
+              <Route path="/" element={<CommandCenter />} />
+              <Route path="/customers" element={<Customers />} />
+              <Route path="/customers/new" element={<CustomerEditor />} />
+              <Route path="/customers/:id" element={<CustomerDetail />} />
+              <Route path="/customers/:id/edit" element={<CustomerEditor />} />
+              <Route path="/monitoring" element={<Monitoring />} />
+              <Route path="/cases" element={<Cases />} />
+              <Route path="/cases/:id" element={<CaseDetail />} />
+              <Route path="/agents" element={<AgentOperations />} />
+              <Route path="/agents/:id" element={<AgentRun />} />
+              <Route path="/rules" element={<Controls />} />
+              <Route path="/rules/new" element={<ControlEditor />} />
+              <Route path="/rules/:id" element={<ControlDetail />} />
+              <Route path="/rules/:id/edit" element={<ControlEditor />} />
+              <Route path="/changes" element={<PolicyChanges />} />
+              <Route path="/changes/:id" element={<ChangeDetail />} />
+              <Route path="/audit" element={<AuditAnalytics />} />
+              <Route path="/settings" element={<WorkspaceSettings />} />
               <Route path="/evaluate" element={<Evaluate />} />
               <Route path="/policies" element={<Policies />} />
               <Route path="/policies/new" element={<PolicyEditor />} />
@@ -199,11 +256,15 @@ function Workspace() {
 }
 export default function App() {
   return (
-    <BrowserRouter>
-      <a className="skip-link" href="#main-content">
-        Skip to content
-      </a>
-      <Workspace />
-    </BrowserRouter>
+    <SessionProvider>
+      <AuthGate>
+        <BrowserRouter>
+          <a className="skip-link" href="#main-content">
+            Skip to content
+          </a>
+          <Workspace />
+        </BrowserRouter>
+      </AuthGate>
+    </SessionProvider>
   );
 }

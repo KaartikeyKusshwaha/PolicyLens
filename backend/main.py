@@ -1,18 +1,24 @@
 import asyncio
+import hmac
 import logging
 import sqlite3
 import time
 import uuid
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
+from urllib.parse import urlparse
 
 import httpx
-from fastapi import FastAPI, File, Form, HTTPException, Query, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import ValidationError
 from starlette.concurrency import run_in_threadpool
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 
+from agents import AgentEngine
+from auth import Credentials, Hub, Invite, Join, Setup
 from config import ROOT, Settings
+from intelligence import Intelligence, SOURCES
 from models import (
     Answer,
     Assessment,
@@ -21,28 +27,136 @@ from models import (
     QueryInput,
     ReviewInput,
 )
-from providers import Providers, extract_document, problem, verify_citations
+from operations import Operations, audit
+from product_models import NamedWorkspace
+from providers import extract_document, problem, verify_citations
 from store import Store, now
 
 logger = logging.getLogger("policylens")
 
 
-def create_app(settings=None, transport=None):
+def require_roles(request, *roles):
+    if request.state.user["role"] not in roles:
+        raise problem(
+            403, "role_required", "Your workspace role does not allow this action."
+        )
+
+
+def create_app(settings=None, transport=None, *, start_worker=True):
     settings = settings or Settings()
 
     @asynccontextmanager
     async def lifespan(app):
+        app.state.settings = settings
         app.state.store = Store(settings.database_path)
+        Operations(app.state.store)
+        app.state.hub = Hub(settings)
+        if app.state.hub.needs_setup():
+            logger.warning(
+                "First workspace setup required. Bootstrap key file: %s",
+                app.state.hub.bootstrap_file,
+            )
         async with httpx.AsyncClient(
             transport=transport,
             follow_redirects=True,
-            headers={"User-Agent": "PolicyLens/2.0"},
+            headers={"User-Agent": "PolicyLens/3.0"},
         ) as client:
-            app.state.providers = Providers(settings, app.state.store, client)
-            app.state.sync_lock = asyncio.Lock()
+            app.state.client = client
+            app.state.providers = Intelligence(settings, app.state.store, client)
+            app.state.engine = AgentEngine(app.state.hub, settings, client)
+            app.state.sync_locks = {}
+            worker = (
+                asyncio.create_task(app.state.engine.loop()) if start_worker else None
+            )
+            app.state.worker = worker
             yield
+            if worker:
+                worker.cancel()
+                with suppress(asyncio.CancelledError):
+                    await worker
 
-    app = FastAPI(title="PolicyLens", version="2.0.0", lifespan=lifespan)
+    app = FastAPI(title="PolicyLens Operations", version="3.0.0", lifespan=lifespan)
+    app.add_middleware(
+        TrustedHostMiddleware,
+        allowed_hosts=[
+            v.strip() for v in settings.allowed_hosts.split(",") if v.strip()
+        ],
+    )
+    public = {
+        "/api/health",
+        "/api/auth/status",
+        "/api/auth/login",
+        "/api/auth/setup",
+        "/api/auth/join",
+    }
+
+    @app.middleware("http")
+    async def security(request, call_next):
+        path = request.url.path
+        writing = request.method not in ("GET", "HEAD", "OPTIONS")
+        try:
+            if (
+                request.headers.get("content-length", "").isdigit()
+                and int(request.headers["content-length"]) > 6_000_000
+            ):
+                raise problem(413, "request_too_large", "Request body exceeds 6 MB.")
+            if path.startswith("/api/") and not path.startswith("/api/webhooks/"):
+                origin = request.headers.get("origin")
+                if (
+                    writing
+                    and origin
+                    and urlparse(origin).netloc != request.headers.get("host")
+                ):
+                    raise problem(
+                        403, "origin_denied", "Cross-origin mutations are not allowed."
+                    )
+                if writing and request.headers.get("sec-fetch-site") == "cross-site":
+                    raise problem(
+                        403, "origin_denied", "Cross-site mutations are not allowed."
+                    )
+                user = app.state.hub.authenticate(
+                    request.cookies.get("policylens_session")
+                )
+                request.state.user = user
+                if path not in public:
+                    if not user:
+                        raise problem(
+                            401, "authentication_required", "Sign in to your workspace."
+                        )
+                    if writing and not hmac.compare_digest(
+                        request.headers.get("x-csrf-token", "").encode(),
+                        user["csrf"].encode(),
+                    ):
+                        raise problem(
+                            403,
+                            "csrf_required",
+                            "Refresh your session before submitting this action.",
+                        )
+                    if (
+                        writing
+                        and user["role"] == "auditor"
+                        and not path.startswith("/api/auth/")
+                    ):
+                        raise problem(
+                            403, "read_only_role", "Auditor access is read-only."
+                        )
+                if user:
+                    request.state.store = app.state.hub.store(user["org_id"])
+                    request.state.ops = Operations(request.state.store)
+                    request.state.providers = Intelligence(
+                        settings, request.state.store, app.state.client
+                    )
+            response = await call_next(request)
+        except HTTPException as exc:
+            response = JSONResponse(
+                status_code=exc.status_code, content={"detail": exc.detail}
+            )
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        if path.startswith("/api/"):
+            response.headers["Cache-Control"] = "no-store"
+        return response
 
     @app.exception_handler(Exception)
     async def unexpected_error(request, exc):
@@ -57,42 +171,164 @@ def create_app(settings=None, transport=None):
             },
         )
 
-    @app.get("/api/health")
-    def health():
-        provider = app.state.providers
-        with app.state.store.connect() as db:
-            db.execute("SELECT 1").fetchone()
+    def set_session(response, user_id, org_id):
+        token, user = app.state.hub.session(user_id, org_id)
+        response.set_cookie(
+            "policylens_session",
+            token,
+            httponly=True,
+            secure=settings.cookie_secure,
+            samesite="strict",
+            max_age=settings.session_hours * 3600,
+            path="/",
+        )
+        return user
+
+    @app.get("/api/auth/status")
+    def auth_status():
         return {
-            "status": "ok",
-            "version": "2.0.0",
-            "storage": "sqlite_fts5",
+            "setup_required": app.state.hub.needs_setup(),
+            "registration": "invite_only",
+            "bootstrap_file": "backend/data/.bootstrap-token",
+        }
+
+    @app.post("/api/auth/setup", status_code=201)
+    def setup(data: Setup, request: Request):
+        app.state.hub.throttle(
+            "setup:" + (request.client.host if request.client else "unknown")
+        )
+        user_id, org_id = app.state.hub.setup(data)
+        result = JSONResponse({}, status_code=201)
+        user = set_session(result, user_id, org_id)
+        result.body = JSONResponse(user).body
+        result.headers["content-length"] = str(len(result.body))
+        return result
+
+    @app.post("/api/auth/login")
+    def login(data: Credentials, request: Request):
+        app.state.hub.throttle(
+            "login:" + (request.client.host if request.client else "unknown")
+        )
+        user_id, org_id = app.state.hub.login(data)
+        result = JSONResponse({})
+        user = set_session(result, user_id, org_id)
+        result.body = JSONResponse(user).body
+        result.headers["content-length"] = str(len(result.body))
+        return result
+
+    @app.post("/api/auth/join", status_code=201)
+    def join(data: Join, request: Request):
+        app.state.hub.throttle(
+            "join:" + (request.client.host if request.client else "unknown")
+        )
+        user_id, org_id = app.state.hub.join(data)
+        result = JSONResponse({}, status_code=201)
+        user = set_session(result, user_id, org_id)
+        result.body = JSONResponse(user).body
+        result.headers["content-length"] = str(len(result.body))
+        return result
+
+    @app.get("/api/auth/me")
+    def me(request: Request):
+        return request.state.user
+
+    @app.post("/api/auth/logout")
+    def logout(request: Request):
+        app.state.hub.logout(request.cookies.get("policylens_session"))
+        result = JSONResponse({"signed_out": True})
+        result.delete_cookie("policylens_session", path="/")
+        return result
+
+    @app.get("/api/auth/workspaces")
+    def workspaces(request: Request):
+        return app.state.hub.organizations(request.state.user["id"])
+
+    @app.post("/api/auth/workspaces", status_code=201)
+    def new_workspace(data: NamedWorkspace, request: Request):
+        require_roles(request, "admin")
+        org_id = app.state.hub.create_workspace(request.state.user["id"], data.name)
+        return {"id": org_id, "name": data.name}
+
+    @app.post("/api/auth/workspaces/{org_id}/switch")
+    def switch_workspace(org_id: str, request: Request):
+        app.state.hub.switch(
+            request.cookies["policylens_session"], request.state.user["id"], org_id
+        )
+        return {"switched": True}
+
+    @app.get("/api/team")
+    def team(request: Request):
+        return app.state.hub.team(request.state.user["org_id"])
+
+    @app.post("/api/team/invites", status_code=201)
+    def invite(data: Invite, request: Request):
+        require_roles(request, "admin")
+        result = app.state.hub.invite(request.state.user["org_id"], data)
+        with request.state.store.connect() as db:
+            audit(
+                db,
+                request.state.user["id"],
+                "member_invited",
+                {"email": result["email"], "role": result["role"]},
+            )
+        return result
+
+    @app.get("/api/health")
+    def health(request: Request):
+        base = {"status": "ok", "version": "3.0.0", "storage": "sqlite_fts5"}
+        if not request.state.user:
+            return base
+        provider = request.state.providers
+        return {
+            **base,
             "ai": {
                 "status": "configured" if provider.ai_configured else "needs_key",
                 "model": settings.groq_model,
             },
             "sanctions": provider.sanctions_status(),
+            "agent_worker": "disabled"
+            if app.state.worker is None
+            else "failed"
+            if app.state.worker.done()
+            else "running",
         }
 
     @app.get("/api/dashboard")
-    def dashboard():
-        store = app.state.store
+    def dashboard(request: Request):
+        store = request.state.store
         return {
             **store.dashboard(),
             "policies": len(store.policies()),
             "recent": store.decisions(6),
-            "health": health(),
+            "health": health(request),
+            "operations": request.state.ops.analytics(),
         }
 
     @app.get("/api/policies")
-    def policies():
-        return app.state.store.policies()
+    def policies(request: Request):
+        return request.state.store.policies()
+
+    def record_policy(data, request, policy_id=None):
+        try:
+            result = request.state.store.save_policy(data, policy_id)
+        except ValueError as exc:
+            raise problem(409, "version_conflict", str(exc)) from exc
+        with request.state.store.connect() as db:
+            audit(
+                db,
+                request.state.user["id"],
+                "policy_updated" if policy_id else "policy_added",
+                {"policy_id": result["id"], "version": result["version"]},
+            )
+        return result
 
     @app.post("/api/policies", status_code=201)
-    def add_policy(data: PolicyInput):
-        return app.state.store.save_policy(data)
+    def add_policy(data: PolicyInput, request: Request):
+        return record_policy(data, request)
 
     @app.post("/api/policies/file", status_code=201)
     async def upload_policy(
+        request: Request,
         file: UploadFile = File(...),
         title: str = Form(...),
         topic: str = Form("general"),
@@ -117,7 +353,7 @@ def create_app(settings=None, transport=None):
             raise problem(
                 422,
                 "invalid_document",
-                "The document needs a title, valid topic, and 50–300,000 characters of selectable text. Scanned PDFs need OCR before upload.",
+                "Use a title and 50–300,000 characters of selectable policy text. Scanned PDFs need OCR before upload.",
             ) from exc
         except HTTPException:
             raise
@@ -125,60 +361,60 @@ def create_app(settings=None, transport=None):
             raise problem(
                 422,
                 "unreadable_document",
-                "Could not read this file. Use an unencrypted, text-based PDF, DOCX, or UTF-8 TXT file.",
+                "Could not read the file. Use an unencrypted text-based PDF, DOCX, or UTF-8 TXT file.",
             ) from exc
         finally:
             await file.close()
-        return app.state.store.save_policy(data)
+        return record_policy(data, request)
 
     @app.get("/api/policies/{policy_id}")
-    def policy(policy_id: str):
-        result = app.state.store.policy(policy_id)
+    def policy(policy_id: str, request: Request):
+        result = request.state.store.policy(policy_id)
         if not result:
             raise problem(404, "not_found", "Policy not found.")
         return result
 
     @app.put("/api/policies/{policy_id}")
-    def update_policy(policy_id: str, data: PolicyInput):
-        policy(policy_id)
-        try:
-            return app.state.store.save_policy(data, policy_id)
-        except ValueError as exc:
-            raise problem(409, "version_conflict", str(exc)) from exc
+    def update_policy(policy_id: str, data: PolicyInput, request: Request):
+        policy(policy_id, request)
+        return record_policy(data, request, policy_id)
 
     @app.get("/api/sources")
-    def sources():
+    def sources(request: Request):
+        provider = request.state.providers
         return {
             "groq": {
-                "status": "configured"
-                if app.state.providers.ai_configured
-                else "needs_key",
+                "status": "configured" if provider.ai_configured else "needs_key",
                 "model": settings.groq_model,
                 "url": "https://console.groq.com/docs/rate-limits",
             },
-            "ofac": app.state.providers.sanctions_status(),
-            "frankfurter": {
+            "ofac": provider.status("ofac"),
+            "feeds": [provider.status(s) for s in SOURCES],
+            "enabled_sources": provider.selected_sources(),
+            "frankfurter": {"status": "on_demand", "url": "https://frankfurter.dev/"},
+            "gleif": {
                 "status": "on_demand",
-                "url": "https://frankfurter.dev/",
-                "description": "Live daily reference rates; fetched during non-USD evaluations.",
+                "url": "https://www.gleif.org/en/lei-data/gleif-api/",
             },
             "max_age_hours": settings.sanctions_max_age_hours,
         }
 
-    @app.post("/api/sources/ofac/sync")
-    async def sync_ofac():
-        if app.state.sync_lock.locked():
-            raise problem(
-                409, "sync_in_progress", "An OFAC sync is already in progress."
-            )
-        async with app.state.sync_lock:
-            return await app.state.providers.sync_sanctions()
+    @app.post("/api/sources/{source_id}/sync")
+    async def sync_source(source_id: str, request: Request):
+        require_roles(request, "admin", "analyst")
+        lock = app.state.sync_locks.setdefault(
+            request.state.user["org_id"] + ":" + source_id, asyncio.Lock()
+        )
+        if lock.locked():
+            raise problem(409, "sync_in_progress", "A source sync is already running.")
+        async with lock:
+            return await request.state.providers.sync(source_id)
 
     @app.post("/api/query")
-    async def query(data: QueryInput):
-        provider = app.state.providers
+    async def query(data: QueryInput, request: Request):
+        provider = request.state.providers
         provider.require_ai()
-        chunks = app.state.store.search(data.query, data.topic)
+        chunks = request.state.store.search(data.query, data.topic)
         if not chunks:
             raise problem(
                 409,
@@ -188,7 +424,7 @@ def create_app(settings=None, transport=None):
         result = await provider.complete(
             Answer,
             {
-                "task": "Answer the question using only these policies. State when they do not establish the answer.",
+                "task": "Answer using only supplied policies. State when they do not establish an answer.",
                 "question": data.query,
                 "policies": chunks,
             },
@@ -197,16 +433,16 @@ def create_app(settings=None, transport=None):
         return result
 
     @app.post("/api/transactions/evaluate", status_code=201)
-    async def evaluate(data: EvaluationRequest):
+    async def evaluate(data: EvaluationRequest, request: Request):
         started = time.perf_counter()
-        store, provider = app.state.store, app.state.providers
+        store, provider = request.state.store, request.state.providers
         provider.require_ai()
         txn = data.transaction
         if store.has_transaction(txn.transaction_id):
             raise problem(
                 409,
                 "duplicate_transaction",
-                "This transaction ID already has an assessment. Open it in Decision history.",
+                "This transaction ID already has an assessment. Open Decision history.",
             )
         chunks = store.search(
             f"{txn.description} {txn.sender_country} {txn.receiver_country} transaction transfer sanctions AML KYC"
@@ -222,7 +458,7 @@ def create_app(settings=None, transport=None):
         assessment = await provider.complete(
             Assessment,
             {
-                "task": "Assess this transaction against the policies. Identify missing facts and coverage limitations. Require human review of potential sanctions matches.",
+                "task": "Assess against supplied policies. Identify missing facts and coverage limitations. Require human review of potential sanctions matches.",
                 "transaction": txn.model_dump(mode="json"),
                 "policies": chunks,
                 "sanctions_screening": screening,
@@ -246,6 +482,7 @@ def create_app(settings=None, transport=None):
             "model": settings.groq_model,
             "processing_time_ms": round((time.perf_counter() - started) * 1000),
             "policy_evidence": chunks,
+            "created_by": request.state.user["id"],
         }
         try:
             store.save_decision(result)
@@ -253,24 +490,32 @@ def create_app(settings=None, transport=None):
             raise problem(
                 409,
                 "duplicate_transaction",
-                "Another request already assessed this transaction ID. Open Decision history.",
+                "Another request already assessed this transaction ID.",
             ) from exc
+        with store.connect() as db:
+            audit(
+                db, request.state.user["id"], "assessment_created", {"id": result["id"]}
+            )
         return result
 
     @app.get("/api/decisions")
-    def decisions(limit: int = Query(50, ge=1, le=200), offset: int = Query(0, ge=0)):
-        return app.state.store.decisions(limit, offset)
+    def decisions(
+        request: Request,
+        limit: int = Query(50, ge=1, le=200),
+        offset: int = Query(0, ge=0),
+    ):
+        return request.state.store.decisions(limit, offset)
 
     @app.get("/api/decisions/{decision_id}")
-    def decision(decision_id: str):
-        record = app.state.store.decision(decision_id)
+    def decision(decision_id: str, request: Request):
+        record = request.state.store.decision(decision_id)
         if not record:
             raise problem(404, "not_found", "Assessment not found.")
-        return {**record, "reviews": app.state.store.reviews(decision_id)}
+        return {**record, "reviews": request.state.store.reviews(decision_id)}
 
     @app.get("/api/decisions/{decision_id}/export")
-    def export(decision_id: str):
-        record = decision(decision_id)
+    def export(decision_id: str, request: Request):
+        record = decision(decision_id, request)
         return JSONResponse(
             record,
             headers={
@@ -279,11 +524,25 @@ def create_app(settings=None, transport=None):
         )
 
     @app.post("/api/decisions/{decision_id}/reviews", status_code=201)
-    def review(decision_id: str, data: ReviewInput):
-        decision(decision_id)
-        return app.state.store.review(decision_id, data)
+    def review(decision_id: str, data: ReviewInput, request: Request):
+        require_roles(request, "admin", "reviewer")
+        decision(decision_id, request)
+        verified = data.model_copy(update={"reviewer": request.state.user["name"]})
+        result = request.state.store.review(decision_id, verified)
+        with request.state.store.connect() as db:
+            audit(
+                db,
+                request.state.user["id"],
+                "assessment_reviewed",
+                {"id": decision_id, "review_id": result["id"], "verdict": data.verdict},
+            )
+        return result
 
-    # Built frontend and API share one origin. No CORS wildcard or hard-coded deployment URL.
+    from product_api import router
+    from access_api import router as access_router
+
+    app.include_router(router)
+    app.include_router(access_router)
     dist = ROOT.parent / "frontend" / "dist"
     if (dist / "assets").is_dir():
         app.mount("/assets", StaticFiles(directory=dist / "assets"), name="assets")

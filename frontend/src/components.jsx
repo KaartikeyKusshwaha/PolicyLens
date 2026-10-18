@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ArrowRight,
   Check,
@@ -29,11 +29,12 @@ export function useResource(path) {
       });
     return () => controller.abort();
   }, [path, revision]);
+  const reload = useCallback(() => setRevision((value) => value + 1), []);
   return {
     data,
     error,
     loading,
-    reload: () => setRevision((value) => value + 1),
+    reload,
   };
 }
 
