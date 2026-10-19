@@ -32,6 +32,8 @@ This local recovery copy excludes private environment/API-key files. The later c
 
 Browser access was briefly available. The isolated local fictional installation was checked visually at desktop size: sign-in, dashboard, customer search, customer detail and a resolved case with independent review. The public-site browser check was then blocked because the browser tool reported local browser use disabled, including after the owner enabled Chrome settings. Mobile layouts, every screen/theme and the public owner sign-in still require visual confirmation. React tests and API/static-serving checks do not substitute for those checks.
 
+Windows desktop control subsequently opened the public HTTPS site in Chrome and visually verified the deployed sign-in page at 1073 x 827. The owner must complete the private password reset and sign in before the authenticated public screens can be reviewed. Browser-extension access remains separate from the working desktop-control route.
+
 ## Oracle deployment and live validation
 
 - The owner's authenticated OCI session confirmed Hyderabad as home region with no existing compute/storage. ARM launch was blocked by capacity; the free AMD Micro shape was identified by the API as `ALWAYS_FREE` and provisioned with a 50 GB disk. See [deployment record](DEPLOYMENT.md).
