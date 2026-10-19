@@ -616,6 +616,7 @@ def test_late_transactions_recheck_forward_windows_and_preserve_alert_snapshots(
 def test_password_change_preserves_spaces_and_revokes_other_sessions(workspace):
     client, _, _, _ = workspace
     identity = member(client, "analyst")
+    reset = client.app.state.hub.issue_password_reset("analyst@example.invalid")
     with acting_as(client, identity):
         old_cookie = httpx.Cookies(client.cookies)
         login = client.post(
@@ -630,6 +631,17 @@ def test_password_change_preserves_spaces_and_revokes_other_sessions(workspace):
             json={"current_password": PASSWORD, "new_password": password},
         )
         assert changed.status_code == 200
+        assert (
+            client.post(
+                "/api/auth/password-reset",
+                json={
+                    "email": "analyst@example.invalid",
+                    "token": reset["token"],
+                    "password": "Rejected-reset-password-2026",
+                },
+            ).status_code
+            == 403
+        )
         current = httpx.Cookies(client.cookies)
         client.cookies.clear()
         client.cookies.update(old_cookie)

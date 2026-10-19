@@ -110,6 +110,25 @@ test("empty dashboard displays truthful zeroes and actionable onboarding", async
   expect(screen.queryByText("API unreachable")).toBeNull();
 });
 
+test("private reset confirms passwords and removes the one-use token after completion", async () => {
+  window.history.replaceState({}, "", "/reset-password#token=private-reset-token-for-tests-12345678901234567890&email=owner%40example.invalid");
+  mockRoutes({"/api/auth/password-reset": () => response({password_reset: true, sessions_revoked: true})});
+  render(<App />);
+  await screen.findByText("Choose a new password");
+  fireEvent.change(screen.getByLabelText(/^New password/), {target: {value: "New-private-password-2026"}});
+  fireEvent.change(screen.getByLabelText("Confirm new password"), {target: {value: "Different-password-2026"}});
+  fireEvent.click(screen.getByRole("button", {name: /Update password/}));
+  await screen.findByText("The two passwords must match.");
+  expect(fetch.mock.calls.filter(([url]) => url === "/api/auth/password-reset")).toHaveLength(0);
+  fireEvent.change(screen.getByLabelText("Confirm new password"), {target: {value: "New-private-password-2026"}});
+  fireEvent.click(screen.getByRole("button", {name: /Update password/}));
+  await screen.findByText("Password updated");
+  expect(window.location.hash).toBe("");
+  const call = fetch.mock.calls.find(([url]) => url === "/api/auth/password-reset");
+  expect(JSON.parse(call[1].body)).toEqual({email: "owner@example.invalid", token: "private-reset-token-for-tests-12345678901234567890", password: "New-private-password-2026"});
+  expect(screen.getByRole("link", {name: "Sign in"}).getAttribute("href")).toBe("/");
+});
+
 test("evaluation surfaces provider failure and never shows a made-up verdict", async () => {
   window.history.replaceState({}, "", "/evaluate");
   mockRoutes({

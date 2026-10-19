@@ -79,30 +79,48 @@ export function AuthGate({ children }) {
         <ErrorNotice message={session.error} retry={session.reload} />
       </div>
     );
-  if (!session.user || window.location.pathname === "/join") return <SignIn />;
+  if (!session.user || ["/join", "/reset-password"].includes(window.location.pathname)) return <SignIn />;
   return children;
 }
 
 function SignIn() {
   const session = useSession();
+  const reset = window.location.pathname === "/reset-password";
+  const resetParams = new URLSearchParams(reset ? window.location.hash.slice(1) : "");
   const invite =
     window.location.pathname === "/join"
       ? decodeURIComponent(window.location.hash.slice(1))
       : "";
-  const setup = session.setup && !invite;
+  const setup = session.setup && !invite && !reset;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [resetDone, setResetDone] = useState(false);
   async function submit(event) {
     event.preventDefault();
     setBusy(true);
     setError("");
     const data = Object.fromEntries(new FormData(event.currentTarget));
     if (invite) data.token = invite;
+    if (reset) {
+      if (data.password !== data.confirm_password) {
+        setError("The two passwords must match.");
+        setBusy(false);
+        return;
+      }
+      delete data.confirm_password;
+    }
     try {
       const user = await api(
-        setup ? "/auth/setup" : invite ? "/auth/join" : "/auth/login",
+        reset ? "/auth/password-reset" : setup ? "/auth/setup" : invite ? "/auth/join" : "/auth/login",
         { method: "POST", body: data },
       );
+      if (reset) {
+        setResetDone(true);
+        window.history.replaceState({}, "", "/reset-password");
+        session.setUser(null);
+        setSessionToken("");
+        return;
+      }
       session.accept(user);
       if (invite) window.location.assign("/");
     } catch (e) {
@@ -145,20 +163,29 @@ function SignIn() {
           </span>
           <div className="eyebrow">YOUR COMPLIANCE WORKSPACE</div>
           <h1>
-            {setup
+            {reset
+              ? resetDone ? "Password updated" : "Choose a new password"
+              : setup
               ? "Create your first workspace"
               : invite
                 ? "Join your team"
                 : "Welcome back."}
           </h1>
           <p>
-            {setup
+            {reset
+              ? resetDone ? "Your previous sessions have been signed out. Sign in with your new password." : "Use your private reset link within 15 minutes. It works once."
+              : setup
               ? "Set up the owner account. Future team members join by invitation."
               : invite
                 ? "Use the invited email. Existing members should enter their current password."
                 : "Sign in to pick up where your team left off."}
           </p>
-          <form onSubmit={submit}>
+          {resetDone ? <a className="button primary" href="/">Sign in</a> : <form onSubmit={submit}>
+            {reset && (
+              <Field label="Private reset token">
+                <input name="token" type="password" autoComplete="off" required minLength={40} maxLength={100} defaultValue={resetParams.get("token") || ""} />
+              </Field>
+            )}
             {setup && (
               <Field
                 label="Local bootstrap key"
@@ -200,33 +227,40 @@ function SignIn() {
               <input
                 type="email"
                 name="email"
+                defaultValue={resetParams.get("email") || ""}
                 autoComplete="username"
                 required
                 maxLength={254}
               />
             </Field>
-            <Field label="Password" hint="At least 12 characters.">
+            <Field label={reset ? "New password" : "Password"} hint="At least 12 characters.">
               <input
                 name="password"
                 type="password"
                 autoComplete={
-                  setup || invite ? "new-password" : "current-password"
+                  setup || invite || reset ? "new-password" : "current-password"
                 }
                 minLength={12}
                 maxLength={128}
                 required
               />
             </Field>
+            {reset && (
+              <Field label="Confirm new password">
+                <input name="confirm_password" type="password" autoComplete="new-password" minLength={12} maxLength={128} required />
+              </Field>
+            )}
             <ErrorNotice message={error} />
             <Submit busy={busy}>
-              {setup
+              {reset ? "Update password" : setup
                 ? "Create workspace"
                 : invite
                   ? "Accept invitation"
                   : "Sign in"}
               <ArrowRight size={16} />
             </Submit>
-          </form>
+          </form>}
+          {!setup && !invite && !reset && <p className="auth-disclosure">Forgot your password? Ask your server operator for a private reset link.</p>}
           <p className="auth-disclosure">
             AI workflows send selected evidence to your configured Groq
             provider. Sanctions and company reference data come from named

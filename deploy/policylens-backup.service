@@ -1,0 +1,10 @@
+[Unit]
+Description=Verified PolicyLens installation snapshot
+After=policylens.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/policylens.env
+ExecStart=/bin/bash /opt/policylens/deploy/backup.sh
+UMask=0077
+TimeoutStartSec=300

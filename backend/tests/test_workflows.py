@@ -109,6 +109,13 @@ def workspace(tmp_path):
                     "quote": "All international transaction transfers require verified sender and receiver identity.",
                 }
             ]
+            if state["mode"] != "bad_quote":
+                citations[0]["quote"] = next(
+                    entry["quote_id"]
+                    for entry in context["citation_quotes"]
+                    if entry["chunk_id"] == chunk["chunk_id"]
+                    and citations[0]["quote"] in entry["text"]
+                )
             if state["mode"] == "bad_quote":
                 citations[0]["quote"] = (
                     "Fabricated policy quote that is not in the supplied document."

@@ -69,6 +69,10 @@ class Join(Credentials):
     token: str = Field(min_length=20, max_length=100)
 
 
+class PasswordReset(Credentials):
+    token: str = Field(min_length=40, max_length=100)
+
+
 class Hub:
     def __init__(self, settings):
         self.settings = settings
@@ -86,6 +90,7 @@ class Hub:
                 CREATE TABLE IF NOT EXISTS invites(id TEXT PRIMARY KEY,org_id TEXT,email TEXT,role TEXT,expires_at TEXT,used INTEGER DEFAULT 0);
                 CREATE TABLE IF NOT EXISTS login_attempts(key TEXT,stamp REAL);
                 CREATE TABLE IF NOT EXISTS metadata(key TEXT PRIMARY KEY,value TEXT);
+                CREATE TABLE IF NOT EXISTS password_resets(user_id TEXT PRIMARY KEY REFERENCES users(id),token_hash TEXT UNIQUE,expires_at TEXT);
             """)
             if not db.execute("SELECT 1 FROM users LIMIT 1").fetchone():
                 token_file = self.path.parent / ".bootstrap-token"
@@ -188,6 +193,42 @@ class Hub:
                     403, "membership_required", "No active workspace membership."
                 )
             return user["id"], membership[0]
+
+    def issue_password_reset(self, email):
+        """Operator-only issuance. The public API cannot issue reset tokens."""
+        token = secrets.token_urlsafe(40)
+        expires = (datetime.now(timezone.utc) + timedelta(minutes=15)).isoformat()
+        with self.connect() as db:
+            db.execute("BEGIN IMMEDIATE")
+            user = db.execute(
+                "SELECT id FROM users WHERE email=?", (email.strip().lower(),)
+            ).fetchone()
+            if not user:
+                raise ValueError("No account exists for this email.")
+            db.execute(
+                "INSERT OR REPLACE INTO password_resets VALUES (?,?,?)",
+                (user[0], digest(token), expires),
+            )
+        return {"token": token, "expires_at": expires}
+
+    def reset_password(self, data):
+        hashed = password_hash(data.password)
+        with self.connect() as db:
+            db.execute("BEGIN IMMEDIATE")
+            user = db.execute(
+                "SELECT u.id,r.expires_at FROM password_resets r JOIN users u ON u.id=r.user_id WHERE u.email=? AND r.token_hash=?",
+                (data.email, digest(data.token)),
+            ).fetchone()
+            if not user or user["expires_at"] <= now():
+                raise problem(
+                    403,
+                    "reset_denied",
+                    "The reset link is invalid, expired or already used. Ask your operator for a new link.",
+                )
+            db.execute("UPDATE users SET password=? WHERE id=?", (hashed, user["id"]))
+            db.execute("DELETE FROM sessions WHERE user_id=?", (user["id"],))
+            db.execute("DELETE FROM password_resets WHERE user_id=?", (user["id"],))
+        return {"password_reset": True, "sessions_revoked": True}
 
     def session(self, user_id, org_id):
         token, csrf = secrets.token_urlsafe(40), secrets.token_urlsafe(32)

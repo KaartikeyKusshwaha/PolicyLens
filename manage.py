@@ -5,11 +5,13 @@ import json
 import sqlite3
 import sys
 from pathlib import Path
+from urllib.parse import urlencode, urlsplit
 
 sys.path.insert(0, str(Path(__file__).resolve().parent / "backend"))
 
 from config import Settings  # noqa: E402
 from recovery import create_snapshot, restore_snapshot, verify_snapshot  # noqa: E402
+from auth import Hub  # noqa: E402
 
 
 def main():
@@ -29,6 +31,12 @@ def main():
     )
     restore.add_argument("backup", type=Path)
     restore.add_argument("--destination", type=Path, required=True)
+    reset = commands.add_parser(
+        "password-reset", help="Write a private, one-use 15-minute reset link."
+    )
+    reset.add_argument("--email", required=True)
+    reset.add_argument("--origin", required=True)
+    reset.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     if args.command == "backup":
         result = create_snapshot(Settings(), args.output)
@@ -44,8 +52,41 @@ def main():
     elif args.command == "verify":
         result = verify_snapshot(args.backup)
         print(json.dumps({"verified": True, "databases": len(result["files"])}))
-    else:
+    elif args.command == "restore":
         print(json.dumps(restore_snapshot(args.backup, args.destination)))
+    else:
+        origin = urlsplit(args.origin)
+        settings = Settings()
+        hosts = settings.allowed_hosts.split(",")
+        if (
+            origin.hostname not in [host.strip() for host in hosts]
+            or origin.username
+            or origin.password
+            or origin.query
+            or origin.fragment
+            or origin.path not in ("", "/")
+            or origin.scheme not in ("http", "https")
+            or (settings.deployment_mode == "public" and origin.scheme != "https")
+        ):
+            raise ValueError(
+                "Use an allowed application origin with HTTPS in public mode."
+            )
+        # Refuse to overwrite any existing file, including before issuing a token.
+        with args.output.open("x", encoding="utf-8") as file:
+            args.output.chmod(0o600)
+            reset = Hub(settings).issue_password_reset(args.email)
+            fragment = urlencode(
+                {"token": reset["token"], "email": args.email.strip().lower()}
+            )
+            file.write(args.origin.rstrip("/") + "/reset-password#" + fragment + "\n")
+        print(
+            json.dumps(
+                {
+                    "reset_link_file": str(args.output.resolve()),
+                    "expires_at": reset["expires_at"],
+                }
+            )
+        )
 
 
 if __name__ == "__main__":

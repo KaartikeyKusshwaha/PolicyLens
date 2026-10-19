@@ -17,7 +17,7 @@ from starlette.concurrency import run_in_threadpool
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from agents import AgentEngine
-from auth import Credentials, Hub, Invite, Join, Setup
+from auth import Credentials, Hub, Invite, Join, PasswordReset, Setup
 from config import ROOT, Settings
 from intelligence import Intelligence, SOURCES
 from models import (
@@ -111,6 +111,7 @@ def create_app(settings=None, transport=None, *, start_worker=True):
         "/api/ready",
         "/api/auth/status",
         "/api/auth/login",
+        "/api/auth/password-reset",
         "/api/auth/setup",
         "/api/auth/join",
     }
@@ -289,6 +290,16 @@ def create_app(settings=None, transport=None, *, start_worker=True):
         user = set_session(result, user_id, org_id)
         result.body = JSONResponse(user).body
         result.headers["content-length"] = str(len(result.body))
+        return result
+
+    @app.post("/api/auth/password-reset")
+    def reset_password(data: PasswordReset, request: Request):
+        app.state.hub.throttle(
+            "reset:" + (request.client.host if request.client else "unknown")
+        )
+        app.state.hub.throttle("reset-email:" + data.email)
+        result = JSONResponse(app.state.hub.reset_password(data))
+        result.delete_cookie("policylens_session", path="/")
         return result
 
     @app.get("/api/auth/me")

@@ -100,6 +100,7 @@ def test_full_snapshot_restores_all_workspaces_and_revokes_sessions(tmp_path):
     with TestClient(create_app(settings, start_worker=False)) as client:
         authenticate(client)
         owner_org = client.get("/api/auth/me").json()["org_id"]
+        client.app.state.hub.issue_password_reset("owner@example.invalid")
         added = client.post(
             "/api/customers",
             json={
@@ -135,6 +136,7 @@ def test_full_snapshot_restores_all_workspaces_and_revokes_sessions(tmp_path):
     assert result["sessions_revoked"]
     with sqlite3.connect(tmp_path / "restored" / "identity.db") as db:
         assert db.execute("SELECT count(*) FROM sessions").fetchone()[0] == 0
+        assert db.execute("SELECT count(*) FROM password_resets").fetchone()[0] == 0
         rows = db.execute("SELECT id,db_path FROM organizations").fetchall()
     assert len(rows) == 2
     for _, path in rows:

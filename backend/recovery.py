@@ -154,6 +154,10 @@ def restore_snapshot(directory, destination):
                     (str(safe_child(destination, relative)), org_id),
                 )
             db.execute("DELETE FROM sessions")
+            if db.execute(
+                "SELECT 1 FROM sqlite_master WHERE type='table' AND name='password_resets'"
+            ).fetchone():
+                db.execute("DELETE FROM password_resets")
         for relative in set(manifest["organization_paths"].values()):
             path = safe_child(destination, relative)
             with sqlite3.connect(path) as db:

@@ -1,11 +1,11 @@
 # Validation record: 19 October 2026
 
-This records the local pilot checks performed on the overhaul branch. It is not a production certification or evidence that a cloud deployment has been tested.
+This records local and Oracle pilot checks performed on the overhaul branch. It is not a production certification or load/uptime guarantee.
 
 ## Automated checks
 
-- 71 backend tests: authentication, isolation, policies, external-service failures, monitoring, independent approvals, cases, agent execution/recovery, audit integrity and backup restoration.
-- 20 React tests, ESLint, production build and Ruff.
+- 78 backend tests: authentication, isolation, policies, external-service failures, monitoring, independent approvals, cases, agent execution/recovery, audit integrity, backup restoration and private password reset. Reset checks cover token hashing, account binding, expiry, supersession, single use, session revocation, cross-origin rejection and throttling.
+- 21 React tests, ESLint, production build and Ruff, including password-reset confirmation and removal of the URL fragment after success.
 - The new generated acceptance test exercises three fictional customers, six payments, four independently approved controls, six alerts, three cases, one independently reviewed resolution and policy-change applicability tasks.
 - Hardening tests cover public HTTPS/secure cookies, hidden public API docs, response headers, streamed request limits, worker readiness, missing workspace storage, concurrent installation locks and full multi-workspace recovery.
 
@@ -26,10 +26,20 @@ A separate local installation exercised the committed [fictional pack](../exampl
 
 Stopped the local server, created and verified a two-database snapshot in a private directory outside the repository, restored it to a separate directory, and verified one account, one workspace and zero restored sessions. Existing password hashes were preserved and the live installation was restarted without replacing its data. Windows directory ACLs restrict the backup parent to the current user and SYSTEM.
 
-This is a local recovery copy. Automated scheduling/retention, encryption and an off-machine backup destination have not been configured. Private environment/API-key files are excluded and must be preserved separately.
+This local recovery copy excludes private environment/API-key files. The later cloud deployment added a daily snapshot timer, verified cloud restore and one encrypted off-machine copy, as described below.
 
-## Outstanding checks and deployment
+## Browser checks
 
-Visual browser review is pending: the browser tool reports that local browser use is disabled in Work settings. React tests and API/static-serving checks do not substitute for that review.
+Browser access was briefly available. The isolated local fictional installation was checked visually at desktop size: sign-in, dashboard, customer search, customer detail and a resolved case with independent review. The public-site browser check was then blocked because the browser tool reported local browser use disabled, including after the owner enabled Chrome settings. Mobile layouts, every screen/theme and the public owner sign-in still require visual confirmation. React tests and API/static-serving checks do not substitute for those checks.
 
-No cloud account, public backend, domain or paid service was provisioned. The native Linux service and proxy files are templates, not a verified cloud deployment. A selected host needs persistent storage, one Python process, outbound HTTPS and a trusted TLS proxy; see [deployment instructions](DEPLOYMENT.md). Load testing, operational monitoring, incident response and production data-handling reviews remain necessary before a production launch.
+## Oracle deployment and live validation
+
+- The owner's authenticated OCI session confirmed Hyderabad as home region with no existing compute/storage. ARM launch was blocked by capacity; the free AMD Micro shape was identified by the API as `ALWAYS_FREE` and provisioned with a 50 GB disk. See [deployment record](DEPLOYMENT.md).
+- Installed the Python service, React build and Caddy on one HTTPS origin. Readiness returned 200, unauthenticated customer access returned 401, setup was closed, API schema was hidden, HTTP redirected to HTTPS and security headers were present.
+- Restored the actual owner account/workspace with existing password hashes and revoked sessions. No fictional customer, policy, transaction or test user was added to the public workspace.
+- Downloaded and validated all three official sources directly from the cloud server: OFAC 19,457, UN 1,010 and UK 6,408 records. The authenticated app reported Groq configured and its background worker running.
+- A separate unserved cloud installation exercised six fictional transactions, four approved controls, three cases, a real Groq investigation, verified citations and one independent reviewer resolution. Earlier invalid model quotations were rejected. Prompt-only changes and full-quotation schema enums did not reliably resolve transcription. Quotation reference selection with server retrieval passed the live investigation; no verifier relaxation, fabricated answer or hidden retry was added.
+- The next policy-agent run encountered Groq's free rate limit and remained failed. A separately started run later completed through the actual worker, used one model attempt, recorded evidence verification and retained human approval. Free-tier limits are a material operational constraint.
+- Manually ran the daily snapshot service, verified the snapshot, restored it to a separate cloud directory with revoked sessions, and verified an encrypted off-machine copy by decryption. The timer is enabled with retention of at least fourteen days. Off-machine copy delivery is not yet scheduled.
+
+Load testing, continuous alert delivery, incident response, an owned domain and production data-handling reviews remain necessary before a broader production launch. The 1 GB shared-CPU free server and shared DNS are pilot infrastructure. No paid account upgrade or purchased domain was enabled.

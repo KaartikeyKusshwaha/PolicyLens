@@ -90,6 +90,9 @@ def change_password(data: PasswordChange, request: Request):
             "DELETE FROM sessions WHERE user_id=? AND id!=?",
             (request.state.user["id"], digest(request.cookies["policylens_session"])),
         )
+        db.execute(
+            "DELETE FROM password_resets WHERE user_id=?", (request.state.user["id"],)
+        )
     with request.state.store.connect() as db:
         audit(
             db,
