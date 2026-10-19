@@ -30,9 +30,11 @@ This local recovery copy excludes private environment/API-key files. The later c
 
 ## Browser checks
 
-Browser access was briefly available. The isolated local fictional installation was checked visually at desktop size: sign-in, dashboard, customer search, customer detail and a resolved case with independent review. The public-site browser check was then blocked because the browser tool reported local browser use disabled, including after the owner enabled Chrome settings. Mobile layouts, every screen/theme and the public owner sign-in still require visual confirmation. React tests and API/static-serving checks do not substitute for those checks.
+The isolated local fictional installation was checked visually at desktop size: sign-in, dashboard, customer search, customer detail and a resolved case with independent review. Browser-extension access later reported disabled; Windows desktop control successfully opened the public HTTPS site in Chrome instead.
 
-Windows desktop control subsequently opened the public HTTPS site in Chrome and visually verified the deployed sign-in page at 1073 x 827. The owner must complete the private password reset and sign in before the authenticated public screens can be reviewed. Browser-extension access remains separate from the working desktop-control route.
+After the owner signed in, desktop control verified the actual public dashboard, customer list, transaction monitoring, investigation queue, agent catalog/target setup, policy library, audit verification and control workbench at 1073 x 827. All loaded with truthful empty business-data states; the three official source cards showed fresh data and the Groq connection showed configured. No test customer, payment, policy, control or AI run was added to the owner's workspace during this review.
+
+The dashboard and control workbench also reflowed at 150% browser zoom, with a working compact navigation drawer that closed after selecting a destination. Zoom was restored to 100% and the browser returned to the command center. This checks a responsive breakpoint, not a physical phone or touch-device test. Every form, populated public workflow, theme and device size has not been visually tested; the populated fictional workflow was validated separately through the cloud API. React tests and API checks do not replace those remaining visual checks.
 
 ## Oracle deployment and live validation
 
