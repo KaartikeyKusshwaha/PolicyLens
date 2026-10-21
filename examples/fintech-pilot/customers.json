@@ -1,0 +1,29 @@
+[
+  {
+    "external_id": "SAMPLE-C001",
+    "name": "SAMPLE Cedar Imports",
+    "kind": "company",
+    "country": "IN",
+    "risk_tier": "medium",
+    "kyc_status": "verified",
+    "notes": "Fictional acceptance data. Verified status is a test input, not completed real KYC."
+  },
+  {
+    "external_id": "SAMPLE-C002",
+    "name": "SAMPLE Maple Services",
+    "kind": "company",
+    "country": "GB",
+    "risk_tier": "high",
+    "kyc_status": "pending",
+    "notes": "Fictional acceptance data; purpose and identity evidence intentionally missing."
+  },
+  {
+    "external_id": "SAMPLE-C003",
+    "name": "SAMPLE Willow Trading",
+    "kind": "company",
+    "country": "AE",
+    "risk_tier": "low",
+    "kyc_status": "expired",
+    "notes": "Fictional acceptance data; expired due diligence tests the KYC control."
+  }
+]

@@ -1,48 +1,21 @@
-# Python
+.venv/
+venv/
+node_modules/
+dist/
 __pycache__/
 *.py[cod]
-*$py.class
-*.so
-.Python
-venv/
-env/
-ENV/
-dist/
-build/
-*.egg-info/
-
-# Node
-node_modules/
-npm-debug.log
-yarn-error.log
-
-# IDEs
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# OS
+.env
+.env.*
+!.env.example
+backend/data/
+.pytest_cache/
+.pytest-tmp/
+.ruff_cache/
+coverage/
+playwright-report/
+test-results/
+*.log
 .DS_Store
 Thumbs.db
-
-# Environment
-.env
-!.env.example
-
-# Test files
-test_*.py
-test_*.json
-test-*.html
-test-*.ps1
-debug-*.html
-
-# Documentation (keep README)
-DEMO_*.md
-IMPLEMENTATION_*.md
-MILVUS_*.md
-plan.md
-
-# Data directories
-backend/data/decisions/*.json
-backend/data/feedback/*.json
+.idea/
+.vscode/

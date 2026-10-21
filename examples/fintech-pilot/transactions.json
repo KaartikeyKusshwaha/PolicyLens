@@ -1,0 +1,68 @@
+[
+  {
+    "external_id": "SAMPLE-P001",
+    "customer_reference": "SAMPLE-C001",
+    "amount": "250.00",
+    "currency": "USD",
+    "counterparty": "SAMPLE Birch Export Services",
+    "counterparty_country": "GB",
+    "account_reference": "SAMPLE-ACCOUNT-01",
+    "description": "Fictional consulting invoice for software acceptance testing. No real payment exists.",
+    "minutes_ago": 50
+  },
+  {
+    "external_id": "SAMPLE-P002",
+    "customer_reference": "SAMPLE-C001",
+    "amount": "450.00",
+    "currency": "USD",
+    "counterparty": "SAMPLE Birch Export Services",
+    "counterparty_country": "GB",
+    "account_reference": "SAMPLE-ACCOUNT-01",
+    "description": "Fictional consulting invoice for software acceptance testing. No real payment exists.",
+    "minutes_ago": 40
+  },
+  {
+    "external_id": "SAMPLE-P003",
+    "customer_reference": "SAMPLE-C001",
+    "amount": "6000.00",
+    "currency": "USD",
+    "counterparty": "SAMPLE Birch Export Services",
+    "counterparty_country": "GB",
+    "account_reference": "SAMPLE-ACCOUNT-01",
+    "description": "Fictional consulting invoice for software acceptance testing. No real payment exists.",
+    "minutes_ago": 30
+  },
+  {
+    "external_id": "SAMPLE-P004",
+    "customer_reference": "SAMPLE-C001",
+    "amount": "2500.00",
+    "currency": "USD",
+    "counterparty": "SAMPLE Birch Export Services",
+    "counterparty_country": "GB",
+    "account_reference": "SAMPLE-ACCOUNT-01",
+    "description": "Fictional consulting invoice for software acceptance testing. No real payment exists.",
+    "minutes_ago": 20
+  },
+  {
+    "external_id": "SAMPLE-P005",
+    "customer_reference": "SAMPLE-C002",
+    "amount": "120.00",
+    "currency": "EUR",
+    "counterparty": "SAMPLE Birch Export Services",
+    "counterparty_country": "GB",
+    "account_reference": "SAMPLE-ACCOUNT-01",
+    "description": "Fictional consulting invoice for software acceptance testing. No real payment exists.",
+    "minutes_ago": 15
+  },
+  {
+    "external_id": "SAMPLE-P006",
+    "customer_reference": "SAMPLE-C003",
+    "amount": "80.00",
+    "currency": "USD",
+    "counterparty": "SAMPLE Birch Export Services",
+    "counterparty_country": "GB",
+    "account_reference": "SAMPLE-ACCOUNT-01",
+    "description": "Fictional consulting invoice for software acceptance testing. No real payment exists.",
+    "minutes_ago": 10
+  }
+]

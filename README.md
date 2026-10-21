@@ -1,123 +1,135 @@
-# PolicyLens - AI-Powered Compliance Intelligence
+# PolicyLens Operations
 
-AI system that analyzes financial transactions against AML rules using RAG, vector search, and GPT-4.
+A cross-border fintech compliance pilot built with **React 19, Python/FastAPI, and SQLite**. Connect customer activity to documented controls, investigate exceptions, and retain the evidence behind human decisions.
 
-## Features
+No Docker, Milvus, GPU, vector service, fabricated answers, alternate-provider fallback, or seeded business records. SQLite FTS5/BM25 is the primary document retrieval engine.
 
-- **Transaction Evaluation**: Real-time compliance checking with risk scoring
-- **Policy Management**: Upload and index compliance documents
-- **Query Assistant**: Natural language Q&A over policies
-- **RAG-based Analysis**: Retrieval-Augmented Generation with Milvus vector DB
-- **Explainable Decisions**: Full traces with policy citations
+## Run locally
 
-## Quick Start
+Install Python 3.11+ and Node.js 22.12+, then run:
 
-### Prerequisites
-- **Docker Desktop** (recommended) - [Download](https://www.docker.com/products/docker-desktop/)
-- Python 3.11+ (for local development)
-- Node.js 18+ (for local development)
-- OpenAI API key (optional - system works in demo mode without it)
-
-### 🚀 Quick Start (Recommended)
-
-**Using Docker Compose (All services in one command):**
-
-```powershell
-# Run the interactive startup script
-.\start.ps1
-# Choose Option 1: Quick Start (Docker + Auto-open browser)
+```sh
+python run.py
 ```
 
-The script will:
-- Start Milvus vector database (etcd + MinIO + Milvus)
-- Start FastAPI backend on port 8000
-- Start React frontend on port 3000
-- Run health checks
-- Auto-open browser to http://localhost:3000
+The launcher installs dependencies when their manifests change, builds React, and serves the app and API at **http://127.0.0.1:8000**. Stop with Ctrl+C.
 
-**Or manually with Docker Compose:**
+1. Open the local app. Read `backend/data/.bootstrap-token` locally and use it to create your owner account and first workspace. With a custom database path, the file is beside that database. The token is consumed after setup; never commit or share it.
+2. Add `GROQ_API_KEY` to ignored `backend/.env` and restart. Obtain your own [free-tier key](https://console.groq.com/keys); no other integration requires an API key.
+3. Sync the enabled feeds in **Data sources**. All three official feeds are enabled initially.
+4. Add your actual operating policies and customer records.
+5. Invite a second person from **Workspace settings**. An independent administrator or reviewer must approve a drafted control before it becomes active.
+6. Ingest transactions manually, by CSV, or through a signed webhook. Investigate triggered alerts and use agents to prepare reviewable drafts.
 
-```bash
-docker-compose up -d
+Business data starts empty. Offline/provider failures remain visible and never produce substitute decisions. The app can manage documents and deterministic monitoring without an AI key. Agent analysis and policy Q&A require Groq.
+
+## Product workflows
+
+| Area | Working capabilities |
+| --- | --- |
+| Team access | Owner bootstrap; invite-only membership; administrator, analyst, reviewer and read-only auditor roles; password changes; access revocation; workspace switching and separate tenant databases. |
+| Customers | Individuals and companies, country, internal risk tier, recorded due diligence status, notes, public LEI lookup, sanctions screening, and an observed transaction relationship graph. |
+| Monitoring | Validated money and UTC timestamps, idempotent external IDs, CSV validation/import results, signed webhook ingestion, explicit internal controls, immutable alert snapshots and customer case grouping. |
+| Control workbench | Amount, transaction velocity, same-currency aggregate, corridor and due diligence conditions; draft versions; independent approval; historical simulation without live alerts. No regulatory thresholds are supplied or inferred. |
+| Investigations | Assignment, status transitions, escalation, notes, tasks, linked alerts and evidence, independent resolution review, and downloadable JSON case packs. Agents cannot close cases. |
+| Policy library | Text, text PDF and DOCX upload, lexical retrieval, archived versions, grounded Q&A and verified verbatim citations. Scanned PDFs need OCR before upload. |
+| Policy change impact | Archived version diff, linked controls, explicitly unconfirmed customer candidates, an analyst draft, human approval/dismissal and applicability review tasks. |
+| Agents | Investigation, screening, policy analyst, policy change and report roles; fixed tool sequence, durable jobs, recorded steps, pause/resume/cancel, budget limits, and deterministic evidence verification. |
+| Continuous screening | Opt-in scheduled refresh of selected sanctions feeds and customer name screening. Creates review cases for potential matches; uses no model calls. Requires the Python process to stay running. |
+| Audit and operations | Real counts, corridor/disposition analytics, overdue cases, hash-linked audit events, downloadable checkpoints, workspace SQLite backup and integrity verification. |
+
+React supplies the interactive interface, with responsive layouts, light/dark themes, loading/error/empty states, accessible form labels and source provenance.
+
+## Public integrations
+
+| Provider | Purpose | Account / scope |
+| --- | --- | --- |
+| [Groq](https://console.groq.com/docs/structured-outputs) | Strict schema AI drafts and Q&A; default `openai/gpt-oss-20b` | Free-tier key required; [account/model limits](https://console.groq.com/docs/rate-limits) apply. No automatic paid upgrade or model/provider switching. |
+| [OFAC](https://ofac.treasury.gov/sanctions-list-service) | Official full SDN XML names and aliases | Key-free. |
+| [United Nations](https://main.un.org/securitycouncil/en/content/un-sc-consolidated-list) | Official consolidated XML names and aliases | Key-free. |
+| [UK FCDO](https://www.gov.uk/government/publications/the-uk-sanctions-list) | Official UK Sanctions List XML names and aliases | Key-free. |
+| [GLEIF](https://www.gleif.org/en/lei-data/gleif-api) | Reference lookup for a supplied LEI | Key-free; reference data, not identity verification or complete ownership coverage. |
+| [Frankfurter](https://frankfurter.dev/) | Daily USD reference conversion for individual AI assessments | Key-free. USD uses identity rate 1; no unsupported currency substitution. Monitoring controls operate in their configured currency. |
+
+Every enabled sanctions source must have a valid snapshot, fresh within 24 hours by default. Failed syncs preserve the previous snapshot and its original age. Download/publication times and SHA-256 checksums are recorded. Source selection is explicit in settings; disabled lists are outside screening coverage.
+
+Matching uses normalized name/alias similarity >= 0.88. Potential matches require identity review. No match is not clearance. Beneficial ownership rules, PEP/adverse-media datasets, every sanctions list and every transliteration are outside this implementation. No hardcoded FATF lists or unimplemented regulatory scraping claims are included.
+
+Non-USD assessments stop if reference rates are unavailable, invalid, older than seven days or future-dated. Invalid AI schemas, unverified quotations and inconsistent clearance recommendations fail visibly. A potential sanctions match cannot receive an acceptable assessment.
+
+## Agent boundaries
+
+The Python orchestrator controls available tools and ordering. Policy text and transaction descriptions cannot grant tool permissions. Each workflow records evidence collection, optional sanctions screening, model draft and evidence verification. Verification checks citations and constraints; it does not prove every narrative inference.
+
+The default limit is 30 new agent runs per workspace per UTC day and one model attempt per run. Pausing takes effect at a step boundary; an already-sent API request may finish. Restarted running jobs become interrupted and require explicit resume. A consumed/failed model attempt requires a new run, retaining the failed history. Completed steps may be reused only within the same run; expired or changed sanctions evidence prevents resume.
+
+Context is limited to 18,000 characters. Investigation samples use up to 50 recent transactions, reduced explicitly to 10 if needed. Policy analysis uses an explicit partial-document coverage summary; large cases fail instead of silently dropping evidence. Policy impact candidates are not confirmed affected customers. Agent drafts never activate controls, approve customers, execute payments, submit filings or resolve investigations.
+
+## Configuration and persistence
+
+Copy `backend/.env.example` if starting manually. Relevant settings:
+
+```dotenv
+GROQ_API_KEY=
+GROQ_MODEL=openai/gpt-oss-20b
+SANCTIONS_MAX_AGE_HOURS=24
+COOKIE_SECURE=false
+DEPLOYMENT_MODE=local
+ALLOWED_HOSTS=127.0.0.1,localhost,testserver
+SESSION_HOURS=12
+AGENT_DAILY_RUNS=30
+AGENT_MAX_CONTEXT_CHARS=18000
+# DATABASE_PATH=/absolute/persistent/path/policylens-v2.db
 ```
 
-Wait 30 seconds for initialization, then access:
-- **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:8000
-- **API Docs**: http://localhost:8000/docs
+The existing filename `backend/data/policylens-v2.db` is retained to preserve v2 data. The first created workspace adopts that database. Later workspaces have separate files under `data/workspaces/`; central identities, memberships and sessions live in `data/identity.db`. Original pre-v2 sample data is not imported. All data, local environment files and generated exports are ignored by Git.
 
-### 🛠️ Local Development Setup
+Sessions use HttpOnly, SameSite=Strict cookies, hashed session IDs and per-session CSRF tokens. Passwords use scrypt; login attempts are throttled in SQLite. Production requires HTTPS, `COOKIE_SECURE=true`, an explicit hostname allowlist and a trusted reverse proxy. Invitation tokens expire after 48 hours and are single-use/email-bound; share the generated invitation link yourself. The app does not send email.
 
-**Backend Only (requires Docker for Milvus):**
+Use **Audit & analytics -> Create backup** for an administrator-only workspace backup. A full disaster-recovery backup must also include `identity.db` and every workspace database. See [deployment and recovery](docs/DEPLOYMENT.md). Hash-linked audits detect changes against a retained checkpoint, but a database administrator can rewrite or truncate the entire chain. Store checkpoints separately when stronger assurance is needed.
 
-```bash
-cd backend
-python -m venv venv
-.\venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-python -m uvicorn main:app --reload --port 8000
+The operator command `python manage.py backup --output <new-private-folder>` takes a verified full snapshot while the server is stopped. `manage.py verify` checks it, and `manage.py restore ... --destination <new-folder>` performs a separate restore with rebased workspace paths and revoked sessions. The OS installation lock rejects concurrent server/backup writers. Private environment/API keys are excluded from snapshots.
+
+Public hosting must explicitly set `DEPLOYMENT_MODE=public` and `COOKIE_SECURE=true`. Public mode requires HTTPS, hides API docs, and applies restrictive browser headers; `/api/ready` exposes minimal readiness for storage and the background worker. See the [generated fictional acceptance pack](examples/fintech-pilot/README.md) for a complete test policy, customer/payment scenarios and independent-review workflow.
+
+## Development and checks
+
+```sh
+python -m venv .venv
+# Windows; use .venv/bin/python on Linux/macOS
+.venv\Scripts\python -m pip install -r backend/requirements-dev.txt
+.venv\Scripts\python -m uvicorn main:app --app-dir backend --reload --host 127.0.0.1 --port 8000
 ```
 
-**Frontend Only:**
+In another terminal:
 
-```bash
+```sh
 cd frontend
-npm install
+npm ci
 npm run dev
 ```
 
-### 🛑 Stop Services
+Vite serves **http://127.0.0.1:3000** and proxies `/api` to Python. Production uses the React build served by FastAPI. Interactive API documentation: **http://127.0.0.1:8000/docs**.
 
-```bash
-docker-compose down
-# Or use start.ps1 -> Option 5: Stop all services
+```sh
+.venv\Scripts\python -m pytest
+.venv\Scripts\python -m ruff check backend run.py
+.venv\Scripts\python -m ruff check manage.py
+cd frontend
+npm test
+npm run lint
+npm run build
+npm audit
 ```
 
-## Tech Stack
+CI uses isolated SQLite databases and mocked provider responses; no key or network is required. Tests cover access boundaries, cross-tenant isolation, source and AI failures, rules/approvals, late arrivals, simulations, case review, webhooks/replay, policy changes, durable agents, backups and audit tampering, plus React onboarding/forms/errors/citations/navigation. Live integrations should also be checked with fictional data before deploying.
 
-**Backend**: FastAPI, Milvus, OpenAI, Sentence-Transformers  
-**Frontend**: React 18, Vite, Tailwind CSS, React Router  
-**Infrastructure**: Docker, Docker Compose
+See the [dated validation record](docs/VALIDATION.md) for the generated live workflow, recovery drill and outstanding browser/deployment checks.
 
-## Configuration
+## Deployment scope
 
-**Optional**: Create `backend/.env` for API keys:
-```env
-OPENAI_API_KEY=sk-...  # Optional - uses OpenRouter fallback
-OPENROUTER_API_KEY=sk-or-v1-...  # Optional
-MILVUS_HOST=localhost
-MILVUS_PORT=19530
-```
+This is a working single-process product pilot, not a certification of regulatory compliance. Scheduled screening supports at most 2,000 customers per run. Historical control simulations support 10,000 transactions, and one late event can recheck at most 1,000 subsequent windows. CSV imports allow 500 rows / 1 MB; policy uploads allow 5 MB / 300,000 characters / 300 PDF pages. Lists and graphs state their sample bounds. These are operational limits, not claims of enterprise scale.
 
-✅ System works without API keys using rule-based fallback and local embeddings.
+Run one Python worker on one machine with persistent disk. Horizontal replicas and multiple Uvicorn workers are unsupported because scheduling and local SQLite ownership assume one process. Netlify can preview the React build, but it cannot host this persistent Python/SQLite backend. Free hosts that erase local files are unsuitable.
 
-## Docker Services
-
-The `docker-compose.yml` includes:
-- **Milvus** (v2.3.3): Vector database on port 19530
-- **etcd** (v3.5.5): Milvus metadata storage
-- **MinIO**: Milvus object storage
-- **Backend**: FastAPI on port 8000
-- **Frontend**: React/Vite on port 3000
-
-All services start together with `docker-compose up -d` or using `start.ps1`.
-
-## Project Structure
-
-```
-PolicyLens/
-├── backend/           # FastAPI backend
-│   ├── services/      # Core services (Milvus, LLM, Compliance)
-│   ├── models.py      # Pydantic models
-│   ├── main.py        # FastAPI app
-│   └── requirements.txt
-├── frontend/          # React frontend
-│   ├── src/
-│   └── package.json
-├── docker-compose.yml # Docker orchestration
-└── start.ps1         # Interactive startup script
-```
-
-## License
-
-MIT
+SSO/MFA, verified KYC, external notification delivery, transaction blocking, regulatory filing, automated retention/deletion policies, database encryption at rest and high availability are not implemented. Relevant selected evidence is sent to Groq; evaluate its data terms before using confidential records. AI risk scores are estimates, not calibrated probabilities or legal/payment approval. Use synthetic data for a public demonstration until your operational and data-handling requirements are satisfied.

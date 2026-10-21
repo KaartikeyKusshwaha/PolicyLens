@@ -1,0 +1,15 @@
+SAMPLE POLICY - FICTIONAL SOFTWARE ACCEPTANCE DATA
+Cross-border payments review policy, version 1.0
+This policy is invented solely for testing PolicyLens. It does not describe legal obligations or regulatory thresholds. Every customer and payment in this pack is fictional.
+
+Identity and purpose
+All international transaction transfers require verified sender and receiver identity. Investigators must collect the payment purpose and supporting invoice. A manually recorded due diligence status does not establish verified identity by itself. Missing or expired customer due diligence requires investigation.
+
+Illustrative internal controls
+For this test organization only, a single USD transaction of 5,000.00 or more requires a documented review. Three or more transactions for one customer within one hour require review. A total of USD 8,000.00 or more for one customer within 24 hours requires review. These are invented internal test settings, not legal thresholds. Amount controls use the configured currency; EUR and USD amounts must not be added together.
+
+Sanctions and investigation
+Screen supplied names against every enabled current official sanctions list. Potential sanctions name matches must be investigated by a human using additional identity evidence. No name match is not sanctions clearance. No automated payment approval or regulatory filing is permitted.
+
+Independent review and evidence
+Assign an investigator to each case. A different authorized reviewer must record the final disposition. Preserve the policy version, original alert facts, source snapshot timestamps and checksums, investigation notes and review rationale. Agents prepare drafts and cannot activate controls or resolve cases.
