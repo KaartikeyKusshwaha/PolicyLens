@@ -64,6 +64,7 @@ export function Controls() {
         Configure explicit conditions, test historical impact, and approve each
         version before it runs.
       </PageHeading>
+      <p><Link className="button secondary" to="/rules/code">Controls as code: export or import YAML</Link></p>
       <div className="notice neutral">
         <SlidersHorizontal size={18} />
         <div>
@@ -370,6 +371,7 @@ export function ControlDetail() {
       >
         {kinds[c.kind]} · {c.policy_title} v{c.policy_version}
       </PageHeading>
+      <p><Link className="button secondary" to={`/rules/code?control_id=${encodeURIComponent(id)}`}>Export this control as YAML</Link></p>
       <ErrorNotice message={error} />
       <div className="control-detail-grid">
         <section className="panel section-padding">

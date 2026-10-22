@@ -89,8 +89,12 @@ review and market validation. None of those gates can be inferred from a green C
   pagination, tenant mapping and upstream outcome boundaries. No live import claimed.
 - [ ] Adapter interface, Marble alerts/cases import with provenance and deduplication.
 - [ ] One transaction-source adapter selected with design partners (selection pending).
-- [ ] YAML export/import into drafts, schema validation, maker-checker-only activation.
+- [x] YAML export/import into atomic draft batches, pinned policy/parent hashes,
+  bounded safe schema, preview/replay protection and maker-checker-only activation.
+  See `CONTROLS_AS_CODE.md`; production and browser acceptance remain pending.
 - [ ] Git-to-draft round-trip and imported inbox acceptance tests.
+  Git round-trip implemented and tested using a real isolated repository and second
+  reviewer. Imported engine alerts/inbox acceptance awaits the adapter implementation.
 
 ## Phase 5: autopilot and scorecard
 
@@ -120,6 +124,14 @@ Parked as specified: HA/multiple workers, SSO, Postgres migration, PEP/adverse-m
 data, SAR filing, payment blocking and additional sanctions sources.
 
 ## Implemented MFA boundaries
+
+Controls-as-code checkpoint: 178 backend tests passed in the full suite; all 14
+focused code-import tests then passed after adding a YAML-indentation preservation
+case (179 tests now in source). All 34 frontend tests, ESLint, production build,
+Ruff and dependency consistency passed. Tests include an actual isolated Git commit
+round-trip, independent activation, replay after approval and atomic rollback. The
+pack's new import-receipt section was rendered and visually inspected. No browser
+testing or Oracle deployment occurred.
 
 Traceability checkpoint: 164 backend tests passed in the full suite, then all six
 traceability tests passed after adding explicit partial-analysis/row-bound coverage

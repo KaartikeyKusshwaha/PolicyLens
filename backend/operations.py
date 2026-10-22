@@ -537,13 +537,34 @@ class Operations:
         return case
 
     def save_rule(self, data, user, rule_id=None):
-        policy = self.store.policy(data.policy_id)
+        with self.store.connect() as db:
+            db.execute("BEGIN IMMEDIATE")
+            return self.draft_rule(db, data, user, rule_id)
+
+    def draft_rule(self, db, data, user, rule_id=None):
+        """Caller owns the transaction; shared by forms and atomic code imports."""
+        policy = db.execute(
+            "SELECT * FROM policies WHERE id=?", (data.policy_id,)
+        ).fetchone()
         if not policy:
             raise problem(
                 422, "policy_required", "Choose a policy from this workspace."
             )
-        old = self.get("rule", rule_id) if rule_id else None
+        prior = (
+            db.execute(
+                "SELECT payload FROM records WHERE kind='rule' AND id=?", (rule_id,)
+            ).fetchone()
+            if rule_id
+            else None
+        )
+        if rule_id and not prior:
+            raise problem(404, "not_found", "Control not found.")
+        old = json.loads(prior[0]) if prior else None
+        stamp = now()
         record = {
+            "id": uid(),
+            "created_at": stamp,
+            "updated_at": stamp,
             **data.model_dump(mode="json"),
             "version": old["version"] + 1 if old else 1,
             "status": "draft",
@@ -552,7 +573,14 @@ class Operations:
             "policy_title": policy["title"],
             "replaces_id": old["id"] if old else None,
         }
-        return self.save("rule", record, user["id"])
+        db.execute(
+            "INSERT INTO records VALUES (?,?,?,?,?)",
+            ("rule", record["id"], stamp, stamp, canonical(record)),
+        )
+        audit(
+            db, user["id"], "rule_saved", {"id": record["id"], "title": record["title"]}
+        )
+        return record
 
     def rule_action(self, rule_id, data, user):
         with self.store.connect() as db:

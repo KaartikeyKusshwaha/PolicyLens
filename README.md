@@ -31,6 +31,7 @@ Business data starts empty. Offline/provider failures remain visible and never p
 | Customers | Individuals and companies, country, internal risk tier, recorded due diligence status, notes, public LEI lookup, sanctions screening, and an observed transaction relationship graph. |
 | Monitoring | Validated money and UTC timestamps, idempotent external IDs, CSV validation/import results, signed webhook ingestion, explicit internal controls, immutable alert snapshots and customer case grouping. |
 | Control workbench | Amount, transaction velocity, same-currency aggregate, corridor and due diligence conditions; draft versions; independent approval; historical simulation without live alerts. No regulatory thresholds are supplied or inferred. |
+| Controls as code | Versioned YAML, policy/parent hashes, previewed atomic draft imports, supplied Git provenance and replay protection. Activation still requires independent human approval. |
 | Investigations | Assignment, status transitions, escalation, notes, tasks, linked alerts and evidence, independent resolution review, and downloadable JSON case packs. Agents cannot close cases. |
 | Policy library | Text, text PDF and DOCX upload, lexical retrieval, archived versions, grounded Q&A and verified verbatim citations. Scanned PDFs need OCR before upload. |
 | Policy change impact | Archived version diff, linked controls, explicitly unconfirmed customer candidates, an analyst draft, human approval/dismissal and applicability review tasks. |
@@ -101,6 +102,8 @@ Use **Audit & analytics -> Create backup** for an administrator-only workspace b
 Configure `CHECKPOINT_DIRECTORY` outside the database directory to retain signed audit checkpoints automatically. Audit & analytics shows retention status and exports a signed audit bundle; `manage.py verify-checkpoint` verifies it offline against an independently trusted signing fingerprint. Retained checkpoints detect conflicting database rewrites. Same-host storage does not protect against host or signing-key compromise and is not off-machine retention. See [external checkpoint operations](docs/EXTERNAL_CHECKPOINTS.md).
 
 The same area exports a [sponsor evidence pack](docs/SPONSOR_EVIDENCE.md) with a printable PDF, complete business JSON, signed file manifest and offline verifier. Generation requires configured external checkpoints and refuses oversized exports without silently dropping records. Exported copies contain private workspace data and need their own access controls.
+
+Use [controls as code](docs/CONTROLS_AS_CODE.md) from the control workbench to review YAML in Git, preview it and import new drafts. Git provenance is supplied by the author; the server does not fetch repositories or turn a Git commit into approval authority.
 
 The operator command `python manage.py backup --output <new-private-folder>` takes a verified full snapshot while the server is stopped. `manage.py verify` checks it, and `manage.py restore ... --destination <new-folder>` performs a separate restore with rebased workspace paths and revoked sessions. The OS installation lock rejects concurrent server/backup writers. Private environment/API keys are excluded from snapshots.
 

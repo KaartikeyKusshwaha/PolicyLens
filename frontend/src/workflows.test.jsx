@@ -174,6 +174,46 @@ test("auditors see traceability without mapping or model-run actions", async () 
   expect(screen.queryByLabelText(/Mapping rationale/)).toBeNull();
 });
 
+test("control YAML export, preview and draft import preserve the review boundary", async () => {
+  window.history.replaceState({}, "", "/rules/code?control_id=control1");
+  const yaml = "schema_version: policylens.controls.v1\ncontrols: []\n";
+  const item = { key: "control-key", policy: { version: "1.0" }, replaces: { id: "control1" }, configuration: { title: "Reviewed threshold draft", threshold: "250.00" } };
+  mockRoutes({
+    "/api/control-code/export?control_id=control1": () => ({ ok: true, headers: new Headers({ "content-type": "application/yaml; charset=utf-8" }), text: async () => yaml }),
+    "/api/control-code/preview": () => response({ preview_sha256: "a".repeat(64), count: 1, controls: [item], scope: "Imported controls need independent in-app approval." }),
+    "/api/control-code/import": () => response({ controls: [{ key: "control-key", control: { id: "draft2", title: "Reviewed threshold draft", version: 2 } }], replayed: false }, 201),
+  });
+  render(<App />);
+  fireEvent.click(await screen.findByRole("button", { name: "Load control YAML" }));
+  await waitFor(() => expect(screen.getByLabelText("Control YAML").value).toBe(yaml));
+  fireEvent.click(screen.getByRole("button", { name: "Preview YAML" }));
+  await screen.findByRole("heading", { name: "Preview: 1 control drafts" });
+  fireEvent.click(screen.getByRole("button", { name: "Import reviewed drafts" }));
+  await screen.findByText("These new drafts require independent approval before activation.");
+  expect(screen.getByRole("link", { name: "Reviewed threshold draft" }).getAttribute("href")).toBe("/rules/draft2");
+  const imported = fetch.mock.calls.find(([url]) => url === "/api/control-code/import");
+  expect(JSON.parse(imported[1].body).preview_sha256).toBe("a".repeat(64));
+});
+
+test("changing YAML clears its preview and auditors cannot import", async () => {
+  window.history.replaceState({}, "", "/rules/code");
+  mockRoutes({
+    "/api/control-code/preview": () => response({ preview_sha256: "b".repeat(64), count: 1, controls: [], scope: "Draft only." }),
+  });
+  const view = render(<App />);
+  fireEvent.change(await screen.findByLabelText("Control YAML"), { target: { value: "test YAML content" } });
+  fireEvent.click(screen.getByRole("button", { name: "Preview YAML" }));
+  await screen.findByRole("button", { name: "Import reviewed drafts" });
+  fireEvent.change(screen.getByLabelText("Control YAML"), { target: { value: "changed after preview" } });
+  expect(screen.queryByRole("button", { name: "Import reviewed drafts" })).toBeNull();
+  view.unmount();
+  mockRoutes({ "/api/auth/me": () => response({ ...user, role: "auditor" }) });
+  render(<App />);
+  await screen.findByRole("heading", { name: "Controls as code" });
+  expect(screen.queryByRole("button", { name: "Preview YAML" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Import reviewed drafts" })).toBeNull();
+});
+
 test("sponsor evidence download checks the archive type and releases its temporary URL", async () => {
   window.history.replaceState({}, "", "/audit");
   const archive = new Blob(["fixture zip bytes"], { type: "application/zip" });
