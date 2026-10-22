@@ -8,6 +8,7 @@ from fastapi import HTTPException
 from starlette.concurrency import run_in_threadpool
 
 from intelligence import Intelligence
+from checkpoints import Checkpoints
 from operations import Operations, audit, canonical, uid
 from product_models import InvestigationBrief, PolicyAnalysis
 from providers import PROMPT_VERSION, problem, verify_citations
@@ -86,6 +87,7 @@ class AgentEngine:
         self.hub, self.settings, self.client = hub, settings, client
         self.stopping = False
         self.model_lock = asyncio.Lock()
+        self.checkpoints = Checkpoints(hub, settings)
 
     def enqueue(self, store, kind, target_id, actor, *, agent_policy=None):
         if agent_policy and agent_policy.get("prompt_version") != PROMPT_VERSION:
@@ -715,4 +717,5 @@ class AgentEngine:
                 job = self.claim(store)
                 if job:
                     await self.execute(org["id"], job)
+            await run_in_threadpool(self.checkpoints.tick)
             await asyncio.sleep(1)

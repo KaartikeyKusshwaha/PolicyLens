@@ -48,7 +48,10 @@ review and market validation. None of those gates can be inferred from a green C
   structured identifiers optionally. The default provider revision remains explicitly
   unreported, so immutable underlying model weights are **not** established.
   See `GOVERNED_TOOLKIT.md`.
-- [ ] Checkpoints retained outside the database.
+- [x] Implement signed checkpoints outside database storage, automatic capture,
+  failure visibility, signed audit exports and offline trusted-key verification.
+  Deployment, off-machine checkpoint retention and operator acceptance remain
+  pending. See `EXTERNAL_CHECKPOINTS.md` for the threat model and provisioning.
 - [ ] Honest security one-pager covering deployed protections and limits.
 
 ## Phase 2: governed toolkit
@@ -108,6 +111,12 @@ Parked as specified: HA/multiple workers, SSO, Postgres migration, PEP/adverse-m
 data, SAR filing, payment blocking and additional sanctions sources.
 
 ## Implemented MFA boundaries
+
+External checkpoint checkpoint: 145 backend tests passed, including signed bundle
+tampering, database rewrite/truncation detection, missing-key recovery boundaries,
+automatic worker capture and export failure handling. All 28 frontend tests,
+ESLint, production build and Ruff passed. Disk space is available again; these
+checks ran on C: in a new test directory. Browser acceptance and deployment are pending.
 
 Latest governed toolkit checkpoint: 129 backend tests passed, including in-memory
 MCP seeded investigation and actual stdio/HTTP subprocess tests; 26 frontend tests,

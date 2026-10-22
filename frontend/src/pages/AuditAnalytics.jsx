@@ -25,10 +25,30 @@ import { useSession } from "../session";
 export default function AuditAnalytics() {
   const r = useResource("/analytics");
   const audit = useResource("/audit");
+  const checkpoints = useResource("/audit/checkpoints");
   const team = useResource("/team");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const { user } = useSession();
+  async function exportSigned() {
+    setBusy(true);
+    setError("");
+    let url;
+    try {
+      const bundle = await api("/audit/checkpoints/export");
+      url = URL.createObjectURL(new Blob([JSON.stringify(bundle, null, 2)], { type: "application/json" }));
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "policylens-signed-audit.json";
+      link.click();
+      checkpoints.reload();
+    } catch (failure) {
+      setError(failure.message);
+    } finally {
+      if (url) URL.revokeObjectURL(url);
+      setBusy(false);
+    }
+  }
   async function backup() {
     setBusy(true);
     setError("");
@@ -50,15 +70,25 @@ export default function AuditAnalytics() {
         eyebrow="OPERATIONS YOU CAN ACCOUNT FOR"
         title="A clear view of the work—and its record."
         action={
-          <a className="button secondary" href="/api/audit/export" download>
-            <Download size={15} /> Export audit checkpoint
-          </a>
+          checkpoints.data?.configured && checkpoints.data.status !== "failed" ? <button className="button secondary" disabled={busy} onClick={exportSigned}>
+            <Download size={15} /> Export signed audit bundle
+          </button> : undefined
         }
       >
         Measured activity, documented human outcomes, and a verifiable chain of
         recorded events.
       </PageHeading>
-      <ErrorNotice message={error || audit.error} />
+      <ErrorNotice message={error || audit.error || checkpoints.error} />
+      <section className="panel section-padding">
+        <h2>External audit checkpoints</h2>
+        {checkpoints.loading ? <p>Checking external checkpoint storage…</p> : checkpoints.error ? <p>External checkpoint status is unavailable.</p> : checkpoints.data?.configured ? <>
+          <p>Status: {checkpoints.data.status}. {checkpoints.data.unanchored_events ?? "Unknown"} events since the last retained anchor.</p>
+          {checkpoints.data.checkpoint && <><p>Last anchor: event #{checkpoints.data.checkpoint.payload.sequence} · {formatDate(checkpoints.data.checkpoint.payload.created_at)}</p><code style={{ overflowWrap: "anywhere" }}>{checkpoints.data.checkpoint.payload.head_hash}</code></>}
+          {checkpoints.data.fingerprint && <><p>Trust this signing fingerprint through a separate channel before verifying an exported bundle:</p><code style={{ overflowWrap: "anywhere" }}>{checkpoints.data.fingerprint}</code></>}
+          <p className="privacy-note">Signed anchors are retained outside database storage. This does not establish off-machine retention or protection from a compromised host and signing key.</p>
+        </> : checkpoints.data?.configured === false ? <p>External checkpoint storage is not configured. A valid local hash chain alone cannot detect a complete database rewrite.</p> : <p>External checkpoint status is unavailable.</p>}
+        <button className="button secondary" onClick={checkpoints.reload}>Refresh checkpoint status</button>
+      </section>
       <div className="product-metrics">
         <Metric
           label="Transactions received"

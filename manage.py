@@ -14,15 +14,29 @@ sys.path.insert(0, str(Path(__file__).resolve().parent / "backend"))
 from config import Settings  # noqa: E402
 from recovery import create_snapshot, restore_snapshot, verify_snapshot  # noqa: E402
 from auth import Hub  # noqa: E402
+from checkpoints import Checkpoints, verify_bundle  # noqa: E402
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
     security_key = commands.add_parser(
-        "security-key", help="Create a private 32-byte installation encryption key; never overwrite."
+        "security-key",
+        help="Create a private 32-byte installation encryption key; never overwrite.",
     )
     security_key.add_argument("--output", type=Path, required=True)
+    checkpoint = commands.add_parser(
+        "checkpoint",
+        help="Retain and export a signed full audit bundle for one workspace.",
+    )
+    checkpoint.add_argument("--workspace", required=True)
+    checkpoint.add_argument("--output", type=Path, required=True)
+    verify_checkpoint = commands.add_parser(
+        "verify-checkpoint",
+        help="Independently verify a signed audit bundle against a trusted public-key fingerprint.",
+    )
+    verify_checkpoint.add_argument("bundle", type=Path)
+    verify_checkpoint.add_argument("--fingerprint", required=True)
     backup = commands.add_parser(
         "backup", help="Snapshot all databases while the app is stopped."
     )
@@ -48,7 +62,33 @@ def main():
         descriptor = os.open(args.output, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
         with os.fdopen(descriptor, "wb") as file:
             file.write(secrets.token_bytes(32))
-        print(json.dumps({"created": True, "bytes": 32, "key_file": str(args.output.resolve())}))
+        print(
+            json.dumps(
+                {"created": True, "bytes": 32, "key_file": str(args.output.resolve())}
+            )
+        )
+    elif args.command == "checkpoint":
+        with args.output.open("x", encoding="utf-8") as file:
+            args.output.chmod(0o600)
+            settings = Settings()
+            result = Checkpoints(Hub(settings), settings).capture(
+                args.workspace, include_events=True
+            )
+            json.dump(result, file, ensure_ascii=False)
+        print(
+            json.dumps(
+                {
+                    "retained": True,
+                    "bundle_file": str(args.output.resolve()),
+                    "sequence": result["checkpoint"]["payload"]["sequence"],
+                }
+            )
+        )
+    elif args.command == "verify-checkpoint":
+        if args.bundle.stat().st_size > 16_000_000:
+            raise ValueError("Audit bundle exceeds the verification input bound.")
+        bundle = json.loads(args.bundle.read_text(encoding="utf-8"))
+        print(json.dumps({"verified": True, **verify_bundle(bundle, args.fingerprint)}))
     elif args.command == "backup":
         result = create_snapshot(Settings(), args.output)
         print(

@@ -50,7 +50,9 @@ const response = (data, status = 200) => ({
   json: async () => data,
 });
 const defaults = (url) =>
-  url === "/api/auth/status"
+  url === "/api/audit/checkpoints"
+    ? { configured: false, status: "not_configured" }
+    : url === "/api/auth/status"
     ? { setup_required: false }
     : url === "/api/auth/me"
       ? user
@@ -99,6 +101,27 @@ beforeEach(() => {
     "fetch",
     vi.fn(async (url) => response(defaults(url))),
   );
+});
+
+test("signed audit download failures are visible to a read-only auditor", async () => {
+  window.history.replaceState({}, "", "/audit");
+  mockRoutes({
+    "/api/auth/me": () => response({ ...user, role: "auditor" }),
+    "/api/audit/checkpoints": () => response({ configured: true, status: "retained", fingerprint: "a".repeat(64), unanchored_events: 0 }),
+    "/api/audit/checkpoints/export": () => response({ detail: { message: "Signed audit export is unavailable." } }, 409),
+  });
+  render(<App />);
+  const button = await screen.findByRole("button", { name: "Export signed audit bundle" });
+  fireEvent.click(button);
+  await screen.findByText("Signed audit export is unavailable.");
+  expect(button.disabled).toBe(false);
+});
+
+test("unconfigured checkpoint storage never offers an unsigned substitute", async () => {
+  window.history.replaceState({}, "", "/audit");
+  render(<App />);
+  await screen.findByText(/External checkpoint storage is not configured/);
+  expect(screen.queryByRole("button", { name: "Export signed audit bundle" })).toBeNull();
 });
 
 test("empty dashboard displays truthful zeroes and actionable onboarding", async () => {

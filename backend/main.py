@@ -74,6 +74,7 @@ def create_app(settings=None, transport=None, *, start_worker=True):
             app.state.client = client
             app.state.providers = Intelligence(settings, app.state.store, client)
             app.state.engine = AgentEngine(app.state.hub, settings, client)
+            app.state.checkpoints = app.state.engine.checkpoints
             app.state.sync_locks = {}
             worker = (
                 asyncio.create_task(app.state.engine.loop()) if start_worker else None
@@ -415,6 +416,9 @@ def create_app(settings=None, transport=None, *, start_worker=True):
             },
             "sanctions": provider.sanctions_status(),
             "api_docs_enabled": not public_deployment,
+            "external_checkpoints": app.state.checkpoints.status(
+                request.state.user["org_id"]
+            ),
             "agent_worker": "disabled"
             if app.state.worker is None
             else "failed"
@@ -429,6 +433,11 @@ def create_app(settings=None, transport=None, *, start_worker=True):
             with app.state.hub.connect() as db:
                 db.execute("SELECT 1 FROM organizations LIMIT 1").fetchone()
             if worker is not None and worker.done():
+                return JSONResponse({"status": "not_ready"}, status_code=503)
+            if (
+                settings.checkpoint_directory is not None
+                and app.state.checkpoints.errors
+            ):
                 return JSONResponse({"status": "not_ready"}, status_code=503)
         except sqlite3.Error:
             return JSONResponse({"status": "not_ready"}, status_code=503)
@@ -683,11 +692,13 @@ def create_app(settings=None, transport=None, *, start_worker=True):
     from access_api import router as access_router
     from mfa_api import router as mfa_router
     from toolkit_api import router as toolkit_router
+    from checkpoint_api import router as checkpoint_router
 
     app.include_router(router)
     app.include_router(access_router)
     app.include_router(mfa_router)
     app.include_router(toolkit_router)
+    app.include_router(checkpoint_router)
     dist = ROOT.parent / "frontend" / "dist"
     if (dist / "assets").is_dir():
         app.mount("/assets", StaticFiles(directory=dist / "assets"), name="assets")
