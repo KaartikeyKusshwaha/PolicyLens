@@ -4,7 +4,6 @@ import argparse
 import json
 import os
 import secrets
-import sqlite3
 import sys
 from pathlib import Path
 from urllib.parse import urlencode, urlsplit
@@ -12,9 +11,15 @@ from urllib.parse import urlencode, urlsplit
 sys.path.insert(0, str(Path(__file__).resolve().parent / "backend"))
 
 from config import Settings  # noqa: E402
-from recovery import create_snapshot, restore_snapshot, verify_snapshot  # noqa: E402
+from recovery import (
+    create_snapshot,
+    migrate_encryption,
+    restore_snapshot,
+    verify_snapshot,
+)  # noqa: E402
 from auth import Hub  # noqa: E402
 from checkpoints import Checkpoints, verify_bundle  # noqa: E402
+from database import DB_ERRORS  # noqa: E402
 
 
 def main():
@@ -41,6 +46,11 @@ def main():
         "backup", help="Snapshot all databases while the app is stopped."
     )
     backup.add_argument("--output", type=Path, required=True)
+    migrate = commands.add_parser(
+        "migrate-encryption",
+        help="Export a stopped plaintext installation to a NEW SQLCipher snapshot; never overwrite source databases.",
+    )
+    migrate.add_argument("--output", type=Path, required=True)
     verify = commands.add_parser(
         "verify", help="Verify checksums and SQLite integrity."
     )
@@ -100,11 +110,25 @@ def main():
                 }
             )
         )
+    elif args.command == "migrate-encryption":
+        result = migrate_encryption(Settings(), args.output)
+        print(
+            json.dumps(
+                {
+                    "verified": True,
+                    "databases": len(result["files"]),
+                    "path": str(args.output.resolve()),
+                    "database_encryption": result["database_encryption"],
+                    "source_modified": False,
+                    "next_step": "Restore this encrypted snapshot into a new directory using sqlcipher4 and the original installation key before switching the service.",
+                }
+            )
+        )
     elif args.command == "verify":
-        result = verify_snapshot(args.backup)
+        result = verify_snapshot(args.backup, Settings())
         print(json.dumps({"verified": True, "databases": len(result["files"])}))
     elif args.command == "restore":
-        print(json.dumps(restore_snapshot(args.backup, args.destination)))
+        print(json.dumps(restore_snapshot(args.backup, args.destination, Settings())))
     else:
         origin = urlsplit(args.origin)
         settings = Settings()
@@ -143,6 +167,6 @@ def main():
 if __name__ == "__main__":
     try:
         main()
-    except (ValueError, RuntimeError, OSError, sqlite3.Error) as exc:
+    except (ValueError, RuntimeError, OSError, *DB_ERRORS) as exc:
         print(str(exc), file=sys.stderr)
         sys.exit(1)

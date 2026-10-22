@@ -1,4 +1,4 @@
-import sqlite3
+from database import DB_ERRORS
 
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
@@ -26,7 +26,7 @@ def checkpoint_export(request: Request):
             "audit_bundle_too_large",
             "The complete audit bundle exceeds the export bound. Automatic checkpoint retention remains separate from this download limit.",
         ) from exc
-    except (ValueError, RuntimeError, OSError, sqlite3.Error) as exc:
+    except (ValueError, RuntimeError, OSError, *DB_ERRORS) as exc:
         manager.errors[org_id] = "checkpoint_capture_failed"
         raise problem(
             409,

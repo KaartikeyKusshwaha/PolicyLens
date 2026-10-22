@@ -306,7 +306,7 @@ class Hub:
                     "workspace_storage_missing",
                     "Workspace storage is missing. Restore its database before restarting; no replacement database was created.",
                 )
-            store = Store(path)
+            store = Store(path, self.settings)
             Operations(store)
             self.stores[org_id] = store
         return self.stores[org_id]
@@ -377,7 +377,7 @@ class Hub:
         path = self.path.parent / "workspaces" / (org_id + ".db")
         from operations import Operations
 
-        Operations(Store(path))
+        Operations(Store(path, self.settings))
         with self.connect() as db:
             db.execute(
                 "INSERT INTO organizations VALUES (?,?,?,?)",

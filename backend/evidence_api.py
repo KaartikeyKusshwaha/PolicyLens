@@ -1,4 +1,4 @@
-import sqlite3
+from database import DB_ERRORS
 
 from fastapi import APIRouter, Request
 from fastapi.responses import Response
@@ -25,7 +25,7 @@ def sponsor_pack(request: Request):
             "evidence_pack_too_large",
             "The complete workspace evidence exceeds the pilot export bound. No partial pack was generated.",
         ) from exc
-    except (ValueError, RuntimeError, OSError, sqlite3.Error) as exc:
+    except (ValueError, RuntimeError, OSError, *DB_ERRORS) as exc:
         raise problem(
             409,
             "evidence_pack_unavailable",

@@ -1,7 +1,6 @@
 import asyncio
 import hmac
 import logging
-import sqlite3
 import time
 import uuid
 from contextlib import asynccontextmanager, suppress
@@ -32,6 +31,7 @@ from operations import Operations, audit
 from product_models import NamedWorkspace
 from providers import extract_document, problem, verify_citations
 from store import Store, now
+from database import INTEGRITY_ERRORS, STORAGE_ERRORS, encryption_status
 from runtime import InstallationLock
 
 logger = logging.getLogger("policylens")
@@ -59,7 +59,7 @@ def create_app(settings=None, transport=None, *, start_worker=True):
             raise RuntimeError(
                 "A registered workspace database is missing. Restore the installation before starting; no replacement workspace database was created."
             )
-        app.state.store = Store(settings.database_path)
+        app.state.store = Store(settings.database_path, settings)
         Operations(app.state.store)
         if app.state.hub.needs_setup():
             logger.warning(
@@ -242,6 +242,10 @@ def create_app(settings=None, transport=None, *, start_worker=True):
             response = JSONResponse(
                 status_code=exc.status_code, content={"detail": exc.detail}
             )
+        except STORAGE_ERRORS:
+            if path != "/api/ready":
+                raise
+            response = JSONResponse({"status": "not_ready"}, status_code=503)
         agent_user = getattr(request.state, "user", None)
         if (
             agent_user
@@ -416,6 +420,7 @@ def create_app(settings=None, transport=None, *, start_worker=True):
             },
             "sanctions": provider.sanctions_status(),
             "api_docs_enabled": not public_deployment,
+            "database_encryption": encryption_status(settings),
             "external_checkpoints": app.state.checkpoints.status(
                 request.state.user["org_id"]
             ),
@@ -439,7 +444,7 @@ def create_app(settings=None, transport=None, *, start_worker=True):
                 and app.state.checkpoints.errors
             ):
                 return JSONResponse({"status": "not_ready"}, status_code=503)
-        except sqlite3.Error:
+        except STORAGE_ERRORS:
             return JSONResponse({"status": "not_ready"}, status_code=503)
         return {"status": "ready"}
 
@@ -636,7 +641,7 @@ def create_app(settings=None, transport=None, *, start_worker=True):
         }
         try:
             store.save_decision(result)
-        except sqlite3.IntegrityError as exc:
+        except INTEGRITY_ERRORS as exc:
             raise problem(
                 409,
                 "duplicate_transaction",

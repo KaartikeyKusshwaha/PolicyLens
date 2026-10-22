@@ -39,6 +39,12 @@ review and market validation. None of those gates can be inferred from a green C
 - [x] Add account UI and non-browser API security tests.
 - [ ] Complete review of MFA and its deployment/key recovery procedure.
 - [ ] Database encryption at rest, migration and recovery verification.
+  SQLCipher identity/tenant storage and encrypted workspace/full-installation
+  backup/restore are implemented with wrong-key, corruption and tenant tests.
+  Offline plaintext-to-encrypted snapshot migration preserves source files and
+  the original MFA/signing key; restore rebases into a separate installation.
+  Encrypted off-machine receiver integration and
+  production acceptance remain pending. See `DATABASE_ENCRYPTION.md`.
 - [ ] Retention/deletion policy, preview, approval and execution with legal holds.
 - [x] Implement agent-scoped keys, immediate revocation, scopes, rate limits and
   per-key/workspace run budgets, plus admin UI. Deployment acceptance is pending.
@@ -128,6 +134,13 @@ Parked as specified: HA/multiple workers, SSO, Postgres migration, PEP/adverse-m
 data, SAR filing, payment blocking and additional sanctions sources.
 
 ## Implemented MFA boundaries
+
+Database encryption checkpoint: the full backend suite passed 202 tests, followed
+by all 10 expanded encryption/migration tests (204 backend tests now in source).
+The migration test retains both tenant databases, FTS retrieval and enabled MFA,
+rejects an incorrect original MFA key, restarts the encrypted installation and
+creates another verified encrypted backup. Ruff and dependency consistency pass.
+Linux CI and encrypted off-machine receiver integration remain to be verified.
 
 Marble adapter checkpoint: 191 backend tests passed in the full suite, followed by
 all 14 focused adapter tests after adding concurrent replay and separate-case checks

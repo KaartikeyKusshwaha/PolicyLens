@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     pseudonymization_scope: str = "interactive"
     database_path: Path = ROOT / "data" / "policylens-v2.db"
     security_key_path: Path | None = None
+    database_encryption: Literal["none", "sqlcipher4"] = "none"
     checkpoint_directory: Path | None = None
     checkpoint_interval_seconds: int = Field(default=300, ge=1, le=86400)
     sanctions_max_age_hours: int = Field(default=24, ge=1, le=168)

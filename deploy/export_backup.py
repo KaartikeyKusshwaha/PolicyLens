@@ -8,11 +8,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
 from recovery import verify_snapshot  # noqa: E402
+from config import Settings  # noqa: E402
 
 MAX_ARCHIVE_BYTES = 128 * 1024 * 1024
 
 
-def export_snapshot(root=Path("/var/backups/policylens")):
+def export_snapshot(root=Path("/var/backups/policylens"), settings=None):
     snapshots = sorted(
         (
             path
@@ -27,7 +28,7 @@ def export_snapshot(root=Path("/var/backups/policylens")):
         raise ValueError("No daily snapshot is available.")
     # Never silently fall back to an older snapshot when the newest is corrupt.
     snapshot = snapshots[0]
-    manifest = verify_snapshot(snapshot)
+    manifest = verify_snapshot(snapshot, settings)
     files = ["manifest.json", *[item["path"] for item in manifest["files"]]]
     if (
         sum((snapshot / relative).stat().st_size for relative in files)
@@ -51,7 +52,7 @@ def export_snapshot(root=Path("/var/backups/policylens")):
 
 if __name__ == "__main__":
     try:
-        sys.stdout.buffer.write(export_snapshot())
+        sys.stdout.buffer.write(export_snapshot(settings=Settings()))
     except Exception:
         # No database contents, secret paths or raw exception details in remote logs.
         print(

@@ -5,9 +5,9 @@ import hmac
 import io
 import json
 import secrets
-import sqlite3
 import time
 from datetime import datetime, timedelta, timezone
+from contextlib import closing
 
 from fastapi import APIRouter, File, HTTPException, Query, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, Response
@@ -32,6 +32,7 @@ from product_models import (
 )
 from providers import problem
 from store import now
+from database import INTEGRITY_ERRORS, connect_database, descriptor
 
 router = APIRouter(prefix="/api")
 
@@ -68,7 +69,7 @@ def customers(request: Request):
 def add_customer(data: CustomerInput, request: Request):
     try:
         return request.state.ops.save_customer(data, request.state.user["id"])
-    except sqlite3.IntegrityError as exc:
+    except INTEGRITY_ERRORS as exc:
         raise problem(
             409, "duplicate_customer", "That customer reference already exists."
         ) from exc
@@ -99,7 +100,7 @@ def update_customer(customer_id: str, data: CustomerInput, request: Request):
         return request.state.ops.save_customer(
             data, request.state.user["id"], customer_id
         )
-    except sqlite3.IntegrityError as exc:
+    except INTEGRITY_ERRORS as exc:
         raise problem(
             409, "duplicate_customer", "That customer reference already exists."
         ) from exc
@@ -601,11 +602,15 @@ def backup(request: Request):
     backup_id = uid()
     path = directory / (backup_id + ".db")
     with (
-        sqlite3.connect(request.state.store.path) as source,
-        sqlite3.connect(path) as target,
+        closing(
+            connect_database(
+                request.state.store.path, request.app.state.settings, readonly=True
+            )
+        ) as source,
+        closing(connect_database(path, request.app.state.settings)) as target,
     ):
         source.backup(target)
-    check = sqlite3.connect(path)
+    check = connect_database(path, request.app.state.settings, readonly=True)
     try:
         integrity = check.execute("PRAGMA integrity_check").fetchone()[0]
     finally:
@@ -620,6 +625,7 @@ def backup(request: Request):
             "file": path.name,
             "created_by": request.state.user["id"],
             "integrity": integrity,
+            "database_encryption": descriptor(request.app.state.settings),
         },
         request.state.user["id"],
         backup_id,

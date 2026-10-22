@@ -2,10 +2,10 @@
 
 import json
 import re
-import sqlite3
 import uuid
 from contextlib import contextmanager
 from datetime import datetime, timezone
+from database import connect_database, driver
 
 
 def now():
@@ -13,8 +13,9 @@ def now():
 
 
 class Store:
-    def __init__(self, path):
+    def __init__(self, path, settings=None):
         self.path = path
+        self.settings = settings
         path.parent.mkdir(parents=True, exist_ok=True)
         with self.connect() as db:
             db.executescript("""
@@ -39,8 +40,9 @@ class Store:
 
     @contextmanager
     def connect(self):
-        db = sqlite3.connect(self.path, timeout=15)
-        db.row_factory = sqlite3.Row
+        settings = getattr(self, "settings", None)
+        db = connect_database(self.path, settings)
+        db.row_factory = driver(settings).Row
         db.execute("PRAGMA foreign_keys=ON")
         try:
             with db:

@@ -8,7 +8,6 @@ import logging
 import os
 import re
 import secrets
-import sqlite3
 import threading
 import time
 import uuid
@@ -25,6 +24,7 @@ from operations import canonical
 from runtime import InstallationLock
 from security import SecretBox
 from store import now
+from database import DB_ERRORS
 
 ZERO = "0" * 64
 SCHEMA = "policylens.audit-checkpoint.v1"
@@ -384,7 +384,7 @@ class Checkpoints:
                 - (latest["payload"]["sequence"] if latest else 0),
                 "scope": "Retained outside database storage; not proof of off-machine retention or resistance to host/signing-key compromise.",
             }
-        except (ValueError, RuntimeError, OSError, sqlite3.Error):
+        except (ValueError, RuntimeError, OSError, *DB_ERRORS):
             self.errors[org_id] = "checkpoint_verification_failed"
             return {
                 "configured": True,
@@ -405,7 +405,7 @@ class Checkpoints:
         for org in self.hub.organizations():
             try:
                 self.capture(org["id"])
-            except (ValueError, RuntimeError, OSError, sqlite3.Error):
+            except (ValueError, RuntimeError, OSError, *DB_ERRORS):
                 self.errors[org["id"]] = "checkpoint_capture_failed"
                 logging.getLogger("policylens.checkpoints").error(
                     "External checkpoint capture failed for workspace %s", org["id"]

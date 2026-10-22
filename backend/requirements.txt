@@ -10,3 +10,4 @@ defusedxml==0.7.1
 cryptography==50.0.2
 reportlab==5.1.0
 PyYAML==6.0.3
+sqlcipher3==0.6.4
