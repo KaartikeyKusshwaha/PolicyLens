@@ -94,15 +94,20 @@ def state(store):
         policies = records(db, "retention_policy")
         holds = records(db, "retention_hold")
         copies = records(db, "retained_copy")
+        requests = records(db, "deletion_request")
         active = active_policy(db)
     return {
         "active_policy": active,
         "policies": policies,
         "holds": holds,
         "copies": copies,
+        "deletion_requests": [
+            {key: value for key, value in item.items() if key != "snapshot"}
+            for item in requests
+        ],
         "deletion_enabled": False,
         "deletion_preview_available": True,
-        "limits": "Deletion inventory previews are available; execution and copy reconciliation are unfinished. Holds remain effective during release review. No statutory retention period is supplied.",
+        "limits": "Deletion inventory previews and expiring independent plan review are available. Execution, physical erasure and complete copy reconciliation remain unfinished. Holds remain effective during release review. No statutory retention period is supplied.",
     }
 
 

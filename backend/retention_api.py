@@ -3,9 +3,60 @@ from fastapi import APIRouter, Query, Request
 import retention
 import deletion
 import retained_copies
+import deletion_requests
 from providers import problem
 
 router = APIRouter(prefix="/api/retention")
+
+
+@router.post("/deletion-requests", status_code=201)
+def create_deletion_request(data: deletion_requests.RequestInput, request: Request):
+    require(request, "admin")
+    return deletion_requests.create(
+        request.state.store, request.state.user["org_id"], data, request.state.user
+    )
+
+
+@router.get("/deletion-requests/{record_id}")
+def inspect_deletion_request(record_id: str, request: Request):
+    require(request, "admin", "reviewer", "auditor")
+    return deletion_requests.inspect(
+        request.state.store, request.state.user["org_id"], record_id
+    )
+
+
+@router.post("/deletion-requests/{record_id}/approve")
+def approve_deletion_request(
+    record_id: str, data: deletion_requests.ApprovalInput, request: Request
+):
+    require(request, "admin", "reviewer")
+    return deletion_requests.approve(
+        request.state.store,
+        request.state.user["org_id"],
+        record_id,
+        data,
+        request.state.user,
+    )
+
+
+@router.post("/deletion-requests/{record_id}/reject")
+def reject_deletion_request(
+    record_id: str, data: deletion_requests.ReviewInput, request: Request
+):
+    require(request, "admin", "reviewer")
+    return deletion_requests.finish_review(
+        request.state.store, record_id, data, request.state.user, action="rejected"
+    )
+
+
+@router.post("/deletion-requests/{record_id}/cancel")
+def cancel_deletion_request(
+    record_id: str, data: deletion_requests.ReviewInput, request: Request
+):
+    require(request, "admin", "reviewer")
+    return deletion_requests.finish_review(
+        request.state.store, record_id, data, request.state.user, action="cancelled"
+    )
 
 
 @router.post("/copies", status_code=201)

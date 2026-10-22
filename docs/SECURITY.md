@@ -23,7 +23,9 @@ shared references. A manual custody register adds preservation deadlines,
 independent removal authorization and custodian-report confirmation, with repeated
 hold/policy checks. Explicit application exports/backups register custody and exact
 content hashes automatically. Historical/offline discovery, deletion execution
-and complete reconciliation remain unfinished. Confirmed reports are human attestations,
+and complete reconciliation remain unfinished. Expiring independent deletion-plan
+review pins the inventory and refuses stale/blocked approval; it does not execute
+deletion or certify discovery evidence. Confirmed reports are human attestations,
 not automated proof of physical erasure.
 No automated deletion or complete erasure guarantee is claimed. See
 [retention status](RETENTION.md). Backups, snapshots, exports and downstream copies

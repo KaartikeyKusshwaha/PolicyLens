@@ -4,6 +4,17 @@ The full user-provided master plan is retained in `MASTER_PLAN.md`. This ledger
 tracks implementation separately from deployment, browser acceptance, external
 review and market validation. None of those gates can be inferred from a green CI run.
 
+## Deletion review checkpoint
+
+Expiring deletion requests now retain a complete inventory snapshot and independent
+review/discovery evidence. Customer changes, new holds, policy changes and new
+exports invalidate the pinned plan; exporting its signed evidence pack is covered.
+Local regression passed 298 backend tests, followed by 13 focused request tests
+covering the final capacity, encrypted recovery and signed-pack additions (301
+backend tests now in source). All 51 frontend tests, ESLint, production build and
+Ruff passed. The PDF request section was rendered and visually inspected. This
+checkpoint does not implement deletion execution or prove physical erasure.
+Browser testing and Oracle deployment remain pending.
 ## Decisions and current evidence
 
 - Retain the existing repository license (user decision, 22 October 2026).
@@ -53,7 +64,10 @@ review and market validation. None of those gates can be inferred from a green C
   holds with independent release approval are implemented in source and settings
   UI. Pending release holds remain effective. Customer inventory previews now
   bind explicit row ownership, content hashes, policy/holds and retention age;
-  shared/text references remain review blockers. Deletion approval/execution,
+  shared/text references remain review blockers. Expiring deletion-plan requests
+  now pin full snapshots, require independent review and discovery evidence,
+  and reject stale/blocked approvals; cancellation/rejection retain history.
+  Execution remains disabled. Deletion execution,
   audit-PII handling and complete backup/export reconciliation remain unfinished.
   Manual copy custody now records scope/custodian/deadlines and independent
   removal authorization/report confirmation; policy/hold checks repeat at each

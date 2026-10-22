@@ -4,8 +4,40 @@ This is an incomplete implementation of the master plan's retention/deletion
 workflow. Policy approval and legal-hold governance are available in Settings
 at `/settings/retention`. No data is deleted or scheduled for deletion by these
 endpoints. Customer-linked inventory preview is implemented; deletion request
-approval/execution, physical storage handling and backup/export reconciliation
+execution, physical storage handling and complete backup/export reconciliation
 remain to be implemented.
+
+## Expiring independent deletion-plan review
+
+An administrator can submit the current customer preview with its exact inventory
+SHA-256 and a reason. The server recalculates it in a write transaction and refuses
+stale input. It preserves the complete bounded snapshot, author and audit record;
+one customer may have only one requested/approved plan at a time. Review expires
+24 hours after submission. Expired requests must be cancelled/rejected and replaced.
+
+A different administrator or reviewer can approve the logical plan only when
+the current inventory still matches and every operational, retention, hold,
+shared-reference and registered-copy blocker is clear. Approval also requires a
+copy-discovery report reference/hash and explicit acknowledgements that immutable
+audit remains and physical/restore limits are unresolved. This records human review
+of discovery evidence; it does not automatically prove discovery completeness or
+remove the planner's reconciliation warning. Neither approval nor an acknowledgement
+enables deletion. There is no execution endpoint yet.
+
+The inspection endpoint compares pinned and current hashes, reports staleness,
+expiry and current blockers, and exposes the full review snapshot. Requests and
+receipts are retained workflow metadata excluded from the business inventory hash;
+otherwise creating/approving a request would invalidate itself. Changes to actual
+candidate records, policy, holds or applicable custody still invalidate the plan.
+Audit events retain request/content hashes rather than copying customer narrative.
+Sponsor packs include retained request history and its pinned snapshot.
+
+Authors or administrators can cancel pending/approved requests; a different reviewer
+can reject them. Terminal requests cannot be rewritten through these actions.
+Every transition and its audit event share a transaction. Review history is retained,
+with at most 2,000 requests and 2 MB per pinned snapshot; capacity refusal never
+stores a partial plan. Approval must be revalidated again by the eventual executor,
+including expiry, holds, copy reconciliation and exact rows inside its write lock.
 
 ## Policy governance
 
@@ -167,8 +199,8 @@ JSON and PDF. Native backup downloads verify the saved content hash when availab
 
 ## Boundaries still requiring implementation
 
-- Build independently reviewed deletion requests from the inventory, handle shared
-  and ambiguous references, reconcile saved exports and revalidate the exact
+- Implement execution of independently reviewed requests, handle shared and
+  ambiguous references, reconcile saved exports and revalidate the exact
   eligible record set during execution. Concurrent changes must invalidate approval.
 - Keep policy/control versions, approval evidence, deletion receipts and the audit
   chain's integrity. Existing immutable audit events can include customer names

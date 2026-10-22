@@ -242,6 +242,13 @@ def plan(db, workspace_id, customer_id, *, current=None):
         for item in rows:
             if (table, item["raw"]["_rowid"]) in selected_keys:
                 continue
+            if table == "records" and item["raw"]["kind"] in (
+                "deletion_request",
+                "deletion_receipt",
+            ):
+                # Workflow metadata cannot invalidate its own business inventory.
+                # Requests are retained/audited separately, never deletion targets.
+                continue
             if references(item["raw"], tokens):
                 governance = (
                     table == "records" and item["raw"]["kind"] in GOVERNANCE_KINDS

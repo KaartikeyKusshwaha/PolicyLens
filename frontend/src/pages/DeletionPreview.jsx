@@ -23,7 +23,7 @@ function Inventory({ title, rows }) {
   return <><h3>{title} ({rows.length})</h3>{rows.length ? <div className="table-scroll"><table><thead><tr><th>Storage</th><th>Record</th><th>Content hash</th></tr></thead><tbody>{rows.map(row => <tr key={`${row.table}:${row.rowid}`}><td>{label(row.kind)}</td><td><code>{row.record_id}</code></td><td><code>{row.sha256}</code></td></tr>)}</tbody></table></div> : <p>No records in this category.</p>}</>;
 }
 
-export default function DeletionPreview() {
+export default function DeletionPreview({ canRequest = false, onCreated = () => {} }) {
   const [customerId, setCustomerId] = useState("");
   const [result, setResult] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -49,6 +49,12 @@ export default function DeletionPreview() {
       <h3>Retained audit and external scope</h3><p>{result.retained_audit.scope}</p><p>{result.retained_audit.events} audit events remain retained.</p>
       <ul>{result.excluded_scope.map(scope => <li key={scope}>{scope}</li>)}</ul><p>{result.limits}</p>
       <p>No data was deleted. A new preview is needed after policy, hold or business-record changes.</p>
+      {canRequest && <form onSubmit={async event => {
+        event.preventDefault(); const reason = new FormData(event.currentTarget).get("reason"); setBusy(true); setError("");
+        try { await api("/retention/deletion-requests", { method:"POST",body:{ customer_id:result.customer_id,inventory_sha256:result.inventory_sha256,reason } }); setResult(null); onCreated(); }
+        catch (failure) { setError(failure.message); setResult(null); }
+        finally { setBusy(false); }
+      }}><Field label="Deletion request reason"><textarea name="reason" minLength={20} maxLength={2000} required disabled={busy} /></Field><Submit busy={busy}>Submit plan for independent review</Submit><p>Submitting preserves current blockers. Approval cannot bypass holds, retention or outstanding registered copies.</p></form>}
     </>}
   </section>;
 }
