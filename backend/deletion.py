@@ -9,7 +9,7 @@ from pydantic import Field
 from models import Input
 from operations import canonical
 from providers import problem
-from retention import active_policy, blocking_holds, get
+from retention import active_policy, blocking_holds, get, records
 
 MAX_ROWS = 5000
 MAX_BYTES = 16_000_000
@@ -51,6 +51,7 @@ GOVERNANCE_KINDS = {
     "retention_hold",
     "deletion_request",
     "deletion_receipt",
+    "retained_copy",
 }
 JSON_COLUMNS = {"payload", "result"}
 
@@ -341,6 +342,16 @@ def plan(db, workspace_id, customer_id, *, current=None):
     # External copies and physical compaction are deliberately not represented as
     # completed by a logical row inventory. Execution remains unavailable.
     block("external_copy_reconciliation_required")
+    external_copies = [
+        copy
+        for copy in records(db, "retained_copy")
+        if copy["scope"] == "workspace"
+        or copy.get("customer_id") == customer_id
+        or (copy["scope"] == "case" and copy["target_id"] in cases)
+    ]
+    for copy in external_copies:
+        if copy["status"] != "removal_confirmed":
+            block("registered_copy_outstanding", copy["id"])
     audit_info = db.execute(
         "SELECT count(*),coalesce(max(seq),0) FROM audit_chain"
     ).fetchone()
@@ -357,6 +368,16 @@ def plan(db, workspace_id, customer_id, *, current=None):
         "unresolved_references": residual,
         "retained_governance": retained_governance,
         "blocking_holds": holds,
+        "external_copies": [
+            {
+                "id": copy["id"],
+                "scope": copy["scope"],
+                "category": copy["category"],
+                "status": copy["status"],
+                "sha256": digest(copy),
+            }
+            for copy in external_copies
+        ],
         "eligible_at": eligible_at.isoformat() if eligible_at else None,
     }
     return {

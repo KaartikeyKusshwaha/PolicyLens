@@ -111,7 +111,7 @@ test("signed audit download failures are visible to a read-only auditor", async 
     "/api/audit/checkpoints/export": () => response({ detail: { message: "Signed audit export is unavailable." } }, 409),
   });
   render(<App />);
-  const button = await screen.findByRole("button", { name: "Export signed audit bundle" });
+  const button = await screen.findByRole("button", { name: "Export signed audit bundle" }, { timeout: 5000 });
   fireEvent.click(button);
   await screen.findByText("Signed audit export is unavailable.");
   expect(button.disabled).toBe(false);

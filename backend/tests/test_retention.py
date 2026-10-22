@@ -328,6 +328,7 @@ def test_retention_bounds_fail_without_silently_omitting_history(
 
 
 def test_encrypted_recovery_preserves_active_policies_and_pending_holds(tmp_path):
+    from datetime import datetime, timedelta, timezone
     from fastapi.testclient import TestClient
     from config import Settings
     from main import create_app
@@ -360,6 +361,24 @@ def test_encrypted_recovery_preserves_active_policies_and_pending_holds(tmp_path
             },
         )
         assert response.status_code == 201
+        copy = client.post(
+            "/api/retention/copies",
+            json={
+                "category": "backup",
+                "scope": "workspace",
+                "custodian": "Fictional recovery custodian",
+                "location_reference": "RECOVERY-CUSTODY-TEST",
+                "content_sha256": "a" * 64,
+                "copy_created_at": (
+                    datetime.now(timezone.utc) - timedelta(days=1000)
+                ).isoformat(),
+                "preserve_until": (
+                    datetime.now(timezone.utc) - timedelta(days=1)
+                ).isoformat(),
+                "reason": "Retain custody metadata through the encrypted recovery drill.",
+            },
+        )
+        assert copy.status_code == 201
         hold_id = response.json()["id"]
         assert (
             client.post(
@@ -387,5 +406,7 @@ def test_encrypted_recovery_preserves_active_policies_and_pending_holds(tmp_path
         value = client.get("/api/retention").json()
         assert value["active_policy"]["id"] == policy["id"]
         assert value["holds"][0]["status"] == "release_requested"
+        assert value["copies"][0]["id"] == copy.json()["id"]
+        assert value["copies"][0]["status"] == "retained"
         with client.app.state.hub.store(identity["org_id"]).connect() as db:
             assert retention.blocking_holds(db)[0]["id"] == hold_id

@@ -2,9 +2,76 @@ from fastapi import APIRouter, Query, Request
 
 import retention
 import deletion
+import retained_copies
 from providers import problem
 
 router = APIRouter(prefix="/api/retention")
+
+
+@router.post("/copies", status_code=201)
+def register_copy(data: retained_copies.CopyInput, request: Request):
+    require(request, "admin", "reviewer")
+    return retained_copies.register(request.state.store, data, request.state.user)
+
+
+@router.post("/copies/{record_id}/request-removal")
+def request_copy_removal(
+    record_id: str, data: retained_copies.CopyReview, request: Request
+):
+    require(request, "admin", "reviewer")
+    return retained_copies.request_removal(
+        request.state.store, record_id, data, request.state.user
+    )
+
+
+@router.post("/copies/{record_id}/approve-removal")
+def approve_copy_removal(
+    record_id: str, data: retained_copies.CopyReview, request: Request
+):
+    require(request, "admin", "reviewer")
+    return retained_copies.approve_removal(
+        request.state.store, record_id, data, request.state.user
+    )
+
+
+@router.post("/copies/{record_id}/report-removal")
+def report_copy_removal(
+    record_id: str, data: retained_copies.RemovalReport, request: Request
+):
+    require(request, "admin", "reviewer")
+    return retained_copies.report_removal(
+        request.state.store, record_id, data, request.state.user
+    )
+
+
+@router.post("/copies/{record_id}/confirm-removal")
+def confirm_copy_removal(
+    record_id: str, data: retained_copies.CopyReview, request: Request
+):
+    require(request, "admin", "reviewer")
+    return retained_copies.confirm_removal(
+        request.state.store, record_id, data, request.state.user
+    )
+
+
+@router.post("/copies/{record_id}/cancel-removal")
+def cancel_copy_removal(
+    record_id: str, data: retained_copies.CopyReview, request: Request
+):
+    require(request, "admin", "reviewer")
+    return retained_copies.cancel_removal(
+        request.state.store, record_id, data, request.state.user
+    )
+
+
+@router.post("/copies/{record_id}/review-reported-removal")
+def review_reported_copy_removal(
+    record_id: str, data: retained_copies.CopyReview, request: Request
+):
+    require(request, "admin", "reviewer")
+    return retained_copies.review_reported_removal(
+        request.state.store, record_id, data, request.state.user
+    )
 
 
 def require(request, *roles):

@@ -11,6 +11,7 @@ const messages = {
   nonterminal_agent_run: "A linked agent run can still run or resume.",
   retention_period_not_elapsed: "The approved retention period has not elapsed for all candidate records.",
   external_copy_reconciliation_required: "Backups, exports, recovery copies and downstream copies still require reconciliation.",
+  registered_copy_outstanding: "A registered copy has no independently confirmed removal report.",
   unresolved_shared_or_text_references: "Shared records or text references need review; they are not authorized deletion candidates.",
   retention_timestamp_missing: "A record has no usable retention timestamp.",
   resolved_case_timestamp_missing: "A resolved case has no resolution timestamp.",
@@ -44,6 +45,7 @@ export default function DeletionPreview() {
       <Inventory title="Operational candidates" rows={result.candidates} />
       <Inventory title="Unresolved retained references" rows={result.unresolved_references} />
       <Inventory title="Retained governance" rows={result.retained_governance} />
+      {result.external_copies?.length > 0 && <><h3>Applicable registered copies</h3><ul>{result.external_copies.map(copy => <li key={copy.id}>{label(copy.category)} · {label(copy.status)} · <code>{copy.id}</code></li>)}</ul></>}
       <h3>Retained audit and external scope</h3><p>{result.retained_audit.scope}</p><p>{result.retained_audit.events} audit events remain retained.</p>
       <ul>{result.excluded_scope.map(scope => <li key={scope}>{scope}</li>)}</ul><p>{result.limits}</p>
       <p>No data was deleted. A new preview is needed after policy, hold or business-record changes.</p>

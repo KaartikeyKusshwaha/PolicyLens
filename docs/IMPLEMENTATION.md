@@ -54,7 +54,10 @@ review and market validation. None of those gates can be inferred from a green C
   UI. Pending release holds remain effective. Customer inventory previews now
   bind explicit row ownership, content hashes, policy/holds and retention age;
   shared/text references remain review blockers. Deletion approval/execution,
-  audit-PII handling and backup/export reconciliation remain unfinished; see
+  audit-PII handling and complete backup/export reconciliation remain unfinished.
+  Manual copy custody now records scope/custodian/deadlines and independent
+  removal authorization/report confirmation; policy/hold checks repeat at each
+  stage. Automatic discovery/registration and physical erasure are not claimed; see
   `RETENTION.md`. No automatic deletion or complete-erasure claim is made.
 - [x] Implement agent-scoped keys, immediate revocation, scopes, rate limits and
   per-key/workspace run budgets, plus admin UI. Deployment acceptance is pending.
@@ -147,12 +150,20 @@ data, SAR filing, payment blocking and additional sanctions sources.
 
 ## Implemented MFA boundaries
 
+Copy custody checkpoint: the full backend suite passed 266 tests, followed by
+all 24 focused custody tests after final policy re-review/validation/bound checks
+(270 backend tests now in source). All 47 frontend tests, Ruff, ESLint and build
+pass. The encrypted recovery test retains custody records and pending holds.
+Supplied content/evidence hashes and confirmed reports are operator attestations;
+no automatic storage discovery or physical erasure is established.
+
 Customer deletion inventory checkpoint: all 17 focused API/planner tests and
 all 42 frontend tests pass, along with Ruff, ESLint and production build. Coverage
 includes read-snapshot consistency during a concurrent update, SQLCipher storage,
 policy/hold/content binding, residual references, retention timestamps and bounds.
-The full backend regression is running. No deletion executor or copy-removal
-claim is made.
+CI passed all 246 backend and 42 frontend tests at `6555753`. The older local
+245-test snapshot also finished successfully. No deletion executor or physical
+copy-removal claim is made.
 
 Retention governance checkpoint: the full backend suite passed 228 tests; all 14
 focused retention tests then passed after adding encrypted recovery (229 backend

@@ -69,8 +69,57 @@ a bounded estimate for reference-search work. Unknown/missing tables, invalid
 objects/timestamps or exceeded bounds fail without a partial preview. Public
 source feeds, identity/account databases, checkpoint files, free pages/WAL and
 external copies are explicitly outside this row inventory. The immutable audit
-chain remains retained and may contain supplied customer names/text. Every plan
-currently has an external-copy reconciliation blocker and no execution action.
+chain remains retained and may contain supplied customer names/text. Applicable
+copy custody records and their review states are included in the inventory hash.
+Unconfirmed removals are additional blockers. Every plan still has an inventory
+coverage/reconciliation blocker and no execution action: a manual register does
+not prove all copies were discovered.
+
+## Copy custody and removal reports
+
+Settings supports a manual register for backups, recovery snapshots, plaintext
+migration originals, evidence exports, audit checkpoints and downstream copies.
+Each entry records a custodian, location reference, supplied content SHA-256,
+creation/preservation dates, scope and reason. Customer/case references must belong
+to the current workspace. The application never opens, fetches, executes or deletes
+a supplied location. References must exclude credentials and private key material.
+Registration is an operator assertion; it is not automatic discovery or verification
+of storage content. Automatic registration by export/backup paths remains pending.
+
+The effective preservation deadline is the later of the declared date and the
+current approved policy's minimum. Backup/recovery/plaintext-original categories
+use backup days; audit checkpoints use audit minimum days; evidence/downstream
+copies use the longest configured period because they may contain mixed records.
+A new policy may extend a deadline but cannot shorten a declared preservation date.
+
+Removal follows `retained` → `removal_requested` → `removal_authorized` →
+`removal_reported` → `removal_confirmed`. Authorization requires a different
+reviewer from the requester. A custodian report supplies an evidence reference
+and SHA-256; confirmation requires a different reviewer from the reporter.
+Every stage rechecks current policy, preservation and applicable legal holds.
+Workspace copies intersect every active/pending-release hold in the workspace;
+customer copies include linked case holds, and case copies include customer and
+workspace holds. A newly added hold prevents further removal workflow progression.
+
+Authorization is pinned to the approved policy version. After a policy change,
+cancel an unreported request/authorization and obtain a fresh review. Cancellation
+retains the prior review history and does not claim to restore an externally deleted
+file. A reported removal cannot be cancelled into a fictitious retained state.
+After a policy change, a different reviewer can explicitly re-review the existing
+report under the new policy before confirmation; the report/evidence and prior
+policy history remain intact. Holds and minimum preservation still apply.
+All state changes and their record hashes enter the immutable audit chain within
+the same transaction. History is bounded at 50 events per copy; the register is
+bounded at 2,000 entries and scoped case discovery at 5,000 cases. Exceeding a bound
+fails without omitting history/holds.
+
+`removal_confirmed` means a second reviewer confirmed the submitted report. It
+does not mean PolicyLens independently proved physical erasure, invalidated old
+recovery keys, retracted downloads or verified a provider's retention system.
+No filesystem or remote-storage deletion is performed by these endpoints.
+Unregistered copies and restore resurrection remain unresolved. Use the review
+record alongside actual custodian/operator evidence; do not describe the register
+as complete erasure verification.
 
 ## Boundaries still requiring implementation
 
@@ -82,8 +131,8 @@ currently has an external-copy reconciliation blocker and no execution action.
   and other supplied text. Deleting operational rows cannot erase retained text
   without redesigning integrity/retention handling. Do not claim complete erasure
   or anonymization.
-- Track backups, off-machine archives, operator recovery copies and exported packs.
-  Apply holds to their lifecycle, record custodians and reconcile removal separately.
+- Automatically register application-generated backups/exports, reconcile discovery
+  coverage and connect custody results to deletion requests and restored data.
   A database deletion cannot retract downloaded files or downstream model context.
 - Define physical deletion/compaction behavior for SQLite WAL, free pages and
   plaintext migration originals, and prove restoration cannot silently resurrect
