@@ -143,13 +143,18 @@ Browser testing and Oracle deployment remain pending.
 
 ## Phase 5: autopilot and scorecard
 
-Scorecard source checkpoint: ten focused evaluation tests pass, including a
+Scorecard source checkpoint: ten focused evaluation tests passed, including a
 complete 50-case real-runner replay with deterministic HTTP transport, strict
 schema handling, hidden labels, SQLCipher isolation and stop-on-provider-failure.
 All 48 existing toolkit/product regression tests also passed after the v2 change.
-A full backend regression is running. No full live scorecard is claimed; a paced
-50-case replay has been started separately and must be inspected to establish
-its actual completion/result. Frontend behavior is unchanged at this checkpoint.
+Exact commit `6c2a03b` passed CI with 311 backend and 51 frontend tests, Ruff,
+ESLint, production build and npm audit (run `39855723808`). A separate local
+backend regression is still running. A paced live replay completed three cases
+before a provider request rejection stopped the fourth; no partial card was
+published. A subsequent isolated diagnostic of that case completed, so the
+failure was not reproduced. Provider error accounting is being tightened to
+distinguish rejected generation from systemic configuration/access failures.
+No complete 50-case live scorecard is claimed.
 
 - [ ] Opt-in cited brief preparation on new alerts, digests and stale-evidence alerts.
 - [ ] Tuning agent: before/after historical simulation, proposed threshold draft,
@@ -170,6 +175,11 @@ its actual completion/result. Frontend behavior is unchanged at this checkpoint.
 
 - [ ] Four areas: Inbox, Policies & Controls, Evidence, Settings & Agents.
 - [ ] Relationship graph becomes a case tab; data sources move to Settings.
+  The graph now lives in the case Relationships tab and the duplicate customer
+  tab is removed. It loads lazily, retains its customer-wide 100-transaction/
+  18-node scope and can retry without losing the investigation. The populated
+  case workflow checks provenance, lazy fetching and graph failure/recovery.
+  Data-source consolidation and final browser/mobile acceptance remain pending.
 - [ ] Raw runs, extra analytics and per-source details move under `/advanced`.
 - [ ] Remove duplicate panels and misleading decision/clearance wording.
 - [ ] Automated populated-screen coverage; then mobile/browser acceptance.

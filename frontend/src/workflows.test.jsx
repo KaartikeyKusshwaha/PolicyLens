@@ -240,8 +240,10 @@ test("engine imports require customer mapping and a fresh preview before commit"
 
 test("imported alerts render source provenance without a fabricated control link", async () => {
   window.history.replaceState({}, "", "/cases/imported-case1");
+  let graphUnavailable = true;
   const external = { provider: "marble", instance: "fictional-instance", source_id: "source-case1", source_name: "Fictional upstream case", source_status: "closed", source_outcome: "false_positive", sha256: "a".repeat(64) };
   mockRoutes({
+    "/api/customers/customer1/graph": () => graphUnavailable ? response({ detail: { message: "Graph is temporarily unavailable." } }, 503) : response({ nodes: [{ id: "customer1", name: "Fictional customer", kind: "customer" }, { id: "counterparty1", name: "Observed counterparty", kind: "counterparty" }], links: [{ source: "customer1", target: "counterparty1", label: "Observed transfer" }], scope: "Latest 100 customer transactions; observed links only." }),
     "/api/cases/imported-case1": () => response({ id: "imported-case1", title: "Review imported Marble case", customer: { name: "Fictional customer", country: "IN", kyc_status: "pending" }, customer_id: "customer1", customer_name: "Fictional customer", created_at: "2026-10-01T00:00:00Z", due_at: "2026-10-23T00:00:00Z", status: "open", priority: "medium", description: "External source evidence for human review.", external_source: external, alerts: [{ id: "alert1", origin: "external_engine", external_source: { ...external, source_id: "source-decision1" }, rule_id: null, rule_title: "Imported Marble scenario", priority: "medium", facts: { source_outcome: "review", source_score: 70, trigger_object_id: "trigger1" }, created_at: "2026-10-01T00:00:00Z" }], screening_evidence: [], transactions: [], notes: [], tasks: [], agent_runs: [] }),
   });
   render(<App />);
@@ -249,6 +251,16 @@ test("imported alerts render source provenance without a fabricated control link
   expect(screen.getByText("Fictional upstream case")).toBeTruthy();
   expect(screen.getByText(/Imported source outcome: review/)).toBeTruthy();
   expect(document.querySelector('a[href="/rules/null"]')).toBeNull();
+  expect(fetch.mock.calls.some(([url]) => url === "/api/customers/customer1/graph")).toBe(false);
+  fireEvent.click(screen.getByRole("button", { name: "Relationships" }));
+  expect(await screen.findByText("Graph is temporarily unavailable.")).toBeTruthy();
+  expect(screen.getByRole("heading", { name: "Review imported Marble case" })).toBeTruthy();
+  graphUnavailable = false;
+  fireEvent.click(screen.getByRole("button", { name: "Retry" }));
+  expect(await screen.findByRole("img", { name: "Observed customer transaction relationships" })).toBeTruthy();
+  expect(screen.getByText(/Links may include activity outside this case/)).toBeTruthy();
+  expect(screen.getByText("Latest 100 customer transactions; observed links only. Showing up to 18 connected nodes.")).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Relationships" }).getAttribute("aria-pressed")).toBe("true");
 });
 
 test("sponsor evidence download checks the archive type and releases its temporary URL", async () => {

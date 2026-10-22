@@ -37,7 +37,7 @@ ordinary account, approval, case-action or other application API endpoints.
 | draft_investigation_brief | draft | Queues the existing investigation runner |
 | verify_evidence | read | Quotes checked against a run's collected policy snapshot |
 | create_review_task | request-approval | Creates an open human-review task; grants no approval |
-| export_case_pack | read | Existing JSON case pack; sponsor-bank pack is a later phase |
+| export_case_pack | read | Customer-scoped JSON case pack, registered in copy custody; signed sponsor packs are available through the human evidence API |
 | run_playbook | draft | Existing investigation, screening, policy, policy-change and report playbooks |
 | get_agent_run | read | Progress, steps, evidence and draft result |
 | control_agent_run | draft | Pause/resume/cancel only this key's own run |
