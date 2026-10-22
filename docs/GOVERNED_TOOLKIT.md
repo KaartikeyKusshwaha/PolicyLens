@@ -5,6 +5,11 @@ The MCP implementation uses the official [Python SDK v2](https://py.sdk.modelcon
 and its stdio transport. This is a local stdio bridge to PolicyLens's authenticated
 HTTPS API, not an unauthenticated public MCP port or an OAuth service.
 
+The current investigation prompt is `policylens-governance-v2`. Briefs may carry
+a nullable, nonbinding `draft_disposition` for [scorecard comparison](AGENT_SCORECARDS.md).
+It does not update the human case disposition. Older keys/queued runs pinned to v1
+are refused; administrators must reissue keys and submit reviewed new runs.
+
 ## Create access
 
 An administrator creates a key in Workspace settings -> Agents. Choose a distinct

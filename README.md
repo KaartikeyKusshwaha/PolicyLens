@@ -153,3 +153,9 @@ Run one Python worker on one machine with persistent disk. Horizontal replicas a
 SSO, verified KYC, external notification delivery, transaction blocking, regulatory filing, automated retention/deletion policies, whole-database encryption at rest and high availability are not implemented. Relevant selected evidence is sent to Groq; evaluate its data terms before using confidential records. AI risk scores are estimates, not calibrated probabilities or legal/payment approval. Use synthetic data for a public demonstration until your operational and data-handling requirements are satisfied.
 
 The [governed toolkit master plan](docs/MASTER_PLAN.md) and [implementation ledger](docs/IMPLEMENTATION.md) track the next stages and their independent deployment, acceptance and external-validation gates. New source should not be assumed deployed to the Oracle pilot.
+
+The [agent evaluation harness](docs/AGENT_SCORECARDS.md) replays a reviewable
+50-case synthetic corpus in a new isolated installation, preserving normal agent
+budgets and human decision boundaries. Scorecards include citation validity,
+unsupported quotation rates, disposition agreement, failures and abstentions;
+test-provider measurements are explicitly distinguished from live model results.

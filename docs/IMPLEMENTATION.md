@@ -6,6 +6,9 @@ review and market validation. None of those gates can be inferred from a green C
 
 ## Deletion review checkpoint
 
+Exact pushed commit `40d30b0` passed CI with 301 backend and 51 frontend tests,
+Ruff, ESLint, production build and npm audit (run `39853582175`).
+
 Expiring deletion requests now retain a complete inventory snapshot and independent
 review/discovery evidence. Customer changes, new holds, policy changes and new
 exports invalidate the pinned plan; exporting its signed evidence pack is covered.
@@ -140,11 +143,27 @@ Browser testing and Oracle deployment remain pending.
 
 ## Phase 5: autopilot and scorecard
 
+Scorecard source checkpoint: ten focused evaluation tests pass, including a
+complete 50-case real-runner replay with deterministic HTTP transport, strict
+schema handling, hidden labels, SQLCipher isolation and stop-on-provider-failure.
+All 48 existing toolkit/product regression tests also passed after the v2 change.
+A full backend regression is running. No full live scorecard is claimed; a paced
+50-case replay has been started separately and must be inspected to establish
+its actual completion/result. Frontend behavior is unchanged at this checkpoint.
+
 - [ ] Opt-in cited brief preparation on new alerts, digests and stale-evidence alerts.
 - [ ] Tuning agent: before/after historical simulation, proposed threshold draft,
   independent approval; no automatic activation.
 - [ ] Evaluation harness with at least 50 labeled historical/seeded cases, citation
   validity, fabricated quotation rate and disposition agreement per pinned model.
+  Isolated source replay and deterministic scoring are implemented, with a
+  reviewable 50-case synthetic corpus, hidden labels, per-model/scenario metrics,
+  abstention/failure denominators and an explicit gate. The 50-case automated
+  test uses a deterministic provider and cannot pass the live gate. Two live
+  cases completed after a strict-schema fix; the third was rate-limited and the
+  batch stopped without publishing a partial card. A full paced live run,
+  historical-source replay and real-label validation remain pending. See
+  `AGENT_SCORECARDS.md`.
 - [ ] Weak citation results prevent autopilot promotion; briefs remain drafts.
 
 ## Phase 6: interface

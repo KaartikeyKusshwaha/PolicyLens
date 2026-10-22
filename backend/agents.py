@@ -467,7 +467,7 @@ class AgentEngine:
                             "Add relevant policies before asking an agent to investigate.",
                         )
                     context = {
-                        "task": "Prepare an evidence-grounded investigation brief. Distinguish observations from suspicion. Recommend human action, never legal approval. Consider the explicit source and sample limitations.",
+                        "task": "Prepare an evidence-grounded investigation brief. Distinguish observations from suspicion. Recommend human action, never legal approval. Consider the explicit source and sample limitations. draft_disposition is a nonbinding suggestion: confirmed means the supplied policy breach is supported, false_positive means the alert is explained by supplied evidence, insufficient_evidence means missing evidence prevents a conclusion. Use null to abstain. No suggestion changes or closes the case.",
                         "customer": customer,
                         "case": case,
                         "transactions": txns,

@@ -1,0 +1,1320 @@
+{
+  "schema_version": "policylens.agent-evaluation.v1",
+  "title": "Fifty synthetic investigation cases, ten scenario families",
+  "origin": "synthetic",
+  "label_author": "PolicyLens synthetic scenario authors",
+  "limitations": [
+    "Fifty labeled cases comprise ten scenario families with five amount/country/customer variations each. They are correlated examples, not fifty independent real-world investigations.",
+    "Labels are explicit scenario-author judgments against a synthetic policy. No compliance lead or independent analyst validation is claimed.",
+    "The local screening snapshot is empty synthetic data. This corpus does not measure real sanctions matching accuracy or freshness.",
+    "Case descriptions summarize supplied evidence. The corpus does not test document forensics, full transaction histories, or adversarial narrative reliability."
+  ],
+  "policy": {
+    "title": "Synthetic transaction investigation policy",
+    "version": "evaluation-1",
+    "topic": "aml",
+    "content": "Synthetic training policy for transaction investigation; this is not regulatory guidance. Investigate transaction transfers using the supplied customer and case evidence. A documented identity mismatch or admitted falsified invoice is a supported policy breach. A documented duplicate alert, verified namesake, or validated invoice explaining the alert is a false positive. Missing identity records, absent invoices, uncertain ownership, or conflicting unverified documents require more evidence. Do not infer a breach solely from payment amount, country, or transaction volume. Potential sanctions name matches require human investigation and are never clearance. Only an independent human reviewer can resolve a case."
+  },
+  "cases": [
+    {
+      "id": "identity_mismatch-1",
+      "category": "identity_mismatch",
+      "customer": {
+        "external_id": "synthetic-customer-001",
+        "name": "Synthetic Customer 001",
+        "country": "IN",
+        "kyc_status": "pending"
+      },
+      "title": "Synthetic transaction investigation 001",
+      "description": "Verified identity records show the account holder and payment sender are different people; the customer acknowledges using another person's identity.",
+      "transactions": [
+        {
+          "external_id": "synthetic-payment-001",
+          "amount": "115",
+          "currency": "USD",
+          "counterparty": "Synthetic Trading Company 1",
+          "counterparty_country": "GB",
+          "description": "Synthetic consulting payment for evaluation only.",
+          "occurred_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "expected_disposition": "confirmed",
+      "label_reference": "synthetic-scenario-v1:identity_mismatch",
+      "label_rationale": "The supplied admission and verified identity mismatch support the explicit synthetic policy breach."
+    },
+    {
+      "id": "identity_mismatch-2",
+      "category": "identity_mismatch",
+      "customer": {
+        "external_id": "synthetic-customer-002",
+        "name": "Synthetic Customer 002",
+        "country": "GB",
+        "kyc_status": "pending"
+      },
+      "title": "Synthetic transaction investigation 002",
+      "description": "Verified identity records show the account holder and payment sender are different people; the customer acknowledges using another person's identity.",
+      "transactions": [
+        {
+          "external_id": "synthetic-payment-002",
+          "amount": "215",
+          "currency": "USD",
+          "counterparty": "Synthetic Trading Company 2",
+          "counterparty_country": "GB",
+          "description": "Synthetic consulting payment for evaluation only.",
+          "occurred_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "expected_disposition": "confirmed",
+      "label_reference": "synthetic-scenario-v1:identity_mismatch",
+      "label_rationale": "The supplied admission and verified identity mismatch support the explicit synthetic policy breach."
+    },
+    {
+      "id": "identity_mismatch-3",
+      "category": "identity_mismatch",
+      "customer": {
+        "external_id": "synthetic-customer-003",
+        "name": "Synthetic Customer 003",
+        "country": "US",
+        "kyc_status": "pending"
+      },
+      "title": "Synthetic transaction investigation 003",
+      "description": "Verified identity records show the account holder and payment sender are different people; the customer acknowledges using another person's identity.",
+      "transactions": [
+        {
+          "external_id": "synthetic-payment-003",
+          "amount": "315",
+          "currency": "USD",
+          "counterparty": "Synthetic Trading Company 3",
+          "counterparty_country": "GB",
+          "description": "Synthetic consulting payment for evaluation only.",
+          "occurred_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "expected_disposition": "confirmed",
+      "label_reference": "synthetic-scenario-v1:identity_mismatch",
+      "label_rationale": "The supplied admission and verified identity mismatch support the explicit synthetic policy breach."
+    },
+    {
+      "id": "identity_mismatch-4",
+      "category": "identity_mismatch",
+      "customer": {
+        "external_id": "synthetic-customer-004",
+        "name": "Synthetic Customer 004",
+        "country": "DE",
+        "kyc_status": "pending"
+      },
+      "title": "Synthetic transaction investigation 004",
+      "description": "Verified identity records show the account holder and payment sender are different people; the customer acknowledges using another person's identity.",
+      "transactions": [
+        {
+          "external_id": "synthetic-payment-004",
+          "amount": "415",
+          "currency": "USD",
+          "counterparty": "Synthetic Trading Company 4",
+          "counterparty_country": "GB",
+          "description": "Synthetic consulting payment for evaluation only.",
+          "occurred_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "expected_disposition": "confirmed",
+      "label_reference": "synthetic-scenario-v1:identity_mismatch",
+      "label_rationale": "The supplied admission and verified identity mismatch support the explicit synthetic policy breach."
+    },
+    {
+      "id": "identity_mismatch-5",
+      "category": "identity_mismatch",
+      "customer": {
+        "external_id": "synthetic-customer-005",
+        "name": "Synthetic Customer 005",
+        "country": "SG",
+        "kyc_status": "pending"
+      },
+      "title": "Synthetic transaction investigation 005",
+      "description": "Verified identity records show the account holder and payment sender are different people; the customer acknowledges using another person's identity.",
+      "transactions": [
+        {
+          "external_id": "synthetic-payment-005",
+          "amount": "515",
+          "currency": "USD",
+          "counterparty": "Synthetic Trading Company 5",
+          "counterparty_country": "GB",
+          "description": "Synthetic consulting payment for evaluation only.",
+          "occurred_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "expected_disposition": "confirmed",
+      "label_reference": "synthetic-scenario-v1:identity_mismatch",
+      "label_rationale": "The supplied admission and verified identity mismatch support the explicit synthetic policy breach."
+    },
+    {
+      "id": "falsified_invoice-1",
+      "category": "falsified_invoice",
+      "customer": {
+        "external_id": "synthetic-customer-006",
+        "name": "Synthetic Customer 006",
+        "country": "IN",
+        "kyc_status": "pending"
+      },
+      "title": "Synthetic transaction investigation 006",
+      "description": "The customer admits the supplied consulting invoice was fabricated. The original issuer confirms it never issued that invoice.",
+      "transactions": [
+        {
+          "external_id": "synthetic-payment-006",
+          "amount": "115",
+          "currency": "USD",
+          "counterparty": "Synthetic Trading Company 1",
+          "counterparty_country": "GB",
+          "description": "Synthetic consulting payment for evaluation only.",
+          "occurred_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "expected_disposition": "confirmed",
+      "label_reference": "synthetic-scenario-v1:falsified_invoice",
+      "label_rationale": "The admitted fabricated invoice supports a breach of the explicit synthetic training policy."
+    },
+    {
+      "id": "falsified_invoice-2",
+      "category": "falsified_invoice",
+      "customer": {
+        "external_id": "synthetic-customer-007",
+        "name": "Synthetic Customer 007",
+        "country": "GB",
+        "kyc_status": "pending"
+      },
+      "title": "Synthetic transaction investigation 007",
+      "description": "The customer admits the supplied consulting invoice was fabricated. The original issuer confirms it never issued that invoice.",
+      "transactions": [
+        {
+          "external_id": "synthetic-payment-007",
+          "amount": "215",
+          "currency": "USD",
+          "counterparty": "Synthetic Trading Company 2",
+          "counterparty_country": "GB",
+          "description": "Synthetic consulting payment for evaluation only.",
+          "occurred_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "expected_disposition": "confirmed",
+      "label_reference": "synthetic-scenario-v1:falsified_invoice",
+      "label_rationale": "The admitted fabricated invoice supports a breach of the explicit synthetic training policy."
+    },
+    {
+      "id": "falsified_invoice-3",
+      "category": "falsified_invoice",
+      "customer": {
+        "external_id": "synthetic-customer-008",
+        "name": "Synthetic Customer 008",
+        "country": "US",
+        "kyc_status": "pending"
+      },
+      "title": "Synthetic transaction investigation 008",
+      "description": "The customer admits the supplied consulting invoice was fabricated. The original issuer confirms it never issued that invoice.",
+      "transactions": [
+        {
+          "external_id": "synthetic-payment-008",
+          "amount": "315",
+          "currency": "USD",
+          "counterparty": "Synthetic Trading Company 3",
+          "counterparty_country": "GB",
+          "description": "Synthetic consulting payment for evaluation only.",
+          "occurred_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "expected_disposition": "confirmed",
+      "label_reference": "synthetic-scenario-v1:falsified_invoice",
+      "label_rationale": "The admitted fabricated invoice supports a breach of the explicit synthetic training policy."
+    },
+    {
+      "id": "falsified_invoice-4",
+      "category": "falsified_invoice",
+      "customer": {
+        "external_id": "synthetic-customer-009",
+        "name": "Synthetic Customer 009",
+        "country": "DE",
+        "kyc_status": "pending"
+      },
+      "title": "Synthetic transaction investigation 009",
+      "description": "The customer admits the supplied consulting invoice was fabricated. The original issuer confirms it never issued that invoice.",
+      "transactions": [
+        {
+          "external_id": "synthetic-payment-009",
+          "amount": "415",
+          "currency": "USD",
+          "counterparty": "Synthetic Trading Company 4",
+          "counterparty_country": "GB",
+          "description": "Synthetic consulting payment for evaluation only.",
+          "occurred_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "expected_disposition": "confirmed",
+      "label_reference": "synthetic-scenario-v1:falsified_invoice",
+      "label_rationale": "The admitted fabricated invoice supports a breach of the explicit synthetic training policy."
+    },
+    {
+      "id": "falsified_invoice-5",
+      "category": "falsified_invoice",
+      "customer": {
+        "external_id": "synthetic-customer-010",
+        "name": "Synthetic Customer 010",
+        "country": "SG",
+        "kyc_status": "pending"
+      },
+      "title": "Synthetic transaction investigation 010",
+      "description": "The customer admits the supplied consulting invoice was fabricated. The original issuer confirms it never issued that invoice.",
+      "transactions": [
+        {
+          "external_id": "synthetic-payment-010",
+          "amount": "515",
+          "currency": "USD",
+          "counterparty": "Synthetic Trading Company 5",
+          "counterparty_country": "GB",
+          "description": "Synthetic consulting payment for evaluation only.",
+          "occurred_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "expected_disposition": "confirmed",
+      "label_reference": "synthetic-scenario-v1:falsified_invoice",
+      "label_rationale": "The admitted fabricated invoice supports a breach of the explicit synthetic training policy."
+    },
+    {
+      "id": "identity_and_invoice-1",
+      "category": "identity_and_invoice",
+      "customer": {
+        "external_id": "synthetic-customer-011",
+        "name": "Synthetic Customer 011",
+        "country": "IN",
+        "kyc_status": "pending"
+      },
+      "title": "Synthetic transaction investigation 011",
+      "description": "Verified records show an identity mismatch and the customer admits the payment invoice was falsified. Both findings are documented in the reviewed case evidence.",
+      "transactions": [
+        {
+          "external_id": "synthetic-payment-011",
+          "amount": "115",
+          "currency": "USD",
+          "counterparty": "Synthetic Trading Company 1",
+          "counterparty_country": "GB",
+          "description": "Synthetic consulting payment for evaluation only.",
+          "occurred_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "expected_disposition": "confirmed",
+      "label_reference": "synthetic-scenario-v1:identity_and_invoice",
+      "label_rationale": "Two documented violations support confirmed under this synthetic policy, without deciding legal liability."
+    },
+    {
+      "id": "identity_and_invoice-2",
+      "category": "identity_and_invoice",
+      "customer": {
+        "external_id": "synthetic-customer-012",
+        "name": "Synthetic Customer 012",
+        "country": "GB",
+        "kyc_status": "pending"
+      },
+      "title": "Synthetic transaction investigation 012",
+      "description": "Verified records show an identity mismatch and the customer admits the payment invoice was falsified. Both findings are documented in the reviewed case evidence.",
+      "transactions": [
+        {
+          "external_id": "synthetic-payment-012",
+          "amount": "215",
+          "currency": "USD",
+          "counterparty": "Synthetic Trading Company 2",
+          "counterparty_country": "GB",
+          "description": "Synthetic consulting payment for evaluation only.",
+          "occurred_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "expected_disposition": "confirmed",
+      "label_reference": "synthetic-scenario-v1:identity_and_invoice",
+      "label_rationale": "Two documented violations support confirmed under this synthetic policy, without deciding legal liability."
+    },
+    {
+      "id": "identity_and_invoice-3",
+      "category": "identity_and_invoice",
+      "customer": {
+        "external_id": "synthetic-customer-013",
+        "name": "Synthetic Customer 013",
+        "country": "US",
+        "kyc_status": "pending"
+      },
+      "title": "Synthetic transaction investigation 013",
+      "description": "Verified records show an identity mismatch and the customer admits the payment invoice was falsified. Both findings are documented in the reviewed case evidence.",
+      "transactions": [
+        {
+          "external_id": "synthetic-payment-013",
+          "amount": "315",
+          "currency": "USD",
+          "counterparty": "Synthetic Trading Company 3",
+          "counterparty_country": "GB",
+          "description": "Synthetic consulting payment for evaluation only.",
+          "occurred_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "expected_disposition": "confirmed",
+      "label_reference": "synthetic-scenario-v1:identity_and_invoice",
+      "label_rationale": "Two documented violations support confirmed under this synthetic policy, without deciding legal liability."
+    },
+    {
+      "id": "identity_and_invoice-4",
+      "category": "identity_and_invoice",
+      "customer": {
+        "external_id": "synthetic-customer-014",
+        "name": "Synthetic Customer 014",
+        "country": "DE",
+        "kyc_status": "pending"
+      },
+      "title": "Synthetic transaction investigation 014",
+      "description": "Verified records show an identity mismatch and the customer admits the payment invoice was falsified. Both findings are documented in the reviewed case evidence.",
+      "transactions": [
+        {
+          "external_id": "synthetic-payment-014",
+          "amount": "415",
+          "currency": "USD",
+          "counterparty": "Synthetic Trading Company 4",
+          "counterparty_country": "GB",
+          "description": "Synthetic consulting payment for evaluation only.",
+          "occurred_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "expected_disposition": "confirmed",
+      "label_reference": "synthetic-scenario-v1:identity_and_invoice",
+      "label_rationale": "Two documented violations support confirmed under this synthetic policy, without deciding legal liability."
+    },
+    {
+      "id": "identity_and_invoice-5",
+      "category": "identity_and_invoice",
+      "customer": {
+        "external_id": "synthetic-customer-015",
+        "name": "Synthetic Customer 015",
+        "country": "SG",
+        "kyc_status": "pending"
+      },
+      "title": "Synthetic transaction investigation 015",
+      "description": "Verified records show an identity mismatch and the customer admits the payment invoice was falsified. Both findings are documented in the reviewed case evidence.",
+      "transactions": [
+        {
+          "external_id": "synthetic-payment-015",
+          "amount": "515",
+          "currency": "USD",
+          "counterparty": "Synthetic Trading Company 5",
+          "counterparty_country": "GB",
+          "description": "Synthetic consulting payment for evaluation only.",
+          "occurred_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "expected_disposition": "confirmed",
+      "label_reference": "synthetic-scenario-v1:identity_and_invoice",
+      "label_rationale": "Two documented violations support confirmed under this synthetic policy, without deciding legal liability."
+    },
+    {
+      "id": "duplicate_alert-1",
+      "category": "duplicate_alert",
+      "customer": {
+        "external_id": "synthetic-customer-016",
+        "name": "Synthetic Customer 016",
+        "country": "IN",
+        "kyc_status": "pending"
+      },
+      "title": "Synthetic transaction investigation 016",
+      "description": "The analyst verified this alert duplicates an already reviewed payment. Both alerts reference the same bank settlement and no additional payment occurred.",
+      "transactions": [
+        {
+          "external_id": "synthetic-payment-016",
+          "amount": "115",
+          "currency": "USD",
+          "counterparty": "Synthetic Trading Company 1",
+          "counterparty_country": "GB",
+          "description": "Synthetic consulting payment for evaluation only.",
+          "occurred_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "expected_disposition": "false_positive",
+      "label_reference": "synthetic-scenario-v1:duplicate_alert",
+      "label_rationale": "Verified duplicate settlement evidence explains the alert under the synthetic policy."
+    },
+    {
+      "id": "duplicate_alert-2",
+      "category": "duplicate_alert",
+      "customer": {
+        "external_id": "synthetic-customer-017",
+        "name": "Synthetic Customer 017",
+        "country": "GB",
+        "kyc_status": "pending"
+      },
+      "title": "Synthetic transaction investigation 017",
+      "description": "The analyst verified this alert duplicates an already reviewed payment. Both alerts reference the same bank settlement and no additional payment occurred.",
+      "transactions": [
+        {
+          "external_id": "synthetic-payment-017",
+          "amount": "215",
+          "currency": "USD",
+          "counterparty": "Synthetic Trading Company 2",
+          "counterparty_country": "GB",
+          "description": "Synthetic consulting payment for evaluation only.",
+          "occurred_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "expected_disposition": "false_positive",
+      "label_reference": "synthetic-scenario-v1:duplicate_alert",
+      "label_rationale": "Verified duplicate settlement evidence explains the alert under the synthetic policy."
+    },
+    {
+      "id": "duplicate_alert-3",
+      "category": "duplicate_alert",
+      "customer": {
+        "external_id": "synthetic-customer-018",
+        "name": "Synthetic Customer 018",
+        "country": "US",
+        "kyc_status": "pending"
+      },
+      "title": "Synthetic transaction investigation 018",
+      "description": "The analyst verified this alert duplicates an already reviewed payment. Both alerts reference the same bank settlement and no additional payment occurred.",
+      "transactions": [
+        {
+          "external_id": "synthetic-payment-018",
+          "amount": "315",
+          "currency": "USD",
+          "counterparty": "Synthetic Trading Company 3",
+          "counterparty_country": "GB",
+          "description": "Synthetic consulting payment for evaluation only.",
+          "occurred_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "expected_disposition": "false_positive",
+      "label_reference": "synthetic-scenario-v1:duplicate_alert",
+      "label_rationale": "Verified duplicate settlement evidence explains the alert under the synthetic policy."
+    },
+    {
+      "id": "duplicate_alert-4",
+      "category": "duplicate_alert",
+      "customer": {
+        "external_id": "synthetic-customer-019",
+        "name": "Synthetic Customer 019",
+        "country": "DE",
+        "kyc_status": "pending"
+      },
+      "title": "Synthetic transaction investigation 019",
+      "description": "The analyst verified this alert duplicates an already reviewed payment. Both alerts reference the same bank settlement and no additional payment occurred.",
+      "transactions": [
+        {
+          "external_id": "synthetic-payment-019",
+          "amount": "415",
+          "currency": "USD",
+          "counterparty": "Synthetic Trading Company 4",
+          "counterparty_country": "GB",
+          "description": "Synthetic consulting payment for evaluation only.",
+          "occurred_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "expected_disposition": "false_positive",
+      "label_reference": "synthetic-scenario-v1:duplicate_alert",
+      "label_rationale": "Verified duplicate settlement evidence explains the alert under the synthetic policy."
+    },
+    {
+      "id": "duplicate_alert-5",
+      "category": "duplicate_alert",
+      "customer": {
+        "external_id": "synthetic-customer-020",
+        "name": "Synthetic Customer 020",
+        "country": "SG",
+        "kyc_status": "pending"
+      },
+      "title": "Synthetic transaction investigation 020",
+      "description": "The analyst verified this alert duplicates an already reviewed payment. Both alerts reference the same bank settlement and no additional payment occurred.",
+      "transactions": [
+        {
+          "external_id": "synthetic-payment-020",
+          "amount": "515",
+          "currency": "USD",
+          "counterparty": "Synthetic Trading Company 5",
+          "counterparty_country": "GB",
+          "description": "Synthetic consulting payment for evaluation only.",
+          "occurred_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "expected_disposition": "false_positive",
+      "label_reference": "synthetic-scenario-v1:duplicate_alert",
+      "label_rationale": "Verified duplicate settlement evidence explains the alert under the synthetic policy."
+    },
+    {
+      "id": "validated_invoice-1",
+      "category": "validated_invoice",
+      "customer": {
+        "external_id": "synthetic-customer-021",
+        "name": "Synthetic Customer 021",
+        "country": "IN",
+        "kyc_status": "pending"
+      },
+      "title": "Synthetic transaction investigation 021",
+      "description": "The reviewed issuer records validate the invoice and delivery. Verified sender identity matches the account holder. The supplied invoice fully explains the alerted transfer.",
+      "transactions": [
+        {
+          "external_id": "synthetic-payment-021",
+          "amount": "115",
+          "currency": "USD",
+          "counterparty": "Synthetic Trading Company 1",
+          "counterparty_country": "GB",
+          "description": "Synthetic consulting payment for evaluation only.",
+          "occurred_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "expected_disposition": "false_positive",
+      "label_reference": "synthetic-scenario-v1:validated_invoice",
+      "label_rationale": "Validated invoice and identity evidence explain the alert without inventing a clearance conclusion."
+    },
+    {
+      "id": "validated_invoice-2",
+      "category": "validated_invoice",
+      "customer": {
+        "external_id": "synthetic-customer-022",
+        "name": "Synthetic Customer 022",
+        "country": "GB",
+        "kyc_status": "pending"
+      },
+      "title": "Synthetic transaction investigation 022",
+      "description": "The reviewed issuer records validate the invoice and delivery. Verified sender identity matches the account holder. The supplied invoice fully explains the alerted transfer.",
+      "transactions": [
+        {
+          "external_id": "synthetic-payment-022",
+          "amount": "215",
+          "currency": "USD",
+          "counterparty": "Synthetic Trading Company 2",
+          "counterparty_country": "GB",
+          "description": "Synthetic consulting payment for evaluation only.",
+          "occurred_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "expected_disposition": "false_positive",
+      "label_reference": "synthetic-scenario-v1:validated_invoice",
+      "label_rationale": "Validated invoice and identity evidence explain the alert without inventing a clearance conclusion."
+    },
+    {
+      "id": "validated_invoice-3",
+      "category": "validated_invoice",
+      "customer": {
+        "external_id": "synthetic-customer-023",
+        "name": "Synthetic Customer 023",
+        "country": "US",
+        "kyc_status": "pending"
+      },
+      "title": "Synthetic transaction investigation 023",
+      "description": "The reviewed issuer records validate the invoice and delivery. Verified sender identity matches the account holder. The supplied invoice fully explains the alerted transfer.",
+      "transactions": [
+        {
+          "external_id": "synthetic-payment-023",
+          "amount": "315",
+          "currency": "USD",
+          "counterparty": "Synthetic Trading Company 3",
+          "counterparty_country": "GB",
+          "description": "Synthetic consulting payment for evaluation only.",
+          "occurred_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "expected_disposition": "false_positive",
+      "label_reference": "synthetic-scenario-v1:validated_invoice",
+      "label_rationale": "Validated invoice and identity evidence explain the alert without inventing a clearance conclusion."
+    },
+    {
+      "id": "validated_invoice-4",
+      "category": "validated_invoice",
+      "customer": {
+        "external_id": "synthetic-customer-024",
+        "name": "Synthetic Customer 024",
+        "country": "DE",
+        "kyc_status": "pending"
+      },
+      "title": "Synthetic transaction investigation 024",
+      "description": "The reviewed issuer records validate the invoice and delivery. Verified sender identity matches the account holder. The supplied invoice fully explains the alerted transfer.",
+      "transactions": [
+        {
+          "external_id": "synthetic-payment-024",
+          "amount": "415",
+          "currency": "USD",
+          "counterparty": "Synthetic Trading Company 4",
+          "counterparty_country": "GB",
+          "description": "Synthetic consulting payment for evaluation only.",
+          "occurred_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "expected_disposition": "false_positive",
+      "label_reference": "synthetic-scenario-v1:validated_invoice",
+      "label_rationale": "Validated invoice and identity evidence explain the alert without inventing a clearance conclusion."
+    },
+    {
+      "id": "validated_invoice-5",
+      "category": "validated_invoice",
+      "customer": {
+        "external_id": "synthetic-customer-025",
+        "name": "Synthetic Customer 025",
+        "country": "SG",
+        "kyc_status": "pending"
+      },
+      "title": "Synthetic transaction investigation 025",
+      "description": "The reviewed issuer records validate the invoice and delivery. Verified sender identity matches the account holder. The supplied invoice fully explains the alerted transfer.",
+      "transactions": [
+        {
+          "external_id": "synthetic-payment-025",
+          "amount": "515",
+          "currency": "USD",
+          "counterparty": "Synthetic Trading Company 5",
+          "counterparty_country": "GB",
+          "description": "Synthetic consulting payment for evaluation only.",
+          "occurred_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "expected_disposition": "false_positive",
+      "label_reference": "synthetic-scenario-v1:validated_invoice",
+      "label_rationale": "Validated invoice and identity evidence explain the alert without inventing a clearance conclusion."
+    },
+    {
+      "id": "verified_namesake-1",
+      "category": "verified_namesake",
+      "customer": {
+        "external_id": "synthetic-customer-026",
+        "name": "Synthetic Customer 026",
+        "country": "IN",
+        "kyc_status": "pending"
+      },
+      "title": "Synthetic transaction investigation 026",
+      "description": "The alerted name belongs to a different person. Verified date of birth and identity documents establish the customer is a namesake; the payment invoice and delivery are validated.",
+      "transactions": [
+        {
+          "external_id": "synthetic-payment-026",
+          "amount": "115",
+          "currency": "USD",
+          "counterparty": "Synthetic Trading Company 1",
+          "counterparty_country": "GB",
+          "description": "Synthetic consulting payment for evaluation only.",
+          "occurred_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "expected_disposition": "false_positive",
+      "label_reference": "synthetic-scenario-v1:verified_namesake",
+      "label_rationale": "Verified disambiguation and payment evidence explain this synthetic alert; no universal sanctions clearance follows."
+    },
+    {
+      "id": "verified_namesake-2",
+      "category": "verified_namesake",
+      "customer": {
+        "external_id": "synthetic-customer-027",
+        "name": "Synthetic Customer 027",
+        "country": "GB",
+        "kyc_status": "pending"
+      },
+      "title": "Synthetic transaction investigation 027",
+      "description": "The alerted name belongs to a different person. Verified date of birth and identity documents establish the customer is a namesake; the payment invoice and delivery are validated.",
+      "transactions": [
+        {
+          "external_id": "synthetic-payment-027",
+          "amount": "215",
+          "currency": "USD",
+          "counterparty": "Synthetic Trading Company 2",
+          "counterparty_country": "GB",
+          "description": "Synthetic consulting payment for evaluation only.",
+          "occurred_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "expected_disposition": "false_positive",
+      "label_reference": "synthetic-scenario-v1:verified_namesake",
+      "label_rationale": "Verified disambiguation and payment evidence explain this synthetic alert; no universal sanctions clearance follows."
+    },
+    {
+      "id": "verified_namesake-3",
+      "category": "verified_namesake",
+      "customer": {
+        "external_id": "synthetic-customer-028",
+        "name": "Synthetic Customer 028",
+        "country": "US",
+        "kyc_status": "pending"
+      },
+      "title": "Synthetic transaction investigation 028",
+      "description": "The alerted name belongs to a different person. Verified date of birth and identity documents establish the customer is a namesake; the payment invoice and delivery are validated.",
+      "transactions": [
+        {
+          "external_id": "synthetic-payment-028",
+          "amount": "315",
+          "currency": "USD",
+          "counterparty": "Synthetic Trading Company 3",
+          "counterparty_country": "GB",
+          "description": "Synthetic consulting payment for evaluation only.",
+          "occurred_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "expected_disposition": "false_positive",
+      "label_reference": "synthetic-scenario-v1:verified_namesake",
+      "label_rationale": "Verified disambiguation and payment evidence explain this synthetic alert; no universal sanctions clearance follows."
+    },
+    {
+      "id": "verified_namesake-4",
+      "category": "verified_namesake",
+      "customer": {
+        "external_id": "synthetic-customer-029",
+        "name": "Synthetic Customer 029",
+        "country": "DE",
+        "kyc_status": "pending"
+      },
+      "title": "Synthetic transaction investigation 029",
+      "description": "The alerted name belongs to a different person. Verified date of birth and identity documents establish the customer is a namesake; the payment invoice and delivery are validated.",
+      "transactions": [
+        {
+          "external_id": "synthetic-payment-029",
+          "amount": "415",
+          "currency": "USD",
+          "counterparty": "Synthetic Trading Company 4",
+          "counterparty_country": "GB",
+          "description": "Synthetic consulting payment for evaluation only.",
+          "occurred_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "expected_disposition": "false_positive",
+      "label_reference": "synthetic-scenario-v1:verified_namesake",
+      "label_rationale": "Verified disambiguation and payment evidence explain this synthetic alert; no universal sanctions clearance follows."
+    },
+    {
+      "id": "verified_namesake-5",
+      "category": "verified_namesake",
+      "customer": {
+        "external_id": "synthetic-customer-030",
+        "name": "Synthetic Customer 030",
+        "country": "SG",
+        "kyc_status": "pending"
+      },
+      "title": "Synthetic transaction investigation 030",
+      "description": "The alerted name belongs to a different person. Verified date of birth and identity documents establish the customer is a namesake; the payment invoice and delivery are validated.",
+      "transactions": [
+        {
+          "external_id": "synthetic-payment-030",
+          "amount": "515",
+          "currency": "USD",
+          "counterparty": "Synthetic Trading Company 5",
+          "counterparty_country": "GB",
+          "description": "Synthetic consulting payment for evaluation only.",
+          "occurred_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "expected_disposition": "false_positive",
+      "label_reference": "synthetic-scenario-v1:verified_namesake",
+      "label_rationale": "Verified disambiguation and payment evidence explain this synthetic alert; no universal sanctions clearance follows."
+    },
+    {
+      "id": "missing_identity-1",
+      "category": "missing_identity",
+      "customer": {
+        "external_id": "synthetic-customer-031",
+        "name": "Synthetic Customer 031",
+        "country": "IN",
+        "kyc_status": "pending"
+      },
+      "title": "Synthetic transaction investigation 031",
+      "description": "The customer identity documents are absent. The payment description alone does not establish sender identity. No verification or admission is available.",
+      "transactions": [
+        {
+          "external_id": "synthetic-payment-031",
+          "amount": "115",
+          "currency": "USD",
+          "counterparty": "Synthetic Trading Company 1",
+          "counterparty_country": "GB",
+          "description": "Synthetic consulting payment for evaluation only.",
+          "occurred_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "expected_disposition": "insufficient_evidence",
+      "label_reference": "synthetic-scenario-v1:missing_identity",
+      "label_rationale": "Missing identity evidence prevents either a supported breach or an explained alert disposition."
+    },
+    {
+      "id": "missing_identity-2",
+      "category": "missing_identity",
+      "customer": {
+        "external_id": "synthetic-customer-032",
+        "name": "Synthetic Customer 032",
+        "country": "GB",
+        "kyc_status": "pending"
+      },
+      "title": "Synthetic transaction investigation 032",
+      "description": "The customer identity documents are absent. The payment description alone does not establish sender identity. No verification or admission is available.",
+      "transactions": [
+        {
+          "external_id": "synthetic-payment-032",
+          "amount": "215",
+          "currency": "USD",
+          "counterparty": "Synthetic Trading Company 2",
+          "counterparty_country": "GB",
+          "description": "Synthetic consulting payment for evaluation only.",
+          "occurred_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "expected_disposition": "insufficient_evidence",
+      "label_reference": "synthetic-scenario-v1:missing_identity",
+      "label_rationale": "Missing identity evidence prevents either a supported breach or an explained alert disposition."
+    },
+    {
+      "id": "missing_identity-3",
+      "category": "missing_identity",
+      "customer": {
+        "external_id": "synthetic-customer-033",
+        "name": "Synthetic Customer 033",
+        "country": "US",
+        "kyc_status": "pending"
+      },
+      "title": "Synthetic transaction investigation 033",
+      "description": "The customer identity documents are absent. The payment description alone does not establish sender identity. No verification or admission is available.",
+      "transactions": [
+        {
+          "external_id": "synthetic-payment-033",
+          "amount": "315",
+          "currency": "USD",
+          "counterparty": "Synthetic Trading Company 3",
+          "counterparty_country": "GB",
+          "description": "Synthetic consulting payment for evaluation only.",
+          "occurred_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "expected_disposition": "insufficient_evidence",
+      "label_reference": "synthetic-scenario-v1:missing_identity",
+      "label_rationale": "Missing identity evidence prevents either a supported breach or an explained alert disposition."
+    },
+    {
+      "id": "missing_identity-4",
+      "category": "missing_identity",
+      "customer": {
+        "external_id": "synthetic-customer-034",
+        "name": "Synthetic Customer 034",
+        "country": "DE",
+        "kyc_status": "pending"
+      },
+      "title": "Synthetic transaction investigation 034",
+      "description": "The customer identity documents are absent. The payment description alone does not establish sender identity. No verification or admission is available.",
+      "transactions": [
+        {
+          "external_id": "synthetic-payment-034",
+          "amount": "415",
+          "currency": "USD",
+          "counterparty": "Synthetic Trading Company 4",
+          "counterparty_country": "GB",
+          "description": "Synthetic consulting payment for evaluation only.",
+          "occurred_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "expected_disposition": "insufficient_evidence",
+      "label_reference": "synthetic-scenario-v1:missing_identity",
+      "label_rationale": "Missing identity evidence prevents either a supported breach or an explained alert disposition."
+    },
+    {
+      "id": "missing_identity-5",
+      "category": "missing_identity",
+      "customer": {
+        "external_id": "synthetic-customer-035",
+        "name": "Synthetic Customer 035",
+        "country": "SG",
+        "kyc_status": "pending"
+      },
+      "title": "Synthetic transaction investigation 035",
+      "description": "The customer identity documents are absent. The payment description alone does not establish sender identity. No verification or admission is available.",
+      "transactions": [
+        {
+          "external_id": "synthetic-payment-035",
+          "amount": "515",
+          "currency": "USD",
+          "counterparty": "Synthetic Trading Company 5",
+          "counterparty_country": "GB",
+          "description": "Synthetic consulting payment for evaluation only.",
+          "occurred_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "expected_disposition": "insufficient_evidence",
+      "label_reference": "synthetic-scenario-v1:missing_identity",
+      "label_rationale": "Missing identity evidence prevents either a supported breach or an explained alert disposition."
+    },
+    {
+      "id": "missing_invoice-1",
+      "category": "missing_invoice",
+      "customer": {
+        "external_id": "synthetic-customer-036",
+        "name": "Synthetic Customer 036",
+        "country": "IN",
+        "kyc_status": "pending"
+      },
+      "title": "Synthetic transaction investigation 036",
+      "description": "The alerted payment has no supplied invoice or delivery records. The customer says it was for services but has not provided supporting evidence.",
+      "transactions": [
+        {
+          "external_id": "synthetic-payment-036",
+          "amount": "115",
+          "currency": "USD",
+          "counterparty": "Synthetic Trading Company 1",
+          "counterparty_country": "GB",
+          "description": "Synthetic consulting payment for evaluation only.",
+          "occurred_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "expected_disposition": "insufficient_evidence",
+      "label_reference": "synthetic-scenario-v1:missing_invoice",
+      "label_rationale": "An unsupported explanation leaves the transfer unresolved under the synthetic policy."
+    },
+    {
+      "id": "missing_invoice-2",
+      "category": "missing_invoice",
+      "customer": {
+        "external_id": "synthetic-customer-037",
+        "name": "Synthetic Customer 037",
+        "country": "GB",
+        "kyc_status": "pending"
+      },
+      "title": "Synthetic transaction investigation 037",
+      "description": "The alerted payment has no supplied invoice or delivery records. The customer says it was for services but has not provided supporting evidence.",
+      "transactions": [
+        {
+          "external_id": "synthetic-payment-037",
+          "amount": "215",
+          "currency": "USD",
+          "counterparty": "Synthetic Trading Company 2",
+          "counterparty_country": "GB",
+          "description": "Synthetic consulting payment for evaluation only.",
+          "occurred_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "expected_disposition": "insufficient_evidence",
+      "label_reference": "synthetic-scenario-v1:missing_invoice",
+      "label_rationale": "An unsupported explanation leaves the transfer unresolved under the synthetic policy."
+    },
+    {
+      "id": "missing_invoice-3",
+      "category": "missing_invoice",
+      "customer": {
+        "external_id": "synthetic-customer-038",
+        "name": "Synthetic Customer 038",
+        "country": "US",
+        "kyc_status": "pending"
+      },
+      "title": "Synthetic transaction investigation 038",
+      "description": "The alerted payment has no supplied invoice or delivery records. The customer says it was for services but has not provided supporting evidence.",
+      "transactions": [
+        {
+          "external_id": "synthetic-payment-038",
+          "amount": "315",
+          "currency": "USD",
+          "counterparty": "Synthetic Trading Company 3",
+          "counterparty_country": "GB",
+          "description": "Synthetic consulting payment for evaluation only.",
+          "occurred_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "expected_disposition": "insufficient_evidence",
+      "label_reference": "synthetic-scenario-v1:missing_invoice",
+      "label_rationale": "An unsupported explanation leaves the transfer unresolved under the synthetic policy."
+    },
+    {
+      "id": "missing_invoice-4",
+      "category": "missing_invoice",
+      "customer": {
+        "external_id": "synthetic-customer-039",
+        "name": "Synthetic Customer 039",
+        "country": "DE",
+        "kyc_status": "pending"
+      },
+      "title": "Synthetic transaction investigation 039",
+      "description": "The alerted payment has no supplied invoice or delivery records. The customer says it was for services but has not provided supporting evidence.",
+      "transactions": [
+        {
+          "external_id": "synthetic-payment-039",
+          "amount": "415",
+          "currency": "USD",
+          "counterparty": "Synthetic Trading Company 4",
+          "counterparty_country": "GB",
+          "description": "Synthetic consulting payment for evaluation only.",
+          "occurred_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "expected_disposition": "insufficient_evidence",
+      "label_reference": "synthetic-scenario-v1:missing_invoice",
+      "label_rationale": "An unsupported explanation leaves the transfer unresolved under the synthetic policy."
+    },
+    {
+      "id": "missing_invoice-5",
+      "category": "missing_invoice",
+      "customer": {
+        "external_id": "synthetic-customer-040",
+        "name": "Synthetic Customer 040",
+        "country": "SG",
+        "kyc_status": "pending"
+      },
+      "title": "Synthetic transaction investigation 040",
+      "description": "The alerted payment has no supplied invoice or delivery records. The customer says it was for services but has not provided supporting evidence.",
+      "transactions": [
+        {
+          "external_id": "synthetic-payment-040",
+          "amount": "515",
+          "currency": "USD",
+          "counterparty": "Synthetic Trading Company 5",
+          "counterparty_country": "GB",
+          "description": "Synthetic consulting payment for evaluation only.",
+          "occurred_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "expected_disposition": "insufficient_evidence",
+      "label_reference": "synthetic-scenario-v1:missing_invoice",
+      "label_rationale": "An unsupported explanation leaves the transfer unresolved under the synthetic policy."
+    },
+    {
+      "id": "uncertain_ownership-1",
+      "category": "uncertain_ownership",
+      "customer": {
+        "external_id": "synthetic-customer-041",
+        "name": "Synthetic Customer 041",
+        "country": "IN",
+        "kyc_status": "pending"
+      },
+      "title": "Synthetic transaction investigation 041",
+      "description": "The counterparty company ownership is uncertain and the requested ownership evidence is absent. Payment amount and country alone do not establish a breach.",
+      "transactions": [
+        {
+          "external_id": "synthetic-payment-041",
+          "amount": "115",
+          "currency": "USD",
+          "counterparty": "Synthetic Trading Company 1",
+          "counterparty_country": "GB",
+          "description": "Synthetic consulting payment for evaluation only.",
+          "occurred_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "expected_disposition": "insufficient_evidence",
+      "label_reference": "synthetic-scenario-v1:uncertain_ownership",
+      "label_rationale": "Ownership evidence is missing and the policy forbids inferring a breach from amount or country alone."
+    },
+    {
+      "id": "uncertain_ownership-2",
+      "category": "uncertain_ownership",
+      "customer": {
+        "external_id": "synthetic-customer-042",
+        "name": "Synthetic Customer 042",
+        "country": "GB",
+        "kyc_status": "pending"
+      },
+      "title": "Synthetic transaction investigation 042",
+      "description": "The counterparty company ownership is uncertain and the requested ownership evidence is absent. Payment amount and country alone do not establish a breach.",
+      "transactions": [
+        {
+          "external_id": "synthetic-payment-042",
+          "amount": "215",
+          "currency": "USD",
+          "counterparty": "Synthetic Trading Company 2",
+          "counterparty_country": "GB",
+          "description": "Synthetic consulting payment for evaluation only.",
+          "occurred_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "expected_disposition": "insufficient_evidence",
+      "label_reference": "synthetic-scenario-v1:uncertain_ownership",
+      "label_rationale": "Ownership evidence is missing and the policy forbids inferring a breach from amount or country alone."
+    },
+    {
+      "id": "uncertain_ownership-3",
+      "category": "uncertain_ownership",
+      "customer": {
+        "external_id": "synthetic-customer-043",
+        "name": "Synthetic Customer 043",
+        "country": "US",
+        "kyc_status": "pending"
+      },
+      "title": "Synthetic transaction investigation 043",
+      "description": "The counterparty company ownership is uncertain and the requested ownership evidence is absent. Payment amount and country alone do not establish a breach.",
+      "transactions": [
+        {
+          "external_id": "synthetic-payment-043",
+          "amount": "315",
+          "currency": "USD",
+          "counterparty": "Synthetic Trading Company 3",
+          "counterparty_country": "GB",
+          "description": "Synthetic consulting payment for evaluation only.",
+          "occurred_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "expected_disposition": "insufficient_evidence",
+      "label_reference": "synthetic-scenario-v1:uncertain_ownership",
+      "label_rationale": "Ownership evidence is missing and the policy forbids inferring a breach from amount or country alone."
+    },
+    {
+      "id": "uncertain_ownership-4",
+      "category": "uncertain_ownership",
+      "customer": {
+        "external_id": "synthetic-customer-044",
+        "name": "Synthetic Customer 044",
+        "country": "DE",
+        "kyc_status": "pending"
+      },
+      "title": "Synthetic transaction investigation 044",
+      "description": "The counterparty company ownership is uncertain and the requested ownership evidence is absent. Payment amount and country alone do not establish a breach.",
+      "transactions": [
+        {
+          "external_id": "synthetic-payment-044",
+          "amount": "415",
+          "currency": "USD",
+          "counterparty": "Synthetic Trading Company 4",
+          "counterparty_country": "GB",
+          "description": "Synthetic consulting payment for evaluation only.",
+          "occurred_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "expected_disposition": "insufficient_evidence",
+      "label_reference": "synthetic-scenario-v1:uncertain_ownership",
+      "label_rationale": "Ownership evidence is missing and the policy forbids inferring a breach from amount or country alone."
+    },
+    {
+      "id": "uncertain_ownership-5",
+      "category": "uncertain_ownership",
+      "customer": {
+        "external_id": "synthetic-customer-045",
+        "name": "Synthetic Customer 045",
+        "country": "SG",
+        "kyc_status": "pending"
+      },
+      "title": "Synthetic transaction investigation 045",
+      "description": "The counterparty company ownership is uncertain and the requested ownership evidence is absent. Payment amount and country alone do not establish a breach.",
+      "transactions": [
+        {
+          "external_id": "synthetic-payment-045",
+          "amount": "515",
+          "currency": "USD",
+          "counterparty": "Synthetic Trading Company 5",
+          "counterparty_country": "GB",
+          "description": "Synthetic consulting payment for evaluation only.",
+          "occurred_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "expected_disposition": "insufficient_evidence",
+      "label_reference": "synthetic-scenario-v1:uncertain_ownership",
+      "label_rationale": "Ownership evidence is missing and the policy forbids inferring a breach from amount or country alone."
+    },
+    {
+      "id": "conflicting_documents-1",
+      "category": "conflicting_documents",
+      "customer": {
+        "external_id": "synthetic-customer-046",
+        "name": "Synthetic Customer 046",
+        "country": "IN",
+        "kyc_status": "pending"
+      },
+      "title": "Synthetic transaction investigation 046",
+      "description": "Two unverified documents give conflicting sender identities. Neither document has been authenticated and there is no customer admission or independent verification.",
+      "transactions": [
+        {
+          "external_id": "synthetic-payment-046",
+          "amount": "115",
+          "currency": "USD",
+          "counterparty": "Synthetic Trading Company 1",
+          "counterparty_country": "GB",
+          "description": "Synthetic consulting payment for evaluation only.",
+          "occurred_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "expected_disposition": "insufficient_evidence",
+      "label_reference": "synthetic-scenario-v1:conflicting_documents",
+      "label_rationale": "Conflicting unauthenticated records require investigation rather than a confident breach or false-positive claim."
+    },
+    {
+      "id": "conflicting_documents-2",
+      "category": "conflicting_documents",
+      "customer": {
+        "external_id": "synthetic-customer-047",
+        "name": "Synthetic Customer 047",
+        "country": "GB",
+        "kyc_status": "pending"
+      },
+      "title": "Synthetic transaction investigation 047",
+      "description": "Two unverified documents give conflicting sender identities. Neither document has been authenticated and there is no customer admission or independent verification.",
+      "transactions": [
+        {
+          "external_id": "synthetic-payment-047",
+          "amount": "215",
+          "currency": "USD",
+          "counterparty": "Synthetic Trading Company 2",
+          "counterparty_country": "GB",
+          "description": "Synthetic consulting payment for evaluation only.",
+          "occurred_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "expected_disposition": "insufficient_evidence",
+      "label_reference": "synthetic-scenario-v1:conflicting_documents",
+      "label_rationale": "Conflicting unauthenticated records require investigation rather than a confident breach or false-positive claim."
+    },
+    {
+      "id": "conflicting_documents-3",
+      "category": "conflicting_documents",
+      "customer": {
+        "external_id": "synthetic-customer-048",
+        "name": "Synthetic Customer 048",
+        "country": "US",
+        "kyc_status": "pending"
+      },
+      "title": "Synthetic transaction investigation 048",
+      "description": "Two unverified documents give conflicting sender identities. Neither document has been authenticated and there is no customer admission or independent verification.",
+      "transactions": [
+        {
+          "external_id": "synthetic-payment-048",
+          "amount": "315",
+          "currency": "USD",
+          "counterparty": "Synthetic Trading Company 3",
+          "counterparty_country": "GB",
+          "description": "Synthetic consulting payment for evaluation only.",
+          "occurred_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "expected_disposition": "insufficient_evidence",
+      "label_reference": "synthetic-scenario-v1:conflicting_documents",
+      "label_rationale": "Conflicting unauthenticated records require investigation rather than a confident breach or false-positive claim."
+    },
+    {
+      "id": "conflicting_documents-4",
+      "category": "conflicting_documents",
+      "customer": {
+        "external_id": "synthetic-customer-049",
+        "name": "Synthetic Customer 049",
+        "country": "DE",
+        "kyc_status": "pending"
+      },
+      "title": "Synthetic transaction investigation 049",
+      "description": "Two unverified documents give conflicting sender identities. Neither document has been authenticated and there is no customer admission or independent verification.",
+      "transactions": [
+        {
+          "external_id": "synthetic-payment-049",
+          "amount": "415",
+          "currency": "USD",
+          "counterparty": "Synthetic Trading Company 4",
+          "counterparty_country": "GB",
+          "description": "Synthetic consulting payment for evaluation only.",
+          "occurred_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "expected_disposition": "insufficient_evidence",
+      "label_reference": "synthetic-scenario-v1:conflicting_documents",
+      "label_rationale": "Conflicting unauthenticated records require investigation rather than a confident breach or false-positive claim."
+    },
+    {
+      "id": "conflicting_documents-5",
+      "category": "conflicting_documents",
+      "customer": {
+        "external_id": "synthetic-customer-050",
+        "name": "Synthetic Customer 050",
+        "country": "SG",
+        "kyc_status": "pending"
+      },
+      "title": "Synthetic transaction investigation 050",
+      "description": "Two unverified documents give conflicting sender identities. Neither document has been authenticated and there is no customer admission or independent verification.",
+      "transactions": [
+        {
+          "external_id": "synthetic-payment-050",
+          "amount": "515",
+          "currency": "USD",
+          "counterparty": "Synthetic Trading Company 5",
+          "counterparty_country": "GB",
+          "description": "Synthetic consulting payment for evaluation only.",
+          "occurred_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "expected_disposition": "insufficient_evidence",
+      "label_reference": "synthetic-scenario-v1:conflicting_documents",
+      "label_rationale": "Conflicting unauthenticated records require investigation rather than a confident breach or false-positive claim."
+    }
+  ]
+}

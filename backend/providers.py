@@ -20,7 +20,7 @@ from store import now
 from privacy import pseudonymize
 from security import SecretBox
 
-PROMPT_VERSION = "policylens-governance-v1"
+PROMPT_VERSION = "policylens-governance-v2"
 
 OFAC_URL = (
     "https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN.XML"
@@ -266,6 +266,11 @@ class Providers:
 
         def constrain_citations(node):
             if isinstance(node, dict):
+                # The provider's strict schema requires every property, including
+                # nullable fields whose local model has a compatibility default.
+                if "properties" in node:
+                    node["required"] = list(node["properties"])
+                node.pop("default", None)
                 if "chunk_id" in node.get("properties", {}) and allowed_chunks:
                     node["properties"]["chunk_id"]["enum"] = allowed_chunks
                     if "quote" in node["properties"] and quotes:
@@ -363,6 +368,12 @@ class Providers:
                     503,
                     "groq_access_denied",
                     "Groq rejected the API key or model access. Check backend/.env and your Groq account.",
+                )
+            if response.status_code == 400:
+                raise problem(
+                    503,
+                    "ai_request_rejected",
+                    "The provider rejected the analysis request. Review model/schema compatibility before retrying; no decision was recorded.",
                 )
             response.raise_for_status()
             envelope = response.json()
