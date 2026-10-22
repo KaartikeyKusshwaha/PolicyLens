@@ -2,6 +2,8 @@
 
 import argparse
 import json
+import os
+import secrets
 import sqlite3
 import sys
 from pathlib import Path
@@ -17,6 +19,10 @@ from auth import Hub  # noqa: E402
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
+    security_key = commands.add_parser(
+        "security-key", help="Create a private 32-byte installation encryption key; never overwrite."
+    )
+    security_key.add_argument("--output", type=Path, required=True)
     backup = commands.add_parser(
         "backup", help="Snapshot all databases while the app is stopped."
     )
@@ -38,7 +44,12 @@ def main():
     reset.add_argument("--origin", required=True)
     reset.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
-    if args.command == "backup":
+    if args.command == "security-key":
+        descriptor = os.open(args.output, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        with os.fdopen(descriptor, "wb") as file:
+            file.write(secrets.token_bytes(32))
+        print(json.dumps({"created": True, "bytes": 32, "key_file": str(args.output.resolve())}))
+    elif args.command == "backup":
         result = create_snapshot(Settings(), args.output)
         print(
             json.dumps(

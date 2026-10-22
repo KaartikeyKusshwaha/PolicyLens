@@ -155,6 +155,11 @@ def restore_snapshot(directory, destination):
                 )
             db.execute("DELETE FROM sessions")
             if db.execute(
+                "SELECT 1 FROM sqlite_master WHERE type='table' AND name='account_mfa'"
+            ).fetchone():
+                db.execute("DELETE FROM account_mfa WHERE enabled=0")
+                db.execute("UPDATE account_mfa SET recovery='[]'")
+            if db.execute(
                 "SELECT 1 FROM sqlite_master WHERE type='table' AND name='password_resets'"
             ).fetchone():
                 db.execute("DELETE FROM password_resets")

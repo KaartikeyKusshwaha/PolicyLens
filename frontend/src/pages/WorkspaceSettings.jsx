@@ -22,6 +22,7 @@ import {
 } from "../components";
 import { Status } from "../product-components";
 import { useSession } from "../session";
+import AccountMFA from "./AccountMFA";
 
 export default function WorkspaceSettings() {
   const { user } = useSession();
@@ -109,6 +110,7 @@ export default function WorkspaceSettings() {
       <ErrorNotice message={error} />
       {success && <Success>{success}</Success>}
       {copied && <Success>Copied.</Success>}
+      {tab === "Account" && <AccountMFA />}
       {tab === "Account" && (
         <form
           className="panel form-panel editor-panel"
@@ -148,6 +150,9 @@ export default function WorkspaceSettings() {
               minLength={12}
               maxLength={128}
             />
+          </Field>
+          <Field label="Authenticator or recovery code" hint="Required when two-factor authentication is enabled.">
+            <input name="second_factor" autoComplete="one-time-code" maxLength={64} />
           </Field>
           <Submit busy={busy}>Update password</Submit>
         </form>

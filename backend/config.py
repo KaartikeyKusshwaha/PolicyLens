@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     groq_api_key: SecretStr = SecretStr("")
     groq_model: str = "openai/gpt-oss-20b"
     database_path: Path = ROOT / "data" / "policylens-v2.db"
+    security_key_path: Path | None = None
     sanctions_max_age_hours: int = Field(default=24, ge=1, le=168)
     cookie_secure: bool = False
     deployment_mode: Literal["local", "public"] = "local"

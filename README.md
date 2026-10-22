@@ -2,7 +2,7 @@
 
 A cross-border fintech compliance pilot built with **React 19, Python/FastAPI, and SQLite**. Connect customer activity to documented controls, investigate exceptions, and retain the evidence behind human decisions.
 
-No Docker, Milvus, GPU, vector service, fabricated answers, alternate-provider fallback, or seeded business records. SQLite FTS5/BM25 is the primary document retrieval engine.
+The application runs as one native Python process with persistent SQLite storage. It does not fabricate answers, switch AI providers after failures, or seed business records. SQLite FTS5/BM25 is the primary document retrieval engine.
 
 ## Run locally
 
@@ -27,7 +27,7 @@ Business data starts empty. Offline/provider failures remain visible and never p
 
 | Area | Working capabilities |
 | --- | --- |
-| Team access | Owner bootstrap; invite-only membership; administrator, analyst, reviewer and read-only auditor roles; password changes; access revocation; workspace switching and separate tenant databases. |
+| Team access | Owner bootstrap; invite-only membership; administrator, analyst, reviewer and read-only auditor roles; TOTP MFA with encrypted seeds and single-use recovery codes; password changes; access revocation; workspace switching and separate tenant databases. |
 | Customers | Individuals and companies, country, internal risk tier, recorded due diligence status, notes, public LEI lookup, sanctions screening, and an observed transaction relationship graph. |
 | Monitoring | Validated money and UTC timestamps, idempotent external IDs, CSV validation/import results, signed webhook ingestion, explicit internal controls, immutable alert snapshots and customer case grouping. |
 | Control workbench | Amount, transaction velocity, same-currency aggregate, corridor and due diligence conditions; draft versions; independent approval; historical simulation without live alerts. No regulatory thresholds are supplied or inferred. |
@@ -86,6 +86,8 @@ The existing filename `backend/data/policylens-v2.db` is retained to preserve v2
 
 Sessions use HttpOnly, SameSite=Strict cookies, hashed session IDs and per-session CSRF tokens. Passwords use scrypt; login attempts are throttled in SQLite. Production requires HTTPS, `COOKIE_SECURE=true`, an explicit hostname allowlist and a trusted reverse proxy. Invitation tokens expire after 48 hours and are single-use/email-bound; share the generated invitation link yourself. The app does not send email.
 
+Account MFA is configured in Workspace settings -> Account. Public enrollment requires a separately provisioned `SECURITY_KEY_PATH`; seeds are encrypted with AES-256-GCM. Recovery codes are displayed once and stored hashed. Password resets preserve MFA, and existing-account invitations cannot bypass it. Keep the installation key separate from database snapshots. This protects MFA secrets, not whole database files. See [trust operations](docs/TRUST_OPERATIONS.md) for provisioning, recovery and the verified encrypted off-machine backup tooling.
+
 Use **Audit & analytics -> Create backup** for an administrator-only workspace backup. A full disaster-recovery backup must also include `identity.db` and every workspace database. See [deployment and recovery](docs/DEPLOYMENT.md). Hash-linked audits detect changes against a retained checkpoint, but a database administrator can rewrite or truncate the entire chain. Store checkpoints separately when stronger assurance is needed.
 
 The operator command `python manage.py backup --output <new-private-folder>` takes a verified full snapshot while the server is stopped. `manage.py verify` checks it, and `manage.py restore ... --destination <new-folder>` performs a separate restore with rebased workspace paths and revoked sessions. The OS installation lock rejects concurrent server/backup writers. Private environment/API keys are excluded from snapshots.
@@ -132,4 +134,6 @@ This is a working single-process product pilot, not a certification of regulator
 
 Run one Python worker on one machine with persistent disk. Horizontal replicas and multiple Uvicorn workers are unsupported because scheduling and local SQLite ownership assume one process. Netlify can preview the React build, but it cannot host this persistent Python/SQLite backend. Free hosts that erase local files are unsuitable.
 
-SSO/MFA, verified KYC, external notification delivery, transaction blocking, regulatory filing, automated retention/deletion policies, database encryption at rest and high availability are not implemented. Relevant selected evidence is sent to Groq; evaluate its data terms before using confidential records. AI risk scores are estimates, not calibrated probabilities or legal/payment approval. Use synthetic data for a public demonstration until your operational and data-handling requirements are satisfied.
+SSO, verified KYC, external notification delivery, transaction blocking, regulatory filing, automated retention/deletion policies, whole-database encryption at rest and high availability are not implemented. Relevant selected evidence is sent to Groq; evaluate its data terms before using confidential records. AI risk scores are estimates, not calibrated probabilities or legal/payment approval. Use synthetic data for a public demonstration until your operational and data-handling requirements are satisfied.
+
+The [governed toolkit master plan](docs/MASTER_PLAN.md) and [implementation ledger](docs/IMPLEMENTATION.md) track the next stages and their independent deployment, acceptance and external-validation gates. New source should not be assumed deployed to the Oracle pilot.

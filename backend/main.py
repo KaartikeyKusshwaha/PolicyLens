@@ -248,6 +248,8 @@ def create_app(settings=None, transport=None, *, start_worker=True):
         )
         return user
 
+    app.state.set_session = set_session
+
     @app.get("/api/auth/status")
     def auth_status():
         return {
@@ -627,9 +629,11 @@ def create_app(settings=None, transport=None, *, start_worker=True):
 
     from product_api import router
     from access_api import router as access_router
+    from mfa_api import router as mfa_router
 
     app.include_router(router)
     app.include_router(access_router)
+    app.include_router(mfa_router)
     dist = ROOT.parent / "frontend" / "dist"
     if (dist / "assets").is_dir():
         app.mount("/assets", StaticFiles(directory=dist / "assets"), name="assets")

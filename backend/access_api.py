@@ -17,6 +17,7 @@ class PasswordChange(Input):
     model_config = ConfigDict(str_strip_whitespace=False, extra="forbid")
     current_password: str = Field(min_length=12, max_length=128)
     new_password: str = Field(min_length=12, max_length=128)
+    second_factor: str = Field(default="", max_length=64)
 
 
 @router.post("/team/{user_id}/access")
@@ -74,14 +75,15 @@ def access(user_id: str, data: MemberAccess, request: Request):
 def change_password(data: PasswordChange, request: Request):
     hub = request.app.state.hub
     hub.throttle("password:" + request.state.user["id"])
+    encoded = password_hash(data.new_password)
     with hub.connect() as db:
+        db.execute("BEGIN IMMEDIATE")
         row = db.execute(
             "SELECT password FROM users WHERE id=?", (request.state.user["id"],)
         ).fetchone()
-    if not row or not password_matches(data.current_password, row["password"]):
-        raise problem(401, "invalid_credentials", "Current password is incorrect.")
-    encoded = password_hash(data.new_password)
-    with hub.connect() as db:
+        if not row or not password_matches(data.current_password, row["password"]):
+            raise problem(401, "invalid_credentials", "Current password is incorrect.")
+        hub.mfa.consume(db, request.state.user["id"], data.second_factor)
         db.execute(
             "UPDATE users SET password=? WHERE id=?",
             (encoded, request.state.user["id"]),
