@@ -1,18 +1,18 @@
 PolicyLens: market fit, agentic toolkit direction, and plan
 Market reality first
-Closest competitor is Marble. It is an open-core engine covering transaction monitoring, sanctions screening, case management and API ingestion, and it can be self-hosted. It claims 100+ banks, fintechs and crypto exchanges across 25+ countries. Its license is source-available (Elastic License 2.0), not OSI open source. 
+Closest competitor is Marble. It is an open-core engine covering transaction monitoring, sanctions screening, case management and API ingestion, and it can be self-hosted. It claims 100+ banks, fintechs and crypto exchanges across 25+ countries. Its license is source-available (Elastic License 2.0), not OSI open source.
 openapps.pro
  +2
-AI investigation agents already ship. Unit21 says its agents run the full investigation workflow and are in production at 100+ customers. It also sells no-code build-your-own agents. Hawk’s agent gathers information, summarizes cases and supports SAR preparation. 
+AI investigation agents already ship. Unit21 says its agents run the full investigation workflow and are in production at 100+ customers. It also sells no-code build-your-own agents. Hawk’s agent gathers information, summarizes cases and supports SAR preparation.
 Unit21 Relaunches as the Leader in AI Risk Infrastructure
  +2
-Pricing is mixed. Flagright markets usage-based pricing, while ComplyAdvantage lists pricing on request. 
+Pricing is mixed. Flagright markets usage-based pricing, while ComplyAdvantage lists pricing on request.
 flagright
 capterra
-Sponsor banks create real pull. The sponsor bank stays responsible for AML and must make sure fintech partners run strong programs, including transaction monitoring and customer due diligence. Banks reviewing partners ask whether you can produce case notes, alert dispositions, audit trails and evidence-ready reports quickly, and one vendor cites 48 hours. Oversight is assessed on evidence, not intent. 
+Sponsor banks create real pull. The sponsor bank stays responsible for AML and must make sure fintech partners run strong programs, including transaction monitoring and customer due diligence. Banks reviewing partners ask whether you can produce case notes, alert dispositions, audit trails and evidence-ready reports quickly, and one vendor cites 48 hours. Oversight is assessed on evidence, not intent.
 Sponsor Banks Are Responsible for Fintech Compliance
  +2
-MCP has a governance gap. Didit’s MCP server exposes screening and case-lifecycle tools but says it targets triage and operations, not compliance governance. Hosted OFAC and FinCEN MCP servers are proprietary and send tool output to whichever LLM host you use. 
+MCP has a governance gap. Didit’s MCP server exposes screening and case-lifecycle tools but says it targets triage and operations, not compliance governance. Hosted OFAC and FinCEN MCP servers are proprietary and send tool output to whichever LLM host you use.
 didit
 glama
 
