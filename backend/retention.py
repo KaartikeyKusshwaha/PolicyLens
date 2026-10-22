@@ -99,7 +99,8 @@ def state(store):
         "policies": policies,
         "holds": holds,
         "deletion_enabled": False,
-        "limits": "Policy and legal-hold governance only. Deletion preview/execution and copy reconciliation are not yet implemented. Holds remain effective during release review. No statutory retention period is supplied.",
+        "deletion_preview_available": True,
+        "limits": "Deletion inventory previews are available; execution and copy reconciliation are unfinished. Holds remain effective during release review. No statutory retention period is supplied.",
     }
 
 

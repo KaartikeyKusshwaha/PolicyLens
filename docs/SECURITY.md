@@ -18,10 +18,11 @@ security review, remediation and a signed data-handling agreement are complete.
 
 Retention policy versions and legal holds now have independent human approval
 and release review in source; pending release holds remain effective. Deletion
-previews/execution and copy reconciliation remain unfinished; no automated deletion
-or complete erasure guarantee is claimed. See [retention status](RETENTION.md).
-Backups, snapshots,
-exports and downstream copies need a unified retention procedure. Tenant databases
+inventory previews bind candidate hashes, policy/holds and age while flagging
+shared references; approval/execution and copy reconciliation remain unfinished.
+No automated deletion or complete erasure guarantee is claimed. See
+[retention status](RETENTION.md). Backups, snapshots, exports and downstream copies
+need a unified retention procedure. Tenant databases
 isolate application workspaces, not a hostile host administrator. One Python worker
 and SQLite are the pilot architecture; HA, multiworker operation and SSO are parked.
 

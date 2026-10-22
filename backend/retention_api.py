@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Query, Request
 
 import retention
+import deletion
 from providers import problem
 
 router = APIRouter(prefix="/api/retention")
@@ -17,6 +18,24 @@ def require(request, *roles):
 def overview(request: Request):
     require(request, "admin", "reviewer", "auditor")
     return retention.state(request.state.store)
+
+
+@router.post("/deletion-preview")
+def deletion_preview(data: deletion.Preview, request: Request):
+    require(request, "admin", "reviewer")
+    return deletion.preview(
+        request.state.store, request.state.user["org_id"], data.customer_id
+    )
+
+
+@router.get("/deletion-preview")
+def read_deletion_preview(
+    request: Request, customer_id: str = Query(min_length=1, max_length=100)
+):
+    require(request, "admin", "reviewer", "auditor")
+    return deletion.preview(
+        request.state.store, request.state.user["org_id"], customer_id
+    )
 
 
 @router.post("/policies", status_code=201)

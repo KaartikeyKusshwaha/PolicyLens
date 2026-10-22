@@ -3,6 +3,7 @@ import { api } from "../services/api";
 import { ErrorNotice, Field, Loading, PageHeading, Submit, useResource } from "../components";
 import { useSession } from "../session";
 import { label } from "../product-components";
+import DeletionPreview from "./DeletionPreview";
 
 const periods = { customer_days: "Customer retention days", resolved_case_days: "Resolved case retention days", terminal_job_days: "Terminal agent run retention days", backup_days: "Backup retention days", audit_minimum_days: "Minimum audit retention days" };
 
@@ -36,6 +37,7 @@ export default function Retention() {
     {notice && <p role="status">{notice}</p>}
     {data && <>
       <p className="privacy-note">{data.limits}</p>
+      {data.deletion_preview_available && <DeletionPreview />}
       <section className="panel section-padding"><h2>Active retention policy</h2>
         {data.active_policy ? <><h3>{data.active_policy.title}</h3><p>{data.active_policy.rationale}</p><p>{data.active_policy.external_copy_procedure}</p><dl>{Object.entries(periods).map(([key, title]) => <div key={key}><dt>{title}</dt><dd>{data.active_policy[key]}</dd></div>)}</dl></> : <p>No approved retention policy. Nothing is scheduled for deletion.</p>}
       </section>

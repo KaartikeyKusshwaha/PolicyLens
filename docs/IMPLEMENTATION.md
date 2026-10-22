@@ -51,7 +51,9 @@ review and market validation. None of those gates can be inferred from a green C
 - [ ] Retention/deletion policy, preview, approval and execution with legal holds.
   Policy drafts/independent activation and immediate workspace/customer/case
   holds with independent release approval are implemented in source and settings
-  UI. Pending release holds remain effective. Deletion planning/execution,
+  UI. Pending release holds remain effective. Customer inventory previews now
+  bind explicit row ownership, content hashes, policy/holds and retention age;
+  shared/text references remain review blockers. Deletion approval/execution,
   audit-PII handling and backup/export reconciliation remain unfinished; see
   `RETENTION.md`. No automatic deletion or complete-erasure claim is made.
 - [x] Implement agent-scoped keys, immediate revocation, scopes, rate limits and
@@ -144,6 +146,13 @@ Parked as specified: HA/multiple workers, SSO, Postgres migration, PEP/adverse-m
 data, SAR filing, payment blocking and additional sanctions sources.
 
 ## Implemented MFA boundaries
+
+Customer deletion inventory checkpoint: all 17 focused API/planner tests and
+all 42 frontend tests pass, along with Ruff, ESLint and production build. Coverage
+includes read-snapshot consistency during a concurrent update, SQLCipher storage,
+policy/hold/content binding, residual references, retention timestamps and bounds.
+The full backend regression is running. No deletion executor or copy-removal
+claim is made.
 
 Retention governance checkpoint: the full backend suite passed 228 tests; all 14
 focused retention tests then passed after adding encrypted recovery (229 backend
