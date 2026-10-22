@@ -30,6 +30,8 @@ RECORD_KINDS = (
     "case_evidence",
     "policy_change",
     "policy_impact",
+    "traceability_link",
+    "backtest",
 )
 LIMITATIONS = [
     "This workspace snapshot supports human review; it is not compliance certification or legal advice.",

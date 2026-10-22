@@ -73,8 +73,11 @@ review and market validation. None of those gates can be inferred from a green C
   verification script; policy versions, controls/approvals, dispositions/notes,
   audit checkpoint, source freshness, agent logs. See `SPONSOR_EVIDENCE.md`.
   Production provisioning and browser acceptance are pending.
-- [ ] Policy obligation matrix: linked controls, latest simulation, alert volumes,
-  evidence and explicit coverage gaps.
+- [x] Implement policy obligation matrix: explicit human mappings, linked controls,
+  latest recorded simulation, alert volumes, screening evidence and coverage gaps.
+  Current/historical versions and superseded analyses require deliberate review.
+  Populated component and API tests cover mapping boundaries. See `TRACEABILITY.md`.
+  Production/mobile acceptance is pending.
 - [x] Automated seeded pack and synthetic 50-case export within one minute;
   offline chain/signature re-verification and tampering/tenant/concurrency checks.
   Deployed performance remains unverified.
@@ -115,6 +118,14 @@ Parked as specified: HA/multiple workers, SSO, Postgres migration, PEP/adverse-m
 data, SAR filing, payment blocking and additional sanctions sources.
 
 ## Implemented MFA boundaries
+
+Traceability checkpoint: 164 backend tests passed in the full suite, then all six
+traceability tests passed after adding explicit partial-analysis/row-bound coverage
+and indexing the joins (165 backend tests now in source). All 32 frontend tests,
+ESLint, production build and Ruff passed. The pack's new mapping/simulation
+sections were rendered with Poppler and visually inspected. An earlier concurrent
+frontend run timed out waiting for an async control; the subsequent complete
+32-test run passed. Browser acceptance and Oracle deployment remain pending.
 
 Sponsor evidence checkpoint: 159 backend tests, 30 frontend tests, Ruff, ESLint,
 production build and dependency consistency passed. The archive verifier ran in a

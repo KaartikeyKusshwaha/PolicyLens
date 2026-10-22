@@ -45,6 +45,7 @@ export function Policies() {
       >
         Keep the documents that guide every assessment in one searchable place.
       </PageHeading>
+      <p><Link className="button secondary" to="/policies/traceability">Open policy-to-control traceability</Link></p>
       <ErrorNotice message={error} retry={reload} />
       <section className="panel">
         <div className="library-toolbar">

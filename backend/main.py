@@ -694,6 +694,7 @@ def create_app(settings=None, transport=None, *, start_worker=True):
     from toolkit_api import router as toolkit_router
     from checkpoint_api import router as checkpoint_router
     from evidence_api import router as evidence_router
+    from traceability_api import router as traceability_router
 
     app.include_router(router)
     app.include_router(access_router)
@@ -701,6 +702,7 @@ def create_app(settings=None, transport=None, *, start_worker=True):
     app.include_router(toolkit_router)
     app.include_router(checkpoint_router)
     app.include_router(evidence_router)
+    app.include_router(traceability_router)
     dist = ROOT.parent / "frontend" / "dist"
     if (dist / "assets").is_dir():
         app.mount("/assets", StaticFiles(directory=dist / "assets"), name="assets")

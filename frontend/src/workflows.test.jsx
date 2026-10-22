@@ -139,6 +139,41 @@ test("sponsor evidence pack failures remain visible and allow retry", async () =
   expect(button.disabled).toBe(false);
 });
 
+const traceabilityFixture = {
+  available_controls: [{ id: "control1", policy_id: "policy1", policy_version: "1", title: "Identity control", version: 1, status: "draft" }],
+  obligations: [{ id: "obligation1", policy_id: "policy1", policy_version: "1", policy_title: "Identity policy", current_policy_version: true, analysis_job_id: "job1", analysis_at: "2026-10-22T00:00:00Z", obligation: "Verify the identity of sender and receiver.", citation: { quote: "Verify sender and receiver identity." }, analysis_scope: "Suggested obligations; not an exhaustive inventory.", analysis_coverage: { complete: false }, controls: [], gaps: ["no_linked_control"], status: "needs_review" }],
+  policies_without_current_analysis: [], counts: { obligations: 1, with_gaps: 1, policies_without_current_analysis: 0 }, scope: "Explicit human mappings; observed alert volume does not measure accuracy.",
+};
+
+test("populated traceability shows citations, partial coverage and mapping failures", async () => {
+  window.history.replaceState({}, "", "/policies/traceability");
+  mockRoutes({
+    "/api/traceability": () => response(traceabilityFixture),
+    "/api/traceability/obligations/obligation1/links": () => response({ detail: { message: "Policy version changed. Refresh the matrix." } }, 409),
+  });
+  render(<App />);
+  await screen.findByText("Verify the identity of sender and receiver.");
+  expect(screen.getByText("Verify sender and receiver identity.")).toBeTruthy();
+  expect(screen.getByText("The analysis used only part of the policy document.")).toBeTruthy();
+  fireEvent.change(screen.getByLabelText("Control to map"), { target: { value: "control1" } });
+  fireEvent.change(screen.getByLabelText(/Mapping rationale/), { target: { value: "Human-reviewed applicability mapping." } });
+  fireEvent.click(screen.getByRole("button", { name: "Record mapping" }));
+  await screen.findByText("Policy version changed. Refresh the matrix.");
+});
+
+test("auditors see traceability without mapping or model-run actions", async () => {
+  window.history.replaceState({}, "", "/policies/traceability");
+  mockRoutes({
+    "/api/auth/me": () => response({ ...user, role: "auditor" }),
+    "/api/traceability": () => response({ ...traceabilityFixture, policies_without_current_analysis: [{ id: "p2", title: "Unanalyzed current policy", version: "2" }] }),
+  });
+  render(<App />);
+  await screen.findByText(/Unanalyzed current policy/);
+  expect(screen.queryByRole("button", { name: "Record mapping" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Prepare cited obligation suggestions" })).toBeNull();
+  expect(screen.queryByLabelText(/Mapping rationale/)).toBeNull();
+});
+
 test("sponsor evidence download checks the archive type and releases its temporary URL", async () => {
   window.history.replaceState({}, "", "/audit");
   const archive = new Blob(["fixture zip bytes"], { type: "application/zip" });

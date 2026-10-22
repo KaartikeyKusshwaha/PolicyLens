@@ -17,7 +17,8 @@ case-pack tool remains separate. The request is recorded in the audit chain.
 - `evidence.json`: current policies, archived policy versions, all retained control
   versions and approvals, customer/case records, notes, tasks, screening evidence,
   transactions, alerts with control snapshots, assessment/review records, agent jobs
-  and every retained job step, plus source freshness and explicit coverage gaps.
+  and every retained job step, human obligation/control mappings, historical
+  simulation records, plus source freshness and explicit coverage gaps.
 - `report.pdf`: the same business sections rendered as labelled printable records.
   Unicode text uses visible escapes in the PDF; the JSON preserves original text.
 - `audit.json`: the complete signed audit bundle for the snapshot.
