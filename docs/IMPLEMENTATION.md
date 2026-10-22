@@ -49,6 +49,11 @@ review and market validation. None of those gates can be inferred from a green C
   FTS; actual scheduling, migration/storage proof and operator acceptance remain
   pending. See `DATABASE_ENCRYPTION.md`.
 - [ ] Retention/deletion policy, preview, approval and execution with legal holds.
+  Policy drafts/independent activation and immediate workspace/customer/case
+  holds with independent release approval are implemented in source and settings
+  UI. Pending release holds remain effective. Deletion planning/execution,
+  audit-PII handling and backup/export reconciliation remain unfinished; see
+  `RETENTION.md`. No automatic deletion or complete-erasure claim is made.
 - [x] Implement agent-scoped keys, immediate revocation, scopes, rate limits and
   per-key/workspace run budgets, plus admin UI. Deployment acceptance is pending.
 - [ ] Agent identity, pinned model/version and pseudonymized model context.
@@ -139,6 +144,11 @@ Parked as specified: HA/multiple workers, SSO, Postgres migration, PEP/adverse-m
 data, SAR filing, payment blocking and additional sanctions sources.
 
 ## Implemented MFA boundaries
+
+Retention governance checkpoint: the full backend suite passed 228 tests; all 14
+focused retention tests then passed after adding encrypted recovery (229 backend
+tests now in source). All 39 frontend tests, ESLint, production build and Ruff
+passed. No deletion executor or browser acceptance is claimed.
 
 Database encryption checkpoint: the full backend suite passed 202 tests, followed
 by all 10 expanded encryption/migration tests (204 backend tests now in source).

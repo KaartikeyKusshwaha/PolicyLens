@@ -33,6 +33,7 @@ from providers import extract_document, problem, verify_citations
 from store import Store, now
 from database import INTEGRITY_ERRORS, STORAGE_ERRORS, encryption_status
 from runtime import InstallationLock
+from retention_api import router as retention_router
 
 logger = logging.getLogger("policylens")
 
@@ -712,6 +713,7 @@ def create_app(settings=None, transport=None, *, start_worker=True):
     app.include_router(traceability_router)
     app.include_router(control_code_router)
     app.include_router(adapter_router)
+    app.include_router(retention_router)
     dist = ROOT.parent / "frontend" / "dist"
     if (dist / "assets").is_dir():
         app.mount("/assets", StaticFiles(directory=dist / "assets"), name="assets")

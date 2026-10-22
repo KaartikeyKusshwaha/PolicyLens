@@ -16,8 +16,11 @@ security review, remediation and a signed data-handling agreement are complete.
 | Evidence integrity | Hash-linked audit, Ed25519 external checkpoints, signed PDF/JSON evidence archives and independent trusted-fingerprint verification detect covered tampering. External checkpoint storage must be configured. Same-host copies do not survive signing-key/host compromise; off-machine checkpoint retention is still pending. |
 | Model exposure | Groq receives bounded selected context. Optional pseudonymization masks structured identifiers; it is not full anonymization of free text. Runs retain model/configured revision and reject explicit mismatches. A provider-unreported revision does not prove immutable model weights. Citation checks cannot establish every narrative inference. |
 
-Retention/deletion policy, legal holds and approved execution are unfinished; no
-automated deletion or complete erasure guarantee is claimed. Backups, snapshots,
+Retention policy versions and legal holds now have independent human approval
+and release review in source; pending release holds remain effective. Deletion
+previews/execution and copy reconciliation remain unfinished; no automated deletion
+or complete erasure guarantee is claimed. See [retention status](RETENTION.md).
+Backups, snapshots,
 exports and downstream copies need a unified retention procedure. Tenant databases
 isolate application workspaces, not a hostile host administrator. One Python worker
 and SQLite are the pilot architecture; HA, multiworker operation and SSO are parked.

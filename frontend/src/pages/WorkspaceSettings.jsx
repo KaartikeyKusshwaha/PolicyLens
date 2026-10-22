@@ -112,6 +112,7 @@ export default function WorkspaceSettings() {
       <ErrorNotice message={error} />
       {success && <Success>{success}</Success>}
       <p><Link className="button secondary" to="/settings/imports">Import records from an existing engine</Link></p>
+      {["admin", "reviewer", "auditor"].includes(user.role) && <p><Link className="button secondary" to="/settings/retention">Retention and legal holds</Link></p>}
       {copied && <Success>Copied.</Success>}
       {tab === "Agents" && (user.role === "admin" ? <AgentKeys /> : <p>Only workspace administrators can manage agent keys.</p>)}
       {tab === "Account" && <AccountMFA />}
