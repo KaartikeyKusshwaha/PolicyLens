@@ -61,7 +61,9 @@ review and market validation. None of those gates can be inferred from a green C
   failure visibility, signed audit exports and offline trusted-key verification.
   Deployment, off-machine checkpoint retention and operator acceptance remain
   pending. See `EXTERNAL_CHECKPOINTS.md` for the threat model and provisioning.
-- [ ] Honest security one-pager covering deployed protections and limits.
+- [x] Honest security one-pager distinguishes implemented source from the unchanged
+  pilot and lists remaining limits/gates. See `SECURITY.md`; this is not production
+  acceptance or an independent security review.
 
 ## Phase 2: governed toolkit
 

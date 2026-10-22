@@ -17,7 +17,7 @@ The launcher installs dependencies when their manifests change, builds React, an
 1. Open the local app. Read `backend/data/.bootstrap-token` locally and use it to create your owner account and first workspace. With a custom database path, the file is beside that database. The token is consumed after setup; never commit or share it.
 2. Add `GROQ_API_KEY` to ignored `backend/.env` and restart. Obtain your own [free-tier key](https://console.groq.com/keys); no other integration requires an API key.
 3. Sync the enabled feeds in **Data sources**. All three official feeds are enabled initially.
-4. Add your actual operating policies and customer records.
+4. Add your operating policies and synthetic/non-production customer records. Real customer data requires independent security review, remediation and a signed agreement first.
 5. Invite a second person from **Workspace settings**. An independent administrator or reviewer must approve a drafted control before it becomes active.
 6. Ingest transactions manually, by CSV, or through a signed webhook. Investigate triggered alerts and use agents to prepare reviewable drafts.
 
@@ -96,7 +96,7 @@ The existing filename `backend/data/policylens-v2.db` is retained to preserve v2
 
 Sessions use HttpOnly, SameSite=Strict cookies, hashed session IDs and per-session CSRF tokens. Passwords use scrypt; login attempts are throttled in SQLite. Production requires HTTPS, `COOKIE_SECURE=true`, an explicit hostname allowlist and a trusted reverse proxy. Invitation tokens expire after 48 hours and are single-use/email-bound; share the generated invitation link yourself. The app does not send email.
 
-Account MFA is configured in Workspace settings -> Account. Public enrollment requires a separately provisioned `SECURITY_KEY_PATH`; seeds are encrypted with AES-256-GCM. Recovery codes are displayed once and stored hashed. Password resets preserve MFA, and existing-account invitations cannot bypass it. Keep the installation key separate from database snapshots. This protects MFA secrets, not whole database files. See [trust operations](docs/TRUST_OPERATIONS.md) for provisioning, recovery and the verified encrypted off-machine backup tooling.
+Account MFA is configured in Workspace settings -> Account. Public enrollment requires a separately provisioned `SECURITY_KEY_PATH`; seeds are encrypted with AES-256-GCM. Recovery codes are displayed once and stored hashed. Password resets preserve MFA, and existing-account invitations cannot bypass it. Keep the installation key separate from database snapshots. Explicit SQLCipher mode separately encrypts whole database files; the existing pilot has not been migrated. See the [security overview](docs/SECURITY.md), [database encryption and migration](docs/DATABASE_ENCRYPTION.md), and [trust operations](docs/TRUST_OPERATIONS.md) for protections, remaining limits and recovery procedures.
 
 Use **Audit & analytics -> Create backup** for an administrator-only workspace backup. A full disaster-recovery backup must also include `identity.db` and every workspace database. See [deployment and recovery](docs/DEPLOYMENT.md).
 
