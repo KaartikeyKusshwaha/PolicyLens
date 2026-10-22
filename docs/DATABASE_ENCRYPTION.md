@@ -4,8 +4,8 @@
 all tenant databases. The default remains `none` for existing installations.
 Selecting encryption never rewrites an existing plaintext database or falls back
 to plaintext if opening an encrypted database fails. Do not enable it on the
-existing Oracle installation: encrypted off-machine backup verification and an
-operator migration drill there are still required. No deployed encryption claim
+existing Oracle installation: an operator migration and off-machine recovery
+drill there are still required. No deployed encryption claim
 is made here.
 
 ## Key and file protection
@@ -77,10 +77,30 @@ at that key when starting a restored installation; do not use a new destination'
 default key path. Keep encryption mode consistent for every process and operator
 command.
 
-The server exporter verifies encrypted snapshots with the same settings. The
-off-machine receiver currently supports plaintext SQLite archives, which it
-verifies in memory and then encrypts with a separate Fernet key. It rejects
-SQLCipher files; it does not silently skip database verification. Extending this
-receiver, recovery drills through it, deployed storage verification and operator acceptance remain
-unfinished. Application encryption must stay disabled on the current pilot until
-those paths are completed and reviewed.
+The server exporter verifies encrypted snapshots with the same settings. For
+SQLCipher snapshots, supply `--database-key-file PRIVATE_RECOVERY_COPY` to
+`deploy/pull_backup.py`, or `-DatabaseKey PRIVATE_RECOVERY_COPY` to the Windows
+task installer. This is a separately protected copy of the original raw 32-byte
+installation key, not the Fernet key passed with `--key-file`/`-EncryptionKey`.
+Keep both outside the backup destination. Supplying the database key selects
+encrypted mode and rejects plaintext downgrades. Without it, legacy plaintext
+SQLite snapshots are verified entirely in memory; encrypted snapshots are refused.
+
+SQLCipher's native binding cannot deserialize a database in memory. The receiver
+stages only the original ciphertext bytes in a temporary directory, opens them
+read-only with the recovery key, enables in-memory SQL temporary storage, and
+verifies SQLite integrity, SQLCipher page authentication and tenant mappings.
+Temporary files are closed and removed before successful verification returns.
+No decrypted database is written to disk. Restrict the receiver's Windows TEMP
+directory ACLs to the operator/service account; POSIX temporary directories use
+0700 and files use 0600. This is not protection against a compromised running host.
+
+The complete transfer archive is Fernet-encrypted and re-verified after decrypting
+in memory before publication. Receipts identify the database scheme/fingerprint
+and preserve the last success when a later attempt fails. Automated recovery
+drills decrypt the saved archive, re-verify it, restore encrypted databases into
+a separate installation and check both tenants, customer records and FTS.
+Actual off-machine transfer scheduling, deployed storage verification, key
+provisioning and operator migration/recovery acceptance remain unverified.
+Application encryption must stay disabled on the current pilot until those
+steps are completed and reviewed.

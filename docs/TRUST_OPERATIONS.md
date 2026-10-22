@@ -2,8 +2,9 @@
 
 This document describes new source on the governance branch, not protections
 already deployed to Oracle. Browser acceptance is deferred until implementation
-is complete, as requested. Whole-database encryption, retention workflows and
-the governed agent toolkit are still outstanding; see `IMPLEMENTATION.md`.
+is complete, as requested. Governed agent access, SQLCipher storage and offline
+migration/backup/restore are implemented in source. Retention workflows and
+deployment acceptance remain outstanding; see `IMPLEMENTATION.md`.
 
 ## Account MFA
 
@@ -44,8 +45,10 @@ snapshots; loss of this key prevents decrypting enrolled seeds. Local developmen
 can create `backend/data/.security-key` automatically. Windows operators must
 restrict the key's ACL to the service/current user and SYSTEM.
 
-This key protects MFA seeds, **not the entire SQLite file**. Do not claim whole
-database encryption until its separate migration and restore tests are complete.
+MFA encryption alone does not encrypt the SQLite file. Explicit
+`DATABASE_ENCRYPTION=sqlcipher4` enables purpose-separated whole-file encryption;
+the current pilot has not been migrated. See `DATABASE_ENCRYPTION.md` for the
+non-destructive migration, key recovery procedure and remaining deployment gates.
 
 ## Automatic off-machine backups
 
@@ -57,10 +60,19 @@ older one silently.
 The puller requires the existing private SSH identity and previously verified
 known-hosts file. It does not accept an unknown host or interactive authentication.
 It downloads through SSH, bounds archive sizes, rejects unsafe paths and extra
-members, verifies checksums and SQLite integrity in memory, then encrypts with
+members, verifies checksums and database integrity, then encrypts with
 Fernet before writing to disk. It decrypts and verifies its own result before
 publishing the encrypted archive. No database plaintext is extracted locally.
 Keep the Fernet decryption key outside the backup destination.
+
+Plaintext SQLite archives are verified entirely in memory. SQLCipher archives
+require `--database-key-file` with a protected recovery copy of the original
+raw installation key. Only ciphertext is temporarily staged for the native
+SQLCipher driver; decrypted pages and temporary SQL data stay in memory. Both
+keys stay outside the backup directory. Configuring the installation key selects
+encrypted mode and rejects plaintext snapshots. The Windows installer accepts
+the same key path as `-DatabaseKey` and includes it in both its initial verified
+transfer and scheduled command. See `DATABASE_ENCRYPTION.md` for key/storage limits.
 
 SQLite WAL snapshots need a documented header adjustment solely in the private
 in-memory verification copy; original archive bytes and checksums are preserved.

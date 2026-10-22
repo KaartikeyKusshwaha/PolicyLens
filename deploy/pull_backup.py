@@ -10,16 +10,48 @@ import sqlite3
 import subprocess
 import sys
 import tarfile
-from contextlib import closing
+import tempfile
+from contextlib import closing, contextmanager
 from datetime import datetime, timedelta, timezone
 from pathlib import Path, PurePosixPath
+from types import SimpleNamespace
 
 from cryptography.fernet import Fernet
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
+from database import DB_ERRORS, connect_database, descriptor  # noqa: E402
 
 MAX_BYTES = 128 * 1024 * 1024
 
 
-def verify_archive(payload, max_age_hours=30):
+@contextmanager
+def verification_database(data, settings):
+    """Never materialize a decrypted database on disk."""
+    if settings is None:
+        if not data.startswith(b"SQLite format 3\x00"):
+            raise ValueError("Snapshot member is not a SQLite database.")
+        with closing(sqlite3.connect(":memory:")) as connection:
+            # Documented WAL deserialize workaround affects this memory copy only.
+            # https://www.sqlite.org/c3ref/deserialize.html
+            connection.deserialize(data[:18] + b"\x01\x01" + data[20:])
+            yield connection
+    else:
+        if data.startswith(b"SQLite format 3\x00"):
+            raise ValueError("Encrypted snapshot contains a plaintext database.")
+        # This native binding has no deserialize API. Only original ciphertext is
+        # staged in the private directory; SQLCipher decrypts pages in memory.
+        with tempfile.TemporaryDirectory(
+            prefix="policylens-cipher-verify-"
+        ) as directory:
+            path = Path(directory) / "encrypted.db"
+            handle = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+            with os.fdopen(handle, "wb") as file:
+                file.write(data)
+            with closing(connect_database(path, settings, readonly=True)) as connection:
+                yield connection
+
+
+def verify_archive(payload, max_age_hours=30, *, database_key_file=None):
     if len(payload) > MAX_BYTES:
         raise ValueError("Archive is too large.")
     with tarfile.open(fileobj=io.BytesIO(payload), mode="r:gz") as archive:
@@ -44,6 +76,18 @@ def verify_archive(payload, max_age_hours=30):
         manifest = json.load(archive.extractfile("manifest.json"))
         if manifest.get("format") != 1 or not manifest.get("files"):
             raise ValueError("Unsupported snapshot manifest.")
+        settings = None
+        encryption = manifest.get("database_encryption", {"scheme": "none"})
+        if database_key_file is not None:
+            settings = SimpleNamespace(
+                database_encryption="sqlcipher4",
+                security_key_path=Path(database_key_file),
+                deployment_mode="public",
+            )
+        if encryption != descriptor(settings):
+            raise ValueError(
+                "Snapshot encryption mode or original installation key does not match."
+            )
         stamp = datetime.fromisoformat(manifest["created_at"])
         current = datetime.now(timezone.utc)
         if (
@@ -67,21 +111,23 @@ def verify_archive(payload, max_age_hours=30):
                 or hashlib.sha256(data).hexdigest() != item["sha256"]
             ):
                 raise ValueError("Snapshot checksum or size mismatch.")
-            with closing(sqlite3.connect(":memory:")) as connection:
-                try:
-                    if not data.startswith(b"SQLite format 3\x00"):
-                        raise ValueError("Snapshot member is not a SQLite database.")
-                    # SQLite's documented WAL deserialize workaround applies only
-                    # to this private verification copy. Archive bytes stay intact.
-                    # https://www.sqlite.org/c3ref/deserialize.html
-                    memory_copy = data[:18] + b"\x01\x01" + data[20:]
-                    connection.deserialize(memory_copy)
+            try:
+                with verification_database(data, settings) as connection:
                     connection.execute("PRAGMA trusted_schema=OFF")
                     connection.execute("PRAGMA query_only=ON")
                     if connection.execute("PRAGMA integrity_check").fetchall() != [
                         ("ok",)
                     ]:
                         raise ValueError("Snapshot database integrity check failed.")
+                    if (
+                        settings is not None
+                        and connection.execute(
+                            "PRAGMA cipher_integrity_check"
+                        ).fetchall()
+                    ):
+                        raise ValueError(
+                            "Snapshot SQLCipher page authentication failed."
+                        )
                     if item["path"] == "identity.db":
                         ids = {
                             row[0]
@@ -93,10 +139,8 @@ def verify_archive(payload, max_age_hours=30):
                             raise ValueError(
                                 "Snapshot workspace mappings are inconsistent."
                             )
-                except sqlite3.Error as exc:
-                    raise ValueError(
-                        "Snapshot database could not be verified."
-                    ) from exc
+            except DB_ERRORS as exc:
+                raise ValueError("Snapshot database could not be verified.") from exc
     return manifest
 
 
@@ -144,13 +188,24 @@ def write_json(path, value):
     os.replace(temporary, path)
 
 
-def persist(payload, key_file, destination, max_age_hours=30):
-    manifest = verify_archive(payload, max_age_hours)
+def persist(
+    payload, key_file, destination, max_age_hours=30, *, database_key_file=None
+):
+    for key_path in (key_file, database_key_file):
+        if key_path is not None and Path(key_path).resolve().is_relative_to(
+            destination.resolve()
+        ):
+            raise ValueError("Keep all decryption keys outside the backup destination.")
+    manifest = verify_archive(
+        payload, max_age_hours, database_key_file=database_key_file
+    )
     destination.mkdir(parents=True, exist_ok=True, mode=0o700)
     cipher = Fernet(key_file.read_bytes().strip())
     encrypted = cipher.encrypt(payload)
     # Authenticate and verify the encrypted result before publishing the backup.
-    verify_archive(cipher.decrypt(encrypted), max_age_hours)
+    verify_archive(
+        cipher.decrypt(encrypted), max_age_hours, database_key_file=database_key_file
+    )
     stamp = datetime.fromisoformat(manifest["created_at"]).strftime("%Y%m%dT%H%M%SZ")
     digest = hashlib.sha256(payload).hexdigest()
     target = destination / (
@@ -174,6 +229,7 @@ def persist(payload, key_file, destination, max_age_hours=30):
         "databases": len(manifest["files"]),
         "archive": target.name,
         "plaintext_sha256": digest,
+        "database_encryption": manifest.get("database_encryption", {"scheme": "none"}),
     }
 
 
@@ -183,6 +239,11 @@ def main():
     parser.add_argument("--identity", type=Path, required=True)
     parser.add_argument("--known-hosts", type=Path, required=True)
     parser.add_argument("--key-file", type=Path, required=True)
+    parser.add_argument(
+        "--database-key-file",
+        type=Path,
+        help="Separate protected recovery copy of the original raw installation key; requires SQLCipher snapshots.",
+    )
     parser.add_argument("--destination", type=Path, required=True)
     parser.add_argument(
         "--max-age-hours", type=int, default=30, choices=range(1, 169), metavar="1..168"
@@ -197,6 +258,7 @@ def main():
             args.key_file,
             args.destination,
             args.max_age_hours,
+            database_key_file=args.database_key_file,
         )
     except Exception:
         result = {

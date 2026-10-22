@@ -43,8 +43,11 @@ review and market validation. None of those gates can be inferred from a green C
   backup/restore are implemented with wrong-key, corruption and tenant tests.
   Offline plaintext-to-encrypted snapshot migration preserves source files and
   the original MFA/signing key; restore rebases into a separate installation.
-  Encrypted off-machine receiver integration and
-  production acceptance remain pending. See `DATABASE_ENCRYPTION.md`.
+  The off-machine receiver verifies SQLCipher pages and tenant mappings with a
+  separately provisioned recovery key, stages only ciphertext, and wraps the
+  archive in Fernet. Automated saved-archive restoration checks both tenants and
+  FTS; actual scheduling, migration/storage proof and operator acceptance remain
+  pending. See `DATABASE_ENCRYPTION.md`.
 - [ ] Retention/deletion policy, preview, approval and execution with legal holds.
 - [x] Implement agent-scoped keys, immediate revocation, scopes, rate limits and
   per-key/workspace run budgets, plus admin UI. Deployment acceptance is pending.
@@ -140,7 +143,16 @@ by all 10 expanded encryption/migration tests (204 backend tests now in source).
 The migration test retains both tenant databases, FTS retrieval and enabled MFA,
 rejects an incorrect original MFA key, restarts the encrypted installation and
 creates another verified encrypted backup. Ruff and dependency consistency pass.
-Linux CI and encrypted off-machine receiver integration remain to be verified.
+Linux CI passed all 204 backend and 36 frontend tests at `20efa22`. Subsequent
+encrypted off-machine integration adds ciphertext-only temporary verification,
+mode/key/page/tenant rejection and a saved-archive recovery drill. Live deployment
+and operator acceptance remain unverified.
+
+Encrypted off-machine checkpoint: the full backend suite passed 214 tests, then
+all 21 focused backup tests passed after adding CLI key-loss receipts (215 tests
+now in source). Ruff passed. The Windows installer was parsed and exercised with
+stubbed task commands: both invocations retain absolute recovery-key paths, and
+a failed initial transfer prevents registration. No real schedule was installed.
 
 Marble adapter checkpoint: 191 backend tests passed in the full suite, followed by
 all 14 focused adapter tests after adding concurrent replay and separate-case checks
