@@ -143,13 +143,17 @@ class MarbleBundle(Input):
 
 class EngineAdapter(Protocol):
     name: str
+    display_name: str
 
     def parse(self, payload: dict): ...
     def objects(self, bundle): ...
+    def project(self, kind: str, raw: dict): ...
+    def contract(self, api_version: str): ...
 
 
 class MarbleAdapter:
     name = "marble"
+    display_name = "Marble"
 
     def parse(self, payload):
         return MarbleBundle.model_validate(payload)
@@ -162,6 +166,47 @@ class MarbleAdapter:
             ("decision", value.model_dump(mode="json"), "v1")
             for value in bundle.decisions.data
         ]
+
+    def contract(self, api_version):
+        return CONTRACTS[api_version]
+
+    def project(self, kind, raw):
+        """Translate provider facts into a bounded display/model projection."""
+        if kind == "case":
+            return {
+                "source_name": raw["name"],
+                "case_reference": None,
+                "creates_alert": False,
+                "case_source": {
+                    "source_name": raw["name"],
+                    "source_status": raw["status"],
+                    "source_outcome": raw["outcome"],
+                },
+            }
+        scenario = raw["scenario"]
+        return {
+            "source_name": "Marble decision",
+            "case_reference": raw["case"]["id"] if raw.get("case") else None,
+            "creates_alert": raw["outcome"] != "approve",
+            "case_source": {},
+            "alert": {
+                "rule_title": "Imported Marble scenario",
+                "rule_version": scenario["version"],
+                "rule_snapshot": {
+                    "origin": "marble",
+                    "scenario": {
+                        k: scenario[k] for k in ("id", "iteration_id", "version")
+                    },
+                    "scope": "External scenario evidence; not an approved PolicyLens control.",
+                },
+                "facts": {
+                    "source_outcome": raw["outcome"],
+                    "source_score": raw["score"],
+                    "source_review_status": raw["review_status"],
+                    "trigger_object_id": raw["trigger_object"]["object_id"],
+                },
+            },
+        }
 
 
 ADAPTERS: dict[str, EngineAdapter] = {"marble": MarbleAdapter()}
@@ -223,12 +268,11 @@ def plan(db, provider, bundle):
     }
     objects, cases = [], {}
     for kind, raw, api_version in ADAPTERS[provider].objects(bundle):
+        projection = ADAPTERS[provider].project(kind, raw)
         source_id = raw["id"]
         key = object_key(provider, bundle.source_instance, kind, source_id)
         prior = record(db, "adapter_object", key)
-        source_case_id = (
-            raw["case"]["id"] if kind == "decision" and raw.get("case") else None
-        )
+        source_case_id = projection["case_reference"]
         customer_id = mappings.get((kind, source_id)) or (
             prior["customer_id"] if prior else None
         )
@@ -255,7 +299,7 @@ def plan(db, provider, bundle):
             prior["sha256"] != source_hash or prior["customer_id"] != customer_id
         ):
             errors.append("source_identity_changed")
-        creates_alert = kind == "decision" and raw["outcome"] != "approve"
+        creates_alert = projection["creates_alert"]
         parent_case = parent.get("local_case_id") if parent else None
         if creates_alert and not prior and parent_case:
             native = record(db, "case", parent_case)
@@ -264,7 +308,7 @@ def plan(db, provider, bundle):
         item = {
             "id": key,
             "object_type": kind,
-            "source_name": raw.get("name", "Marble decision"),
+            "source_name": projection["source_name"],
             "source_id": source_id,
             "customer_id": customer_id,
             "source_case_id": source_case_id,
@@ -272,7 +316,7 @@ def plan(db, provider, bundle):
             "alert_id": prior.get("alert_id") if prior else None,
             "sha256": source_hash,
             "api_version": api_version,
-            "contract_git_blob": CONTRACTS[api_version],
+            "contract_git_blob": ADAPTERS[provider].contract(api_version),
             "action": "replay" if prior else "new",
             "creates_alert": creates_alert and prior is None,
             "raw": raw,
@@ -334,6 +378,7 @@ def import_bundle(store, provider, payload, preview_sha256, user):
         cases = {}
         for item in objects:
             kind, raw = item["object_type"], item["raw"]
+            projection = ADAPTERS[provider].project(kind, raw)
             if item["action"] == "replay":
                 if kind == "case":
                     cases[item["source_id"]] = item["local_case_id"]
@@ -354,9 +399,12 @@ def import_bundle(store, provider, payload, preview_sha256, user):
             if kind == "case" or (item["creates_alert"] and not item["local_case_id"]):
                 customer = record(db, "customer", item["customer_id"])
                 title = (
-                    "Review imported Marble case " + item["source_id"]
-                    if kind == "case"
-                    else "Review imported Marble decision " + item["source_id"]
+                    "Review imported "
+                    + ADAPTERS[provider].display_name
+                    + " "
+                    + kind
+                    + " "
+                    + item["source_id"]
                 )
                 native = ops._open_case(
                     db,
@@ -367,18 +415,7 @@ def import_bundle(store, provider, payload, preview_sha256, user):
                     user["id"],
                     group_existing=False,
                 )
-                native["external_source"] = {
-                    **source,
-                    **(
-                        {
-                            "source_name": raw["name"],
-                            "source_status": raw["status"],
-                            "source_outcome": raw["outcome"],
-                        }
-                        if kind == "case"
-                        else {}
-                    ),
-                }
+                native["external_source"] = {**source, **projection["case_source"]}
                 db.execute(
                     "UPDATE records SET payload=? WHERE kind='case' AND id=?",
                     (canonical(native), native["id"]),
@@ -388,7 +425,6 @@ def import_bundle(store, provider, payload, preview_sha256, user):
                 cases[item["source_id"]] = item["local_case_id"]
             if item["creates_alert"]:
                 alert_id = uid()
-                scenario = raw["scenario"]
                 alert = {
                     "id": alert_id,
                     "case_id": item["local_case_id"],
@@ -396,20 +432,14 @@ def import_bundle(store, provider, payload, preview_sha256, user):
                     "external_source": source,
                     "transaction_id": None,
                     "rule_id": None,
-                    "rule_title": "Imported Marble scenario",
-                    "rule_version": scenario["version"],
-                    "rule_snapshot": {
-                        "origin": "marble",
-                        "scenario": {
-                            k: scenario[k] for k in ("id", "iteration_id", "version")
-                        },
-                        "scope": "External scenario evidence; not an approved PolicyLens control.",
-                    },
-                    "facts": {
-                        "source_outcome": raw["outcome"],
-                        "source_score": raw["score"],
-                        "source_review_status": raw["review_status"],
-                        "trigger_object_id": raw["trigger_object"]["object_id"],
+                    **{
+                        k: projection["alert"][k]
+                        for k in (
+                            "rule_title",
+                            "rule_version",
+                            "rule_snapshot",
+                            "facts",
+                        )
                     },
                     "created_at": now(),
                     "priority": "medium",

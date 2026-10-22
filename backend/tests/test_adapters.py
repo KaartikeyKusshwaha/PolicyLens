@@ -350,6 +350,85 @@ def test_upstream_cases_remain_separate_from_each_other_and_existing_local_case(
     )
 
 
+def test_shared_import_service_uses_adapter_projection_not_marble_field_names(
+    workspace, monkeypatch
+):
+    client, _, _, _ = workspace
+    bundle = example(add_customer(client)["id"])
+
+    class FixtureEngine(adapters.MarbleAdapter):
+        name = "fixture_engine"
+        display_name = "Fixture Engine"
+
+        def objects(self, parsed):
+            case = parsed.cases.data[0]
+            decision = parsed.decisions.data[0]
+            return [
+                (
+                    "case",
+                    {"id": str(case.id), "label": case.name, "state": case.status},
+                    "fixture-v1",
+                ),
+                (
+                    "decision",
+                    {
+                        "id": str(decision.id),
+                        "parent": str(case.id),
+                        "verdict": "manual_review",
+                        "points": decision.score,
+                    },
+                    "fixture-v1",
+                ),
+            ]
+
+        def contract(self, api_version):
+            assert api_version == "fixture-v1"
+            return "f" * 40
+
+        def project(self, kind, raw):
+            if kind == "case":
+                return {
+                    "source_name": raw["label"],
+                    "case_reference": None,
+                    "creates_alert": False,
+                    "case_source": {
+                        "source_name": raw["label"],
+                        "source_status": raw["state"],
+                    },
+                }
+            return {
+                "source_name": "Fixture signal",
+                "case_reference": raw["parent"],
+                "creates_alert": True,
+                "case_source": {},
+                "alert": {
+                    "rule_title": "Fixture engine signal",
+                    "rule_version": "fixture-v1",
+                    "rule_snapshot": {"origin": "fixture_engine"},
+                    "facts": {
+                        "source_outcome": raw["verdict"],
+                        "source_score": raw["points"],
+                    },
+                },
+            }
+
+    monkeypatch.setitem(adapters.ADAPTERS, "fixture_engine", FixtureEngine())
+    prepared = client.post(
+        "/api/adapters/fixture_engine/preview", json={"bundle": bundle}
+    )
+    assert prepared.status_code == 200
+    result = client.post(
+        "/api/adapters/fixture_engine/import",
+        json={"bundle": bundle, "preview_sha256": prepared.json()["preview_sha256"]},
+    )
+    assert result.status_code == 201, result.text
+    case = client.get("/api/cases").json()[0]
+    assert case["title"].startswith("Review imported Fixture Engine case")
+    detail = client.get("/api/cases/" + case["id"]).json()
+    assert detail["alerts"][0]["rule_snapshot"]["origin"] == "fixture_engine"
+    assert detail["alerts"][0]["facts"]["source_outcome"] == "manual_review"
+
+
 def test_external_identifier_masking_and_size_bound(workspace, monkeypatch):
     client, _, _, _ = workspace
     bundle = example(add_customer(client)["id"])

@@ -45,8 +45,13 @@ customer reference is deliberately not a real record; nothing is seeded automati
 
 ## Provenance, preview and replay
 
-The adapter registry defines a parse/object interface; the implemented engine adapter
-is Marble. `GET /api/adapters` lists supported import transports. `POST
+The adapter registry defines parsing, source-object enumeration, contract identity
+and bounded local projection methods. Provider-specific field names and outcome
+interpretation stay inside that adapter. The shared service owns tenant mapping,
+preview, replay, case-state checks and the transaction. A test-only provider with
+different raw field names exercises the same service without changing its logic;
+Marble is the only production engine adapter. `GET /api/adapters` lists supported
+import transports. `POST
 /api/adapters/marble/preview` accepts `{"bundle": ...}` and returns source identities,
 hashes, new/replay status, missing mappings/conflicts and a preview digest. `POST
 /api/adapters/marble/import` requires the same bundle and `preview_sha256`.
@@ -97,6 +102,6 @@ Automated checks cover import-to-inbox/case visibility, retained provenance/pack
 inclusion, no inferred transaction/control/closure, customer and tenant mapping,
 auditor denials, source/preview conflicts, partial pages, duplicate IDs, invalid source
 versions/timestamps, resolved-case protection, late-failure rollback, concurrent replay,
-source masking and populated import/case component states. Live source compatibility
+source masking, provider projection and populated import/case component states. Live source compatibility
 and operational/browser acceptance remain unverified. The partner-selected transaction
 source adapter is still pending partner selection.

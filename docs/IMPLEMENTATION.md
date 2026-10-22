@@ -137,6 +137,10 @@ in the sponsor PDF and visually inspected. Disk space is available again; prior
 disposable artifacts were consolidated at the user's request. Browser testing,
 real Marble-account comparison and Oracle deployment remain pending.
 
+The shared adapter service was then separated from provider field projection; a
+test-only engine with different raw fields verifies that boundary. The focused
+suite now contains 15 adapter tests (194 backend tests in source).
+
 Controls-as-code checkpoint: 178 backend tests passed in the full suite; all 14
 focused code-import tests then passed after adding a YAML-indentation preservation
 case (179 tests now in source). All 34 frontend tests, ESLint, production build,
