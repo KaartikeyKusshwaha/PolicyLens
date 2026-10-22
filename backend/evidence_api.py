@@ -7,6 +7,7 @@ from checkpoints import AuditBundleLimit
 from evidence import EvidenceLimit, export_pack
 from providers import problem
 from operations import audit
+from retained_copies import register_generated
 
 router = APIRouter(prefix="/api/evidence")
 
@@ -31,10 +32,18 @@ def sponsor_pack(request: Request):
             "evidence_pack_unavailable",
             "A signed evidence pack could not be generated. Check external checkpoint storage, signing key and audit integrity. No unsigned substitute was generated.",
         ) from exc
+    custody = register_generated(
+        request.state.store,
+        request.state.user,
+        result,
+        category="evidence_export",
+        location_reference="sponsor-pack-download",
+    )
     return Response(
         result,
         media_type="application/zip",
         headers={
-            "Content-Disposition": 'attachment; filename="policylens-sponsor-evidence.zip"'
+            "X-PolicyLens-Custody-ID": custody["id"],
+            "Content-Disposition": 'attachment; filename="policylens-sponsor-evidence.zip"',
         },
     )

@@ -83,8 +83,10 @@ Each entry records a custodian, location reference, supplied content SHA-256,
 creation/preservation dates, scope and reason. Customer/case references must belong
 to the current workspace. The application never opens, fetches, executes or deletes
 a supplied location. References must exclude credentials and private key material.
-Registration is an operator assertion; it is not automatic discovery or verification
-of storage content. Automatic registration by export/backup paths remains pending.
+Manual registration is an operator assertion; it is not automatic discovery or
+verification of storage content. Explicit application exports and workspace backups
+also register automatically, as described below. Historical/offline copy discovery
+and complete coverage reconciliation remain unfinished.
 
 The effective preservation deadline is the later of the declared date and the
 current approved policy's minimum. Backup/recovery/plaintext-original categories
@@ -121,6 +123,48 @@ Unregistered copies and restore resurrection remain unresolved. Use the review
 record alongside actual custodian/operator evidence; do not describe the register
 as complete erasure verification.
 
+## Automatically registered artifacts
+
+Sponsor ZIPs, signed and legacy audit downloads, human case-pack downloads,
+workspace backup creation/downloads and the toolkit `export_case_pack` result
+create custody records before successful delivery. Human download responses expose
+`X-PolicyLens-Custody-ID`; workspace backup metadata includes its local `custody_id`.
+Each requested download gets a separate entry. A delivery attempt does not prove
+receipt, future custody or erasure at the recipient. Ordinary detail/read-tool
+responses are not counted as explicit downloads; they still expose data and may
+be copied outside the application.
+
+Byte artifacts record SHA-256 of their exact generated response/file bytes.
+Toolkit exports record `canonical-json-tool-result`: the object after optional
+pseudonymization, serialized with sorted keys, compact separators and unescaped
+Unicode (`operations.canonical`). The hash does not describe the transport envelope
+or the unmasked source context. Case packs contain customer transaction history,
+so their custody scope covers the customer rather than only one case.
+
+Generated copies are registered even before an approved retention policy exists.
+Such records have no invented policy or preservation date; removal review requires
+an approved policy and uses its minimum. Once a policy exists at creation, the
+generated preservation floor is retained. Register-capacity failures refuse delivery;
+no untracked successful export is returned. In-memory artifacts are discarded on
+failure, while native backup generation reserves custody before creating the file.
+
+Local backup reservations start as `pending`; finalization records the file's hash
+and size. Failed creation leaves `failed_unknown`, with no claim that a partial file
+was removed. These states block removal review. Administrators can use **Inspect
+backup** to verify integrity/hash at the server-selected UUID backup path, or record
+`observed_missing` without recreating it. Symlinks/redirected paths and supplied paths
+are refused. Inspection is bound to the original storage directory; a restored
+installation cannot treat absence in its new directory as proof about the old copy.
+Inspection does not establish recipient receipt or physical erasure elsewhere.
+
+A backup's own pending reservation can appear inside its bytes: its final hash
+is recorded in the live source database after creation, since embedding a file's
+own final hash is not possible. Similarly, a signed export's custody hash enters
+the audit chain after the signed snapshot. That later event remains visible as
+unanchored until the next capture; it is not retroactively included in the artifact.
+Sponsor packs include prior retention-policy, hold and copy-custody records in both
+JSON and PDF. Native backup downloads verify the saved content hash when available.
+
 ## Boundaries still requiring implementation
 
 - Build independently reviewed deletion requests from the inventory, handle shared
@@ -131,8 +175,9 @@ as complete erasure verification.
   and other supplied text. Deleting operational rows cannot erase retained text
   without redesigning integrity/retention handling. Do not claim complete erasure
   or anonymization.
-- Automatically register application-generated backups/exports, reconcile discovery
-  coverage and connect custody results to deletion requests and restored data.
+- Register/import offline whole-installation snapshots, off-machine archives,
+  migration originals and historical copies; reconcile discovery coverage and
+  connect custody results to deletion requests and restored data.
   A database deletion cannot retract downloaded files or downstream model context.
 - Define physical deletion/compaction behavior for SQLite WAL, free pages and
   plaintext migration originals, and prove restoration cannot silently resurrect

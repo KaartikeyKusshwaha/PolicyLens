@@ -35,6 +35,9 @@ RECORD_KINDS = (
     "control_code_import",
     "adapter_object",
     "adapter_import",
+    "retention_policy",
+    "retention_hold",
+    "retained_copy",
 )
 LIMITATIONS = [
     "This workspace snapshot supports human review; it is not compliance certification or legal advice.",

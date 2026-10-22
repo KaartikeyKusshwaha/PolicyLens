@@ -21,8 +21,9 @@ and release review in source; pending release holds remain effective. Deletion
 inventory previews bind candidate hashes, policy/holds and age while flagging
 shared references. A manual custody register adds preservation deadlines,
 independent removal authorization and custodian-report confirmation, with repeated
-hold/policy checks. Automatic copy discovery/registration, deletion execution and
-complete reconciliation remain unfinished. Confirmed reports are human attestations,
+hold/policy checks. Explicit application exports/backups register custody and exact
+content hashes automatically. Historical/offline discovery, deletion execution
+and complete reconciliation remain unfinished. Confirmed reports are human attestations,
 not automated proof of physical erasure.
 No automated deletion or complete erasure guarantee is claimed. See
 [retention status](RETENTION.md). Backups, snapshots, exports and downstream copies

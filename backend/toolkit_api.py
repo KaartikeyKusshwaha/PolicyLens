@@ -7,7 +7,8 @@ from pydantic import ValidationError
 
 from agent_keys import KeyCreate
 from agents import AgentEngine
-from operations import audit, uid
+from operations import audit, canonical, uid
+from retained_copies import register_generated
 from privacy import pseudonymize
 from product_api import case_pack
 from providers import problem, verify_citations
@@ -111,6 +112,18 @@ def invoke(name: str, arguments: dict, request: Request):
                 result,
                 SecretBox(request.app.state.settings).key(create=True),
                 user["id"],
+            )
+        if name == "export_case_pack":
+            target = request.state.ops.get("case", data.case_id)
+            register_generated(
+                request.state.store,
+                user,
+                canonical(result).encode(),
+                category="evidence_export",
+                scope="customer",
+                target_id=target["customer_id"],
+                location_reference="toolkit-case-pack:" + data.case_id,
+                hash_encoding="canonical-json-tool-result",
             )
         event(request, name, "completed")
         return result

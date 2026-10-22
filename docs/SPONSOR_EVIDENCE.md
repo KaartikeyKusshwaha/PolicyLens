@@ -19,7 +19,8 @@ case-pack tool remains separate. The request is recorded in the audit chain.
   transactions, alerts with control snapshots, assessment/review records, agent jobs
   and every retained job step, human obligation/control mappings, historical
   simulation and controls-as-code import receipts, imported engine source objects and
-  batch provenance, plus source freshness and explicit coverage gaps.
+  batch provenance, retention-policy/hold history, prior copy custody, plus source
+  freshness and explicit coverage gaps.
 - `report.pdf`: the same business sections rendered as labelled printable records.
   Unicode text uses visible escapes in the PDF; the JSON preserves original text.
 - `audit.json`: the complete signed audit bundle for the snapshot.
@@ -34,6 +35,13 @@ snapshot. The corresponding external anchor is retained before a pack is returne
 The server verifies the finished archive before sending it. The PDF and JSON file
 digests are signed; business rows do not become independently proven audit events
 merely by being included in this server-signed snapshot.
+
+The exact generated ZIP is registered in copy custody before delivery, with its
+ID in `X-PolicyLens-Custody-ID`. Its own custody event occurs after the signed
+snapshot and is anchored on a later capture. It does not change the downloaded
+pack or invalidate its snapshot. Prior custody records appear in the pack; a pack
+cannot contain its own final file hash. Delivery is not proof of recipient custody
+or erasure. See `RETENTION.md` for boundaries and remaining discovery work.
 
 No date filtering or silent sampling occurs. Exports refuse more than 5,000 rows per
 section, 2 MB per business section/complete JSON snapshot, 200,000 printable snapshot

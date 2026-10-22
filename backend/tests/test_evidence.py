@@ -226,7 +226,9 @@ def test_auditor_can_export_and_snapshot_stays_consistent_if_writer_appends(
         e["action"] == "concurrent_event"
         for e in json.loads(files["audit.json"])["events"]
     )
-    assert manager.status(org)["unanchored_events"] == 1
+    # The concurrent event and the exact exported artifact's custody hash occur
+    # after the signed read snapshot. Neither is retroactively inside the pack.
+    assert manager.status(org)["unanchored_events"] == 2
     assert verify_pack(response.content, manager.status(org)["fingerprint"])["valid"]
 
 

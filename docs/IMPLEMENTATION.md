@@ -57,7 +57,10 @@ review and market validation. None of those gates can be inferred from a green C
   audit-PII handling and complete backup/export reconciliation remain unfinished.
   Manual copy custody now records scope/custodian/deadlines and independent
   removal authorization/report confirmation; policy/hold checks repeat at each
-  stage. Automatic discovery/registration and physical erasure are not claimed; see
+  stage. Explicit downloads, toolkit case exports and workspace backups now register
+  content hashes automatically; failed native generation remains tracked and can
+  be inspected at the original location. Historical/offline discovery, complete
+  reconciliation and physical erasure are not claimed; see
   `RETENTION.md`. No automatic deletion or complete-erasure claim is made.
 - [x] Implement agent-scoped keys, immediate revocation, scopes, rate limits and
   per-key/workspace run budgets, plus admin UI. Deployment acceptance is pending.
@@ -149,6 +152,15 @@ Parked as specified: HA/multiple workers, SSO, Postgres migration, PEP/adverse-m
 data, SAR filing, payment blocking and additional sanctions sources.
 
 ## Implemented MFA boundaries
+
+Generated-artifact custody checkpoint: a full backend run passed 283 tests; all
+18 focused generation/custody tests passed after adding tamper/path/policy checks
+(288 backend tests now in source). All 47 frontend tests passed before the final
+UI assertion; all six focused custody component tests then passed (48 in source).
+Ruff, ESLint and build passed. Sponsor PDF custody sections were rendered with
+Poppler and visually inspected. The artifact's own custody event follows its
+signed snapshot; prior custody/policy/hold records are included in later packs.
+Offline discovery/reconciliation, deletion execution and deployment remain pending.
 
 Copy custody checkpoint: the full backend suite passed 266 tests, followed by
 all 24 focused custody tests after final policy re-review/validation/bound checks

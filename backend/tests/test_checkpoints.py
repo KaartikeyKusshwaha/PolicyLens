@@ -36,9 +36,13 @@ def test_external_signed_bundle_is_retained_idempotent_and_verifies_offline(
     assert not root.is_relative_to(client.app.state.settings.database_path.parent)
     files = list(root.glob("*/checkpoint-*.json"))
     assert len(files) == 1
+    assert manager.status(org)["unanchored_events"] == 1
     second = manager.capture(org)
-    assert second == bundle["checkpoint"]
-    assert len(list(root.glob("*/checkpoint-*.json"))) == 1
+    assert (
+        second["payload"]["sequence"] == bundle["checkpoint"]["payload"]["sequence"] + 1
+    )
+    assert manager.capture(org) == second
+    assert len(list(root.glob("*/checkpoint-*.json"))) == 2
     with client.app.state.hub.store(org).connect() as db:
         audit(
             db, "test-reviewer", "new_review_recorded", {"reason": "Synthetic record."}

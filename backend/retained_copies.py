@@ -1,6 +1,7 @@
 """Human-reviewed custody records. Never opens/deletes a supplied location."""
 
 import hashlib
+import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Literal
 
@@ -11,6 +12,7 @@ from operations import audit, canonical, uid
 from providers import problem
 from retention import active_policy, blocking_holds, get, records, save
 from store import now
+from recovery import checksum, integrity
 
 MAX_COPIES = 2000
 MAX_HISTORY = 50
@@ -112,8 +114,11 @@ def minimum_until(copy, policy):
 
 
 def effective_until(copy, policy):
-    return max(
-        datetime.fromisoformat(copy["preserve_until"]), minimum_until(copy, policy)
+    minimum = minimum_until(copy, policy)
+    return (
+        max(datetime.fromisoformat(copy["preserve_until"]), minimum)
+        if copy.get("preserve_until")
+        else minimum
     )
 
 
@@ -145,6 +150,12 @@ def applicable_holds(db, copy):
 
 def removal_checks(db, copy, *, approved=False):
     policy = policy_required(db)
+    if copy.get("generation_status") in ("pending", "failed_unknown"):
+        raise problem(
+            409,
+            "retention_copy_generation_unresolved",
+            "Inspect and reconcile the generated copy before removal review; creation is pending or its outcome is unknown.",
+        )
     if applicable_holds(db, copy):
         raise problem(
             409,
@@ -231,6 +242,189 @@ def register(store, data, user):
                 "The chosen preservation date is earlier than the approved policy permits.",
             )
         return transition(db, value, user, "registered", data.reason)
+
+
+def _generated(
+    store,
+    user,
+    *,
+    category,
+    scope="workspace",
+    target_id="",
+    location_reference,
+    hash_encoding="file-bytes",
+    content=None,
+    storage_root=None,
+):
+    """Reserve custody before creating a durable artifact; does not grant removal."""
+    with store.connect() as db:
+        db.execute("BEGIN IMMEDIATE")
+        if len(records(db, "retained_copy")) >= MAX_COPIES:
+            raise problem(
+                422,
+                "retention_capacity",
+                "Copy custody history reached the pilot bound; no untracked artifact will be delivered.",
+            )
+        policy = active_policy(db)
+        customer_id = None
+        if scope != "workspace":
+            target = get(db, scope, target_id)
+            customer_id = target["id"] if scope == "customer" else target["customer_id"]
+        stamp = now()
+        value = {
+            "id": uid(),
+            "category": category,
+            "scope": scope,
+            "target_id": target_id,
+            "customer_id": customer_id,
+            "custodian": user["id"],
+            "location_reference": location_reference,
+            "content_sha256": None,
+            "content_bytes": None,
+            "hash_encoding": hash_encoding,
+            "copy_created_at": stamp,
+            "preserve_until": None,
+            "reason": "Application-generated artifact; delivery is not proof of receipt or physical custody.",
+            "origin": "application",
+            "generation_status": "pending",
+            "generation_storage_root": storage_root,
+            "status": "retained",
+            "registered_policy_id": policy["id"] if policy else None,
+            "created_at": stamp,
+            "created_by": user["id"],
+            "history": [],
+        }
+        if policy:
+            value["preserve_until"] = minimum_until(value, policy).isoformat()
+        if content is not None:
+            value.update(
+                content_sha256=hashlib.sha256(content).hexdigest(),
+                content_bytes=len(content),
+                generation_status="complete",
+            )
+            return transition(
+                db,
+                value,
+                user,
+                "generation_completed",
+                "Exact generated content hash recorded before delivery.",
+            )
+        return transition(db, value, user, "generation_reserved", value["reason"])
+
+
+def reserve_generated(store, user, **metadata):
+    return _generated(store, user, **metadata)
+
+
+def finish_generated(store, record_id, user, content_sha256, content_bytes):
+    with store.connect() as db:
+        db.execute("BEGIN IMMEDIATE")
+        value = get(db, "retained_copy", record_id)
+        if (
+            value.get("origin") != "application"
+            or value.get("generation_status") != "pending"
+        ):
+            raise problem(
+                409,
+                "retention_copy_state",
+                "Only a pending application artifact can be finalized.",
+            )
+        value.update(
+            generation_status="complete",
+            content_sha256=content_sha256,
+            content_bytes=content_bytes,
+        )
+        return transition(
+            db,
+            value,
+            user,
+            "generation_completed",
+            "Exact generated content hash recorded before delivery.",
+        )
+
+
+def fail_generated(store, record_id, user):
+    with store.connect() as db:
+        db.execute("BEGIN IMMEDIATE")
+        value = get(db, "retained_copy", record_id)
+        value["generation_status"] = "failed_unknown"
+        return transition(
+            db,
+            value,
+            user,
+            "generation_failed",
+            "Creation failed; an incomplete or unverified local artifact may remain. Operator reconciliation is required.",
+        )
+
+
+def register_generated(store, user, content, **metadata):
+    return _generated(store, user, content=content, **metadata)
+
+
+def reconcile_generated_backup(store, record_id, data, user):
+    """Inspect only an application-selected backup path, never a user path."""
+    with store.connect() as db:
+        db.execute("BEGIN IMMEDIATE")
+        value = get(db, "retained_copy", record_id)
+        if value.get("origin") != "application" or value.get(
+            "generation_status"
+        ) not in ("pending", "failed_unknown"):
+            raise problem(
+                409,
+                "retention_copy_state",
+                "Only an unresolved application backup can be inspected.",
+            )
+        if value.get("generation_storage_root") != str(store.path.parent.resolve()):
+            raise problem(
+                409,
+                "retention_copy_origin",
+                "The copy belongs to another storage location or restored installation; local absence cannot reconcile the original copy.",
+            )
+        prefix, separator, identifier = value["location_reference"].partition(":")
+        if (
+            prefix not in ("workspace-backup", "workspace-backup-download")
+            or not separator
+        ):
+            raise problem(
+                409,
+                "retention_copy_state",
+                "This artifact has no local backup path for automatic inspection.",
+            )
+        try:
+            if str(uuid.UUID(identifier)) != identifier:
+                raise ValueError("Invalid backup identity")
+        except ValueError as exc:
+            raise problem(
+                409, "retention_copy_path", "The generated backup identity is invalid."
+            ) from exc
+        directory = store.path.parent / "backups"
+        path = directory / (identifier + ".db")
+        expected_directory = store.path.parent.resolve() / "backups"
+        if (
+            directory.resolve() != expected_directory
+            or path.is_symlink()
+            or path.resolve().parent != expected_directory
+        ):
+            raise problem(
+                409,
+                "retention_copy_path",
+                "The backup path cannot be redirected during inspection.",
+            )
+        if path.exists():
+            integrity(path, getattr(store, "settings", None))
+            value.update(
+                generation_status="reconciled_present",
+                content_sha256=checksum(path),
+                content_bytes=path.stat().st_size,
+            )
+        else:
+            value.update(
+                generation_status="observed_missing",
+                content_sha256=None,
+                content_bytes=None,
+            )
+        value["generation_observed_at"] = now()
+        return transition(db, value, user, "generation_reconciled", data.reason)
 
 
 def request_removal(store, record_id, data, user):

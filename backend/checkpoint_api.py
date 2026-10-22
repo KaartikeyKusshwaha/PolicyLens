@@ -5,6 +5,7 @@ from fastapi.responses import JSONResponse
 
 from providers import problem
 from checkpoints import AuditBundleLimit
+from retained_copies import register_generated
 
 router = APIRouter(prefix="/api/audit/checkpoints")
 
@@ -33,9 +34,18 @@ def checkpoint_export(request: Request):
             "checkpoint_unavailable",
             "A signed audit bundle could not be retained and verified. Check checkpoint configuration, key availability and database history; no unsigned substitute was generated.",
         ) from exc
-    return JSONResponse(
+    response = JSONResponse(
         result,
         headers={
             "Content-Disposition": 'attachment; filename="policylens-signed-audit.json"'
         },
     )
+    custody = register_generated(
+        request.state.store,
+        request.state.user,
+        response.body,
+        category="audit_checkpoint",
+        location_reference="signed-audit-download",
+    )
+    response.headers["X-PolicyLens-Custody-ID"] = custody["id"]
+    return response

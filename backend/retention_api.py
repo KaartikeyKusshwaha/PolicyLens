@@ -14,6 +14,16 @@ def register_copy(data: retained_copies.CopyInput, request: Request):
     return retained_copies.register(request.state.store, data, request.state.user)
 
 
+@router.post("/copies/{record_id}/inspect-backup")
+def inspect_generated_backup(
+    record_id: str, data: retained_copies.CopyReview, request: Request
+):
+    require(request, "admin")
+    return retained_copies.reconcile_generated_backup(
+        request.state.store, record_id, data, request.state.user
+    )
+
+
 @router.post("/copies/{record_id}/request-removal")
 def request_copy_removal(
     record_id: str, data: retained_copies.CopyReview, request: Request

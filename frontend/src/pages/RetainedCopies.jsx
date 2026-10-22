@@ -50,14 +50,16 @@ export default function RetainedCopies({ copies, user, policy, reload }) {
     {copies.length === 0 && <p>No copies have been registered. This does not prove that no external copies exist.</p>}
     {copies.map(copy => <article className="detail-section" key={copy.id}><h3>{label(copy.category)} · {label(copy.status)}</h3>
       <p>{copy.custodian} · {copy.location_reference}</p><p>{label(copy.scope)}: {copy.target_id || "Entire workspace"}</p>
-      <p>Declared preservation until {formatDate(copy.preserve_until)}. The server also applies the current approved policy and all applicable holds.</p>
-      <p>Copy hash: <code>{copy.content_sha256}</code></p><p>Copy record: <code>{copy.id}</code></p>
+      <p>Declared preservation: {copy.preserve_until ? formatDate(copy.preserve_until) : "Awaiting an approved retention policy"}. The server also applies the current approved policy and all applicable holds.</p>
+      {copy.origin === "application" && <p>Application-generated · {label(copy.generation_status)} · Hash encoding: {copy.hash_encoding}</p>}
+      <p>Copy hash: <code>{copy.content_sha256 || "Not established"}</code></p><p>Copy record: <code>{copy.id}</code></p>
       {copy.status === "removal_authorized" && <p>Authorization does not mean the copy has been removed. Recheck holds and policy before any external action.</p>}
       {copy.status === "removal_reported" && <p>The custodian report awaits confirmation by a different reviewer.</p>}
       {copy.evidence_reference && <p>Reported evidence: {copy.evidence_reference} · <code>{copy.evidence_sha256}</code></p>}
       {copy.status === "removal_confirmed" && <p>A different reviewer confirmed the custodian report. External erasure was not automatically verified.</p>}
       <details><summary>Custody review history</summary>{copy.history.map((event, index) => <p key={index}>{label(event.action)} · {formatDate(event.at)} · {event.actor}: {event.reason}</p>)}</details>
-      {canManage && copy.status === "retained" && <CopyAction copy={copy} action="request-removal" title={`Request removal ${copy.id}`} busy={busy} perform={perform} />}
+      {canManage && policy && copy.status === "retained" && <CopyAction copy={copy} action="request-removal" title={`Request removal ${copy.id}`} busy={busy} perform={perform} />}
+      {user.role === "admin" && ["pending", "failed_unknown"].includes(copy.generation_status) && copy.location_reference.startsWith("workspace-backup") && <CopyAction copy={copy} action="inspect-backup" title={`Inspect backup ${copy.id}`} busy={busy} perform={perform} />}
       {canManage && copy.status === "removal_requested" && copy.removal_requested_by !== user.id && <CopyAction copy={copy} action="approve-removal" title={`Authorize removal ${copy.id}`} busy={busy} perform={perform} />}
       {canManage && copy.status === "removal_authorized" && <CopyAction copy={copy} action="report-removal" title={`Report removal ${copy.id}`} busy={busy} perform={perform} report />}
       {canManage && copy.status === "removal_reported" && copy.removal_reported_by !== user.id && policy && (copy.removal_policy_id === policy.id ? <CopyAction copy={copy} action="confirm-removal" title={`Confirm report ${copy.id}`} busy={busy} perform={perform} /> : <CopyAction copy={copy} action="review-reported-removal" title={`Review report under current policy ${copy.id}`} busy={busy} perform={perform} />)}

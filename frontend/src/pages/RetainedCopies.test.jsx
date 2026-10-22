@@ -58,3 +58,12 @@ test("a changed policy requires explicit rereview of reported facts before confi
   rerender(<RetainedCopies copies={[{ ...reported,removal_policy_id: policy.id }]} user={user} policy={policy} reload={vi.fn()} />);
   expect(screen.getByRole("button", { name: "Confirm report copy-one" })).toBeTruthy();
 });
+
+
+test("an unresolved generated backup exposes inspection without claiming a hash or preservation policy", () => {
+  render(<RetainedCopies copies={[{ ...copy,status:"retained",origin:"application",generation_status:"failed_unknown",hash_encoding:"file-bytes",location_reference:"workspace-backup:test-backup",content_sha256:null,preserve_until:null }]} user={{ id:"operator",role:"admin" }} policy={null} reload={vi.fn()} />);
+  expect(screen.getByText("Not established")).toBeTruthy();
+  expect(screen.getByText(/Awaiting an approved retention policy/)).toBeTruthy();
+  expect(screen.getByRole("button", { name:"Inspect backup copy-one" })).toBeTruthy();
+  expect(screen.queryByRole("button", { name:"Request removal copy-one" })).toBeNull();
+});
