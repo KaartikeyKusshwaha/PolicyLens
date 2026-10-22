@@ -214,6 +214,43 @@ test("changing YAML clears its preview and auditors cannot import", async () => 
   expect(screen.queryByRole("button", { name: "Import reviewed drafts" })).toBeNull();
 });
 
+test("engine imports require customer mapping and a fresh preview before commit", async () => {
+  window.history.replaceState({}, "", "/settings/imports");
+  const sourceId = "11111111-1111-4111-8111-111111111111";
+  mockRoutes({
+    "/api/customers": () => response([{ id: "customer1", name: "Fictional customer", external_id: "C-1" }]),
+    "/api/adapters/marble/preview": options => {
+      const mapped = JSON.parse(options.body).bundle.customer_mappings.length > 0;
+      return response({ preview_sha256: "a".repeat(64), can_import: mapped, objects: [{ id: "object1", object_type: "case", source_id: sourceId, source_name: "Upstream fictional case", action: "new", creates_alert: false, errors: mapped ? [] : ["customer_mapping_required"], customer_id: mapped ? "customer1" : null }], scope: "Selected records; local cases stay open for review." });
+    },
+    "/api/adapters/marble/import": () => response({ replayed: false, objects: [{ local_case_id: "imported-case1" }] }, 201),
+  });
+  render(<App />);
+  fireEvent.change(await screen.findByLabelText(/Marble instance label/), { target: { value: "fictional-instance" } });
+  fireEvent.click(screen.getByRole("button", { name: "Preview engine import" }));
+  await screen.findByText(/Customer Mapping Required/);
+  expect(screen.getByRole("button", { name: "Import reviewed engine records" }).disabled).toBe(true);
+  fireEvent.change(screen.getByLabelText(new RegExp(`Customer mapping for ${sourceId}`)), { target: { value: "customer1" } });
+  expect(screen.getByRole("button", { name: "Import reviewed engine records" }).disabled).toBe(true);
+  fireEvent.click(screen.getByRole("button", { name: "Preview engine import" }));
+  await waitFor(() => expect(screen.getByRole("button", { name: "Import reviewed engine records" }).disabled).toBe(false));
+  fireEvent.click(screen.getByRole("button", { name: "Import reviewed engine records" }));
+  expect((await screen.findByRole("link", { name: "Open imported investigation" })).getAttribute("href")).toBe("/cases/imported-case1");
+});
+
+test("imported alerts render source provenance without a fabricated control link", async () => {
+  window.history.replaceState({}, "", "/cases/imported-case1");
+  const external = { provider: "marble", instance: "fictional-instance", source_id: "source-case1", source_name: "Fictional upstream case", source_status: "closed", source_outcome: "false_positive", sha256: "a".repeat(64) };
+  mockRoutes({
+    "/api/cases/imported-case1": () => response({ id: "imported-case1", title: "Review imported Marble case", customer: { name: "Fictional customer", country: "IN", kyc_status: "pending" }, customer_id: "customer1", customer_name: "Fictional customer", created_at: "2026-10-01T00:00:00Z", due_at: "2026-10-23T00:00:00Z", status: "open", priority: "medium", description: "External source evidence for human review.", external_source: external, alerts: [{ id: "alert1", origin: "external_engine", external_source: { ...external, source_id: "source-decision1" }, rule_id: null, rule_title: "Imported Marble scenario", priority: "medium", facts: { source_outcome: "review", source_score: 70, trigger_object_id: "trigger1" }, created_at: "2026-10-01T00:00:00Z" }], screening_evidence: [], transactions: [], notes: [], tasks: [], agent_runs: [] }),
+  });
+  render(<App />);
+  await screen.findByText("Imported source evidence");
+  expect(screen.getByText("Fictional upstream case")).toBeTruthy();
+  expect(screen.getByText(/Imported source outcome: review/)).toBeTruthy();
+  expect(document.querySelector('a[href="/rules/null"]')).toBeNull();
+});
+
 test("sponsor evidence download checks the archive type and releases its temporary URL", async () => {
   window.history.replaceState({}, "", "/audit");
   const archive = new Blob(["fixture zip bytes"], { type: "application/zip" });

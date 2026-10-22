@@ -33,6 +33,8 @@ RECORD_KINDS = (
     "traceability_link",
     "backtest",
     "control_code_import",
+    "adapter_object",
+    "adapter_import",
 )
 LIMITATIONS = [
     "This workspace snapshot supports human review; it is not compliance certification or legal advice.",

@@ -87,14 +87,18 @@ review and market validation. None of those gates can be inferred from a green C
 - [x] Inspect Marble's official v1 decision and beta case OpenAPI contracts before
   adapter implementation. See `MARBLE_ADAPTER_RESEARCH.md` for inspected blob IDs,
   pagination, tenant mapping and upstream outcome boundaries. No live import claimed.
-- [ ] Adapter interface, Marble alerts/cases import with provenance and deduplication.
+- [x] Adapter registry/interface and previewed Marble v1 decision/v1beta case
+  export imports, explicit customer mapping, provenance, deduplication and atomic
+  replay. Source outcomes never activate controls or close cases. See `ENGINE_IMPORTS.md`.
+  A live Marble export comparison and production/browser acceptance remain pending.
 - [ ] One transaction-source adapter selected with design partners (selection pending).
 - [x] YAML export/import into atomic draft batches, pinned policy/parent hashes,
   bounded safe schema, preview/replay protection and maker-checker-only activation.
   See `CONTROLS_AS_CODE.md`; production and browser acceptance remain pending.
-- [ ] Git-to-draft round-trip and imported inbox acceptance tests.
-  Git round-trip implemented and tested using a real isolated repository and second
-  reviewer. Imported engine alerts/inbox acceptance awaits the adapter implementation.
+- [x] Automated Git-to-draft round-trip with a real isolated repository and second
+  reviewer; imported engine records appear in the case inbox with source provenance.
+  Populated component checks cover import and case views; live/browser acceptance
+  remains pending.
 
 ## Phase 5: autopilot and scorecard
 
@@ -124,6 +128,14 @@ Parked as specified: HA/multiple workers, SSO, Postgres migration, PEP/adverse-m
 data, SAR filing, payment blocking and additional sanctions sources.
 
 ## Implemented MFA boundaries
+
+Marble adapter checkpoint: 191 backend tests passed in the full suite, followed by
+all 14 focused adapter tests after adding concurrent replay and separate-case checks
+(193 tests now in source). All 36 frontend tests, ESLint, production build, Ruff and
+dependency consistency passed. Imported source records and receipts were rendered
+in the sponsor PDF and visually inspected. Disk space is available again; prior
+disposable artifacts were consolidated at the user's request. Browser testing,
+real Marble-account comparison and Oracle deployment remain pending.
 
 Controls-as-code checkpoint: 178 backend tests passed in the full suite; all 14
 focused code-import tests then passed after adding a YAML-indentation preservation

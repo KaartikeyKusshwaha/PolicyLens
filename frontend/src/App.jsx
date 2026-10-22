@@ -52,6 +52,7 @@ import AuditAnalytics from "./pages/AuditAnalytics";
 import WorkspaceSettings from "./pages/WorkspaceSettings";
 import Traceability from "./pages/Traceability";
 import ControlCode from "./pages/ControlCode";
+import EngineImports from "./pages/EngineImports";
 
 const WorkspaceContext = createContext(null);
 export const useWorkspace = () => useContext(WorkspaceContext);
@@ -228,6 +229,7 @@ function Workspace() {
               <Route path="/evaluate" element={<Evaluate />} />
               <Route path="/policies" element={<Policies />} />
               <Route path="/rules/code" element={<ControlCode />} />
+              <Route path="/settings/imports" element={<EngineImports />} />
               <Route path="/policies/traceability" element={<Traceability />} />
               <Route path="/policies/new" element={<PolicyEditor />} />
               <Route path="/policies/:id/edit" element={<PolicyEditor />} />

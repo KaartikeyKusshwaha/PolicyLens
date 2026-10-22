@@ -18,7 +18,8 @@ case-pack tool remains separate. The request is recorded in the audit chain.
   versions and approvals, customer/case records, notes, tasks, screening evidence,
   transactions, alerts with control snapshots, assessment/review records, agent jobs
   and every retained job step, human obligation/control mappings, historical
-  simulation and controls-as-code import receipts, plus source freshness and explicit coverage gaps.
+  simulation and controls-as-code import receipts, imported engine source objects and
+  batch provenance, plus source freshness and explicit coverage gaps.
 - `report.pdf`: the same business sections rendered as labelled printable records.
   Unicode text uses visible escapes in the PDF; the JSON preserves original text.
 - `audit.json`: the complete signed audit bundle for the snapshot.

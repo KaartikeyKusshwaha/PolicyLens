@@ -209,12 +209,14 @@ class Operations:
             "destinations": rule["countries"],
         }
 
-    def _open_case(self, db, customer, title, priority, description, actor):
+    def _open_case(
+        self, db, customer, title, priority, description, actor, *, group_existing=True
+    ):
         row = db.execute(
             "SELECT payload FROM records WHERE kind='case' AND json_extract(payload,'$.customer_id')=? AND json_extract(payload,'$.status')!='resolved' ORDER BY created_at LIMIT 1",
             (customer["id"],),
         ).fetchone()
-        if row:
+        if row and group_existing:
             existing = json.loads(row[0])
             order = {"low": 0, "medium": 1, "high": 2, "critical": 3}
             if order[priority] > order[existing["priority"]]:

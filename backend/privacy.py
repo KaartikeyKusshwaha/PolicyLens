@@ -16,6 +16,8 @@ IDENTIFIERS = {
     "account_reference",
     "phone",
     "date_of_birth",
+    "trigger_object_id",
+    "source_name",
 }
 UNTOUCHED = {"chunk_id", "policy_id", "quote_id", "version", "source_url"}
 

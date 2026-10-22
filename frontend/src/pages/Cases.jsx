@@ -295,7 +295,7 @@ export function CaseDetail() {
       <div className="entity-summary">
         <Status value={c.status} />
         <Status value={c.priority} />
-        <span>{c.alerts.length} control alerts</span>
+        <span>{c.alerts.length} alerts</span>
         <span>Owner: {assignee?.name || "Unassigned"}</span>
         <span>Due {formatDate(c.due_at)}</span>
       </div>
@@ -317,13 +317,14 @@ export function CaseDetail() {
               <section className="panel section-padding">
                 <h2>Investigation context</h2>
                 <p className="section-copy preserve-lines">{c.description}</p>
+                {c.external_source && <><h3>Imported source evidence</h3><DefinitionList items={[["Provider", c.external_source.provider], ["Instance", c.external_source.instance], ["Source record", c.external_source.source_id], ["Source name", c.external_source.source_name], ["Upstream status", c.external_source.source_status], ["Upstream outcome", c.external_source.source_outcome]]} /><p>Upstream status and outcome are retained as source evidence. The local investigation requires independent human review.</p><code style={{ overflowWrap: "anywhere" }}>{c.external_source.sha256}</code></>}
                 <Link className="text-link" to={"/customers/" + c.customer_id}>
                   Open customer profile <ArrowUpRight size={14} />
                 </Link>
               </section>
               <section className="panel detail-section">
                 <div className="panel-heading">
-                  <h2>Triggered controls</h2>
+                  <h2>Control hits and imported engine signals</h2>
                   <span className="count-pill">{c.alerts.length}</span>
                 </div>
                 {c.alerts.length ? (
@@ -331,12 +332,12 @@ export function CaseDetail() {
                     {c.alerts.map((a) => (
                       <article key={a.id}>
                         <div className="panel-title-row">
-                          <Link to={"/rules/" + a.rule_id}>
+                          {a.origin === "external_engine" ? <strong>{a.rule_title}</strong> : <Link to={"/rules/" + a.rule_id}>
                             <strong>{a.rule_title}</strong>
-                          </Link>
+                          </Link>}
                           <Status value={a.priority} />
                         </div>
-                        <p>
+                        {a.origin === "external_engine" ? <><p>Imported source outcome: {a.facts.source_outcome}. This is external engine evidence; local disposition requires human review.</p><DefinitionList items={[["Source", a.external_source.provider], ["Instance", a.external_source.instance], ["Source decision", a.external_source.source_id], ["Source score", a.facts.source_score], ["Trigger object reference", a.facts.trigger_object_id]]} /></> : <><p>
                           Control version {a.rule_version} ·{" "}
                           {a.rule_snapshot.policy_title} v
                           {a.rule_snapshot.policy_version}
@@ -348,7 +349,7 @@ export function CaseDetail() {
                             ["Currency", a.facts.currency],
                             ["Window", a.facts.window_hours + " hours"],
                           ]}
-                        />
+                        /></>}
                         <small>{formatDate(a.created_at)}</small>
                       </article>
                     ))}

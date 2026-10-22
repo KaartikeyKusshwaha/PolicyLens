@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import {
   ArrowUpRight,
   Copy,
@@ -110,6 +111,7 @@ export default function WorkspaceSettings() {
       </div>
       <ErrorNotice message={error} />
       {success && <Success>{success}</Success>}
+      <p><Link className="button secondary" to="/settings/imports">Import records from an existing engine</Link></p>
       {copied && <Success>Copied.</Success>}
       {tab === "Agents" && (user.role === "admin" ? <AgentKeys /> : <p>Only workspace administrators can manage agent keys.</p>)}
       {tab === "Account" && <AccountMFA />}

@@ -32,6 +32,7 @@ Business data starts empty. Offline/provider failures remain visible and never p
 | Monitoring | Validated money and UTC timestamps, idempotent external IDs, CSV validation/import results, signed webhook ingestion, explicit internal controls, immutable alert snapshots and customer case grouping. |
 | Control workbench | Amount, transaction velocity, same-currency aggregate, corridor and due diligence conditions; draft versions; independent approval; historical simulation without live alerts. No regulatory thresholds are supplied or inferred. |
 | Controls as code | Versioned YAML, policy/parent hashes, previewed atomic draft imports, supplied Git provenance and replay protection. Activation still requires independent human approval. |
+| Engine imports | Marble decision/case export bundles, explicit customer mapping, provenance, atomic replay and imported review alerts. Source outcomes never grant local approval or close investigations. |
 | Investigations | Assignment, status transitions, escalation, notes, tasks, linked alerts and evidence, independent resolution review, and downloadable JSON case packs. Agents cannot close cases. |
 | Policy library | Text, text PDF and DOCX upload, lexical retrieval, archived versions, grounded Q&A and verified verbatim citations. Scanned PDFs need OCR before upload. |
 | Policy change impact | Archived version diff, linked controls, explicitly unconfirmed customer candidates, an analyst draft, human approval/dismissal and applicability review tasks. |
