@@ -6,7 +6,6 @@ import time
 from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 
-import httpx
 import pytest
 
 from intelligence import parse_public_feed
@@ -39,7 +38,7 @@ def member(client, role="reviewer"):
     email = role + "@example.invalid"
     response = client.post("/api/team/invites", json={"email": email, "role": role})
     assert response.status_code == 201, response.text
-    cookie = httpx.Cookies(client.cookies)
+    cookie = type(client.cookies)(client.cookies)
     csrf = client.headers["X-CSRF-Token"]
     invitation = response.json()
     response = client.post(
@@ -55,7 +54,7 @@ def member(client, role="reviewer"):
     user = response.json()
     result = {
         "user": user,
-        "cookies": httpx.Cookies(client.cookies),
+        "cookies": type(client.cookies)(client.cookies),
         "csrf": user["csrf"],
         "invitation": invitation,
     }
@@ -67,7 +66,7 @@ def member(client, role="reviewer"):
 
 @contextmanager
 def acting_as(client, identity):
-    cookies = httpx.Cookies(client.cookies)
+    cookies = type(client.cookies)(client.cookies)
     csrf = client.headers["X-CSRF-Token"]
     client.cookies.clear()
     client.cookies.update(identity["cookies"])
@@ -443,7 +442,7 @@ def test_webhook_signature_expiry_idempotency_and_secret_redaction(workspace):
         "Content-Type": "application/json",
     }
     path = integration["webhook_path"]
-    saved = httpx.Cookies(client.cookies)
+    saved = type(client.cookies)(client.cookies)
     client.cookies.clear()
     first = client.post(path, content=raw, headers=headers)
     assert first.status_code == 202, first.text
@@ -618,7 +617,7 @@ def test_password_change_preserves_spaces_and_revokes_other_sessions(workspace):
     identity = member(client, "analyst")
     reset = client.app.state.hub.issue_password_reset("analyst@example.invalid")
     with acting_as(client, identity):
-        old_cookie = httpx.Cookies(client.cookies)
+        old_cookie = type(client.cookies)(client.cookies)
         login = client.post(
             "/api/auth/login",
             json={"email": "analyst@example.invalid", "password": PASSWORD},
@@ -642,7 +641,7 @@ def test_password_change_preserves_spaces_and_revokes_other_sessions(workspace):
             ).status_code
             == 403
         )
-        current = httpx.Cookies(client.cookies)
+        current = type(client.cookies)(client.cookies)
         client.cookies.clear()
         client.cookies.update(old_cookie)
         assert client.get("/api/auth/me").status_code == 401

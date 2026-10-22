@@ -2,7 +2,6 @@ import base64
 import json
 from concurrent.futures import ThreadPoolExecutor
 
-import httpx
 import pytest
 from fastapi import HTTPException
 
@@ -71,7 +70,7 @@ def login(client, factor="", password=PASSWORD):
 
 def test_mfa_enrollment_login_replay_and_revoked_sessions(workspace, clock):
     client, _, _, settings = workspace
-    old_cookie = httpx.Cookies(client.cookies)
+    old_cookie = type(client.cookies)(client.cookies)
     old_csrf = client.headers["X-CSRF-Token"]
     enrollment, result = enable(client, clock)
     assert len(result["recovery_codes"]) == 10

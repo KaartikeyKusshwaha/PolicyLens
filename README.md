@@ -35,6 +35,7 @@ Business data starts empty. Offline/provider failures remain visible and never p
 | Policy library | Text, text PDF and DOCX upload, lexical retrieval, archived versions, grounded Q&A and verified verbatim citations. Scanned PDFs need OCR before upload. |
 | Policy change impact | Archived version diff, linked controls, explicitly unconfirmed customer candidates, an analyst draft, human approval/dismissal and applicability review tasks. |
 | Agents | Investigation, screening, policy analyst, policy change and report roles; fixed tool sequence, durable jobs, recorded steps, pause/resume/cancel, budget limits, and deterministic evidence verification. |
+| Governed toolkit | Scoped expiring agent keys, per-tool permissions, request/run budgets, audited MCP stdio tools, thin CLI and Python SDK. Agents cannot approve, activate controls, close cases or file. |
 | Continuous screening | Opt-in scheduled refresh of selected sanctions feeds and customer name screening. Creates review cases for potential matches; uses no model calls. Requires the Python process to stay running. |
 | Audit and operations | Real counts, corridor/disposition analytics, overdue cases, hash-linked audit events, downloadable checkpoints, workspace SQLite backup and integrity verification. |
 
@@ -66,6 +67,11 @@ The default limit is 30 new agent runs per workspace per UTC day and one model a
 Context is limited to 18,000 characters. Investigation samples use up to 50 recent transactions, reduced explicitly to 10 if needed. Policy analysis uses an explicit partial-document coverage summary; large cases fail instead of silently dropping evidence. Policy impact candidates are not confirmed affected customers. Agent drafts never activate controls, approve customers, execute payments, submit filings or resolve investigations.
 
 ## Configuration and persistence
+
+See [governed toolkit setup](docs/GOVERNED_TOOLKIT.md) for the registry, agent keys,
+CLI/Python SDK, MCP stdio transport and Claude Desktop/Cursor examples. Queued runs
+use saved model configuration. Explicit provider revisions are enforced when
+configured; the default `provider-unreported` does not establish immutable model weights.
 
 Copy `backend/.env.example` if starting manually. Relevant settings:
 

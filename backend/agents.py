@@ -10,7 +10,7 @@ from starlette.concurrency import run_in_threadpool
 from intelligence import Intelligence
 from operations import Operations, audit, canonical, uid
 from product_models import InvestigationBrief, PolicyAnalysis
-from providers import problem, verify_citations
+from providers import PROMPT_VERSION, problem, verify_citations
 from store import now
 
 CATALOG = [
@@ -87,7 +87,13 @@ class AgentEngine:
         self.stopping = False
         self.model_lock = asyncio.Lock()
 
-    def enqueue(self, store, kind, target_id, actor):
+    def enqueue(self, store, kind, target_id, actor, *, agent_policy=None):
+        if agent_policy and agent_policy.get("prompt_version") != PROMPT_VERSION:
+            raise problem(
+                409,
+                "agent_prompt_version_changed",
+                "The agent key references a different prompt version; reissue it after review.",
+            )
         ops = Operations(store)
         if kind in ("investigation", "report"):
             ops.get("case", target_id)
@@ -116,6 +122,24 @@ class AgentEngine:
                     "This target already has an active run. Open Agent operations to resume or cancel it.",
                 )
             if kind != "maintenance":
+                if agent_policy:
+                    key = self.hub.agent_keys.active(agent_policy["key_id"])
+                    if not key:
+                        raise problem(
+                            403,
+                            "agent_key_revoked",
+                            "The requesting agent is no longer authorized.",
+                        )
+                    count = db.execute(
+                        "SELECT count(*) FROM jobs WHERE actor=? AND kind!='maintenance' AND created_at>=?",
+                        (actor, datetime.now(timezone.utc).date().isoformat()),
+                    ).fetchone()[0]
+                    if count >= agent_policy["daily_runs"]:
+                        raise problem(
+                            429,
+                            "agent_key_budget",
+                            "This agent's daily run budget is exhausted.",
+                        )
                 count = db.execute(
                     "SELECT count(*) FROM jobs WHERE kind!='maintenance' AND created_at>=?",
                     (datetime.now(timezone.utc).date().isoformat(),),
@@ -136,8 +160,21 @@ class AgentEngine:
                 "actor": actor,
                 "payload": {
                     "model": self.settings.groq_model,
+                    "model_revision": self.settings.groq_model_revision,
+                    "prompt_version": PROMPT_VERSION,
+                    "pseudonymize": self.settings.pseudonymize_model_calls,
                     "max_model_calls": 0 if kind == "maintenance" else 1,
                     "requested_by": actor,
+                    **(
+                        {
+                            "agent_key": agent_policy["key_id"],
+                            "model": agent_policy["model"],
+                            "model_revision": agent_policy["model_revision"],
+                            "pseudonymize": agent_policy["pseudonymize"],
+                        }
+                        if agent_policy
+                        else {}
+                    ),
                 },
             }
             db.execute(
@@ -157,7 +194,14 @@ class AgentEngine:
                 db,
                 actor,
                 "agent_queued",
-                {"id": job["id"], "kind": kind, "target_id": target_id},
+                {
+                    "id": job["id"],
+                    "kind": kind,
+                    "target_id": target_id,
+                    "model": job["payload"]["model"],
+                    "model_revision": job["payload"]["model_revision"],
+                    "prompt_version": job["payload"]["prompt_version"],
+                },
             )
         return job
 
@@ -280,7 +324,8 @@ class AgentEngine:
         with store.connect() as db:
             db.execute("BEGIN IMMEDIATE")
             row = db.execute(
-                "SELECT payload FROM jobs WHERE id=? AND state='running'", (job_id,)
+                "SELECT payload,actor FROM jobs WHERE id=? AND state='running'",
+                (job_id,),
             ).fetchone()
             if not row:
                 return
@@ -295,17 +340,51 @@ class AgentEngine:
             )
             audit(
                 db,
-                "agent:" + job_id,
+                row["actor"]
+                if row["actor"].startswith("agent:")
+                else "agent:" + job_id,
                 "agent_" + state,
-                {"id": job_id, "error_code": error.get("code") if error else None},
+                {
+                    "id": job_id,
+                    "error_code": error.get("code") if error else None,
+                    "model": payload.get("model"),
+                    "model_revision": payload.get("model_revision"),
+                    "requested_by": payload.get("requested_by"),
+                },
             )
 
     async def execute(self, org_id, job):
         store = self.hub.store(org_id)
         ops = Operations(store)
-        provider = Intelligence(self.settings, store, self.client)
+        pinned = self.settings.model_copy(
+            update={
+                "groq_model": job["payload"]["model"],
+                "groq_model_revision": job["payload"].get(
+                    "model_revision", "provider-unreported"
+                ),
+                "pseudonymize_model_calls": job["payload"].get("pseudonymize", False),
+                "pseudonymization_scope": job["id"],
+            }
+        )
+        provider = Intelligence(pinned, store, self.client)
         cached = {s["step"]: s["output"] for s in job["steps"]}
         try:
+            if (
+                job["kind"] != "maintenance"
+                and job["payload"].get("prompt_version") != PROMPT_VERSION
+            ):
+                raise problem(
+                    409,
+                    "agent_prompt_version_changed",
+                    "This run's prompt version is unavailable. Start a reviewed new run; no model attempt was made.",
+                )
+            key_id = job["payload"].get("agent_key")
+            if key_id and not self.hub.agent_keys.active(key_id):
+                raise problem(
+                    403,
+                    "agent_key_revoked",
+                    "The requesting agent is no longer authorized.",
+                )
             if job["kind"] == "maintenance":
                 result = await self.maintenance(store, provider, ops, job["id"])
                 if result is None:
@@ -469,7 +548,16 @@ class AgentEngine:
                         if kind in ("policy_analyst", "policy_change")
                         else InvestigationBrief
                     )
+                    if key_id and not self.hub.agent_keys.active(key_id):
+                        raise problem(
+                            403,
+                            "agent_key_revoked",
+                            "The requesting agent is no longer authorized.",
+                        )
                     result = await provider.complete(schema, context)
+                    self.step(
+                        store, job["id"], "model_identity", provider.last_model_identity
+                    )
                 self.step(store, job["id"], "draft_analysis", result)
             if not self.is_running(store, job["id"]):
                 return

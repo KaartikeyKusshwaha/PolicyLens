@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta, timezone
 
-import httpx
 import pytest
 
 from auth import digest, password_matches
@@ -13,7 +12,7 @@ NEW_PASSWORD = "New-private-test-password-2026"
 def test_private_reset_is_one_use_revokes_sessions_and_preserves_workspace(workspace):
     client, store, _, _ = workspace
     hub = client.app.state.hub
-    original_cookie = httpx.Cookies(client.cookies)
+    original_cookie = type(client.cookies)(client.cookies)
     reset = hub.issue_password_reset(EMAIL)
     with hub.connect() as db:
         stored = db.execute("SELECT token_hash FROM password_resets").fetchone()[0]

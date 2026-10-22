@@ -113,6 +113,9 @@ class Hub:
         from mfa import AccountMFA
 
         self.mfa = AccountMFA(self)
+        from agent_keys import AgentKeys
+
+        self.agent_keys = AgentKeys(self)
 
     def connect(self):
         # Store.connect provides commit/rollback and always closes the connection.

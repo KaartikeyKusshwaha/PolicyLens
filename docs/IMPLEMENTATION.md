@@ -23,7 +23,9 @@ review and market validation. None of those gates can be inferred from a green C
   Source implemented: verified server exporter, in-memory verification/encryption,
   failure/success receipts and Windows task installer. Ten transfer/integrity tests
   pass. No schedule is claimed installed until a first real transfer succeeds.
-- [ ] Tag a verified baseline and update stale documentation.
+- [x] Tag the verified baseline (`pilot-baseline-20261022`, merged baseline commit)
+  and update obsolete dependency descriptions. Product documentation continues to
+  evolve as remaining features are implemented.
 - [ ] Fresh authenticated production end-to-end acceptance (after implementation).
 - [x] Research public design-partner candidates and interview materials; see
   `DESIGN_PARTNER_RESEARCH.md` (five prospects, no contact or validation claimed).
@@ -38,19 +40,29 @@ review and market validation. None of those gates can be inferred from a green C
 - [ ] Complete review of MFA and its deployment/key recovery procedure.
 - [ ] Database encryption at rest, migration and recovery verification.
 - [ ] Retention/deletion policy, preview, approval and execution with legal holds.
-- [ ] Agent-scoped keys, immediate revocation, scopes, rate limits and run budgets.
+- [x] Implement agent-scoped keys, immediate revocation, scopes, rate limits and
+  per-key/workspace run budgets, plus admin UI. Deployment acceptance is pending.
 - [ ] Agent identity, pinned model/version and pseudonymized model context.
+  Source records identity, saved model ID, configured revision and prompt version;
+  uses queued configuration; rejects reported model/revision mismatches; masks
+  structured identifiers optionally. The default provider revision remains explicitly
+  unreported, so immutable underlying model weights are **not** established.
+  See `GOVERNED_TOOLKIT.md`.
 - [ ] Checkpoints retained outside the database.
 - [ ] Honest security one-pager covering deployed protections and limits.
 
 ## Phase 2: governed toolkit
 
-- [ ] Registry classes: read, draft, request-approval. Tools:
+- [x] Implement registry classes: read, draft, request-approval. Tools:
   search_policy, get_control, simulate_control, list_alerts, get_case_context,
   draft_investigation_brief, verify_evidence, create_review_task, export_case_pack.
-- [ ] MCP server over the existing runner; no approval/activation/closure/filing tool.
-- [ ] Thin CLI and Python SDK; Claude Desktop and Cursor examples.
-- [ ] Client-level seeded investigation, citations, audit and permission-denial tests.
+- [x] MCP stdio server over the existing runner; no approval/activation/closure/filing tool.
+- [x] Thin CLI and Python SDK; Claude Desktop and Cursor examples.
+- [x] Automated MCP client seeded investigation, citations, audit and permission-denial tests.
+- [x] Actual stdio subprocess and installed CLI against a loopback HTTP test service.
+- [ ] Deployed MCP/live-provider and configured-host acceptance after implementation.
+  Automated tests use isolated data and mocked Groq responses. These prove protocol
+  and enforcement behavior, not real-model accuracy or live desktop-host setup.
 
 ## Phase 3: evidence and traceability
 
@@ -96,6 +108,13 @@ Parked as specified: HA/multiple workers, SSO, Postgres migration, PEP/adverse-m
 data, SAR filing, payment blocking and additional sanctions sources.
 
 ## Implemented MFA boundaries
+
+Latest governed toolkit checkpoint: 129 backend tests passed, including in-memory
+MCP seeded investigation and actual stdio/HTTP subprocess tests; 26 frontend tests,
+ESLint, the production build, Ruff and dependency checks passed. The final backend
+run used a new D: test directory with pytest's C: cache disabled after C: filled.
+Cleanup of disposable C: test directories was rejected by automatic approval review;
+the existing folders were left intact. No browser testing or deployment occurred.
 
 Governance foundation checks: 107 backend tests passed in the full suite, then
 the added public-key provisioning test passed separately (108 tests in source).

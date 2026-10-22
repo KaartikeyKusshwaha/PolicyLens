@@ -166,18 +166,44 @@ def create_app(settings=None, transport=None, *, start_worker=True):
                     raise problem(
                         403, "origin_denied", "Cross-site mutations are not allowed."
                     )
-                user = app.state.hub.authenticate(
-                    request.cookies.get("policylens_session")
-                )
+                authorization = request.headers.get("authorization", "")
+                if path.startswith("/api/toolkit/") or authorization.startswith(
+                    "Bearer "
+                ):
+                    token = (
+                        authorization[7:] if authorization.startswith("Bearer ") else ""
+                    )
+                    user = app.state.hub.agent_keys.authenticate(token)
+                    if not path.startswith("/api/toolkit/"):
+                        with app.state.hub.store(user["org_id"]).connect() as db:
+                            audit(
+                                db,
+                                user["id"],
+                                "agent_route_denied",
+                                {"path": path[:160], "method": request.method},
+                            )
+                        raise problem(
+                            403,
+                            "agent_route_denied",
+                            "Agent keys can use only the governed toolkit endpoints.",
+                        )
+                else:
+                    user = app.state.hub.authenticate(
+                        request.cookies.get("policylens_session")
+                    )
                 request.state.user = user
                 if path not in public:
                     if not user:
                         raise problem(
                             401, "authentication_required", "Sign in to your workspace."
                         )
-                    if writing and not hmac.compare_digest(
-                        request.headers.get("x-csrf-token", "").encode(),
-                        user["csrf"].encode(),
+                    if (
+                        writing
+                        and not user.get("agent_key")
+                        and not hmac.compare_digest(
+                            request.headers.get("x-csrf-token", "").encode(),
+                            user["csrf"].encode(),
+                        )
                     ):
                         raise problem(
                             403,
@@ -198,11 +224,37 @@ def create_app(settings=None, transport=None, *, start_worker=True):
                     request.state.providers = Intelligence(
                         settings, request.state.store, app.state.client
                     )
+                    if user.get("agent_key"):
+                        with request.state.store.connect() as db:
+                            audit(
+                                db,
+                                user["id"],
+                                "tool_request_received",
+                                {
+                                    "path": path[:160],
+                                    "method": request.method,
+                                    "key_id": user["agent_key"],
+                                },
+                            )
             response = await call_next(request)
         except HTTPException as exc:
             response = JSONResponse(
                 status_code=exc.status_code, content={"detail": exc.detail}
             )
+        agent_user = getattr(request.state, "user", None)
+        if (
+            agent_user
+            and agent_user.get("agent_key")
+            and response.status_code >= 400
+            and getattr(request.state, "store", None) is not None
+        ):
+            with request.state.store.connect() as db:
+                audit(
+                    db,
+                    agent_user["id"],
+                    "tool_http_rejected",
+                    {"path": path[:160], "status": response.status_code},
+                )
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
@@ -630,10 +682,12 @@ def create_app(settings=None, transport=None, *, start_worker=True):
     from product_api import router
     from access_api import router as access_router
     from mfa_api import router as mfa_router
+    from toolkit_api import router as toolkit_router
 
     app.include_router(router)
     app.include_router(access_router)
     app.include_router(mfa_router)
+    app.include_router(toolkit_router)
     dist = ROOT.parent / "frontend" / "dist"
     if (dist / "assets").is_dir():
         app.mount("/assets", StaticFiles(directory=dist / "assets"), name="assets")

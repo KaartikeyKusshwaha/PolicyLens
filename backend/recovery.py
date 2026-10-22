@@ -160,6 +160,11 @@ def restore_snapshot(directory, destination):
                 db.execute("DELETE FROM account_mfa WHERE enabled=0")
                 db.execute("UPDATE account_mfa SET recovery='[]'")
             if db.execute(
+                "SELECT 1 FROM sqlite_master WHERE type='table' AND name='agent_keys'"
+            ).fetchone():
+                db.execute("UPDATE agent_keys SET revoked=1")
+                db.execute("DELETE FROM agent_requests")
+            if db.execute(
                 "SELECT 1 FROM sqlite_master WHERE type='table' AND name='password_resets'"
             ).fetchone():
                 db.execute("DELETE FROM password_resets")

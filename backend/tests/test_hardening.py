@@ -236,6 +236,7 @@ def test_background_worker_consumes_queued_job_and_records_verified_steps(worksp
         assert {step["step"] for step in result["steps"]} == {
             "collect_evidence",
             "sanctions_screening",
+            "model_identity",
             "draft_analysis",
             "verify_evidence",
         }

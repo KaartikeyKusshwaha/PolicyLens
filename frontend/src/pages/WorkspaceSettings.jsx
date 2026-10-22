@@ -23,6 +23,7 @@ import {
 import { Status } from "../product-components";
 import { useSession } from "../session";
 import AccountMFA from "./AccountMFA";
+import AgentKeys from "./AgentKeys";
 
 export default function WorkspaceSettings() {
   const { user } = useSession();
@@ -91,7 +92,7 @@ export default function WorkspaceSettings() {
         <Status value={user.role} />
       </div>
       <div className="page-tabs">
-        {["Team", "Monitoring", "Integrations", "Workspaces", "Account"].map(
+        {["Team", "Monitoring", "Integrations", "Agents", "Workspaces", "Account"].map(
           (t) => (
             <button
               key={t}
@@ -110,6 +111,7 @@ export default function WorkspaceSettings() {
       <ErrorNotice message={error} />
       {success && <Success>{success}</Success>}
       {copied && <Success>Copied.</Success>}
+      {tab === "Agents" && (user.role === "admin" ? <AgentKeys /> : <p>Only workspace administrators can manage agent keys.</p>)}
       {tab === "Account" && <AccountMFA />}
       {tab === "Account" && (
         <form
