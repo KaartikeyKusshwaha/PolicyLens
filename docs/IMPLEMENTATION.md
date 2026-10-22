@@ -84,7 +84,9 @@ review and market validation. None of those gates can be inferred from a green C
 
 ## Phase 4: adapters and controls-as-code
 
-- [ ] Inspect Marble's current official API/export formats before adapter implementation.
+- [x] Inspect Marble's official v1 decision and beta case OpenAPI contracts before
+  adapter implementation. See `MARBLE_ADAPTER_RESEARCH.md` for inspected blob IDs,
+  pagination, tenant mapping and upstream outcome boundaries. No live import claimed.
 - [ ] Adapter interface, Marble alerts/cases import with provenance and deduplication.
 - [ ] One transaction-source adapter selected with design partners (selection pending).
 - [ ] YAML export/import into drafts, schema validation, maker-checker-only activation.
