@@ -28,9 +28,11 @@ def write_private(path, value):
 
 def load_dataset(path):
     path = Path(path)
-    if path.stat().st_size > MAX_DATASET_BYTES:
+    with path.open("rb") as source:
+        content = source.read(MAX_DATASET_BYTES + 1)
+    if len(content) > MAX_DATASET_BYTES:
         raise ValueError("Dataset exceeds the 4 MB input bound.")
-    return Dataset.model_validate_json(path.read_bytes())
+    return Dataset.model_validate_json(content)
 
 
 async def replay(dataset, settings, destination, *, transport=None, interval_seconds=3):

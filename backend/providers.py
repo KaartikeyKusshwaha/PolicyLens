@@ -370,11 +370,22 @@ class Providers:
                     "Groq rejected the API key or model access. Check backend/.env and your Groq account.",
                 )
             if response.status_code == 400:
-                raise problem(
+                if provider_error_code in (
+                    "json_validate_failed",
+                    "structured_generation_failed",
+                ):
+                    raise problem(
+                        502,
+                        "invalid_ai_response",
+                        "The provider could not generate a schema-valid draft. No decision was recorded and this run will not retry.",
+                    )
+                rejected = problem(
                     503,
                     "ai_request_rejected",
                     "The provider rejected the analysis request. Review model/schema compatibility before retrying; no decision was recorded.",
                 )
+                rejected.detail["provider_error_code"] = provider_error_code
+                raise rejected
             response.raise_for_status()
             envelope = response.json()
             if envelope.get("model") and envelope["model"] != self.settings.groq_model:

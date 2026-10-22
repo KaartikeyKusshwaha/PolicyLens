@@ -376,3 +376,29 @@ def test_cli_help_and_preflight_do_not_create_workspace(tmp_path):
     assert result.returncode == 1
     assert json.loads(result.stderr)["error_type"] == "ValueError"
     assert not output.exists()
+
+
+def test_provider_generation_failure_counts_as_a_failed_case_without_retry_or_batch_abort(
+    tmp_path,
+):
+    calls = []
+    valid = responder([])
+
+    def handler(request):
+        calls.append(request)
+        if len(calls) == 1:
+            return httpx.Response(400, json={"error": {"code": "json_validate_failed"}})
+        return valid(request)
+
+    dataset = corpus().model_copy(update={"cases": corpus().cases[:2]})
+    settings = Settings(_env_file=None, groq_api_key="test-key")
+    destination = tmp_path / "one-failed-case"
+    report = asyncio.run(
+        replay(dataset, settings, destination, transport=httpx.MockTransport(handler))
+    )
+    assert len(calls) == 2
+    assert report["metrics"]["completed_runs"] == 1
+    assert report["metrics"]["disposition_agreement"] == 0.5
+    assert report["metrics"]["runs_without_retained_draft"] == 1
+    assert report["cases"][0]["error_code"] == "invalid_ai_response"
+    assert not report["gate"]["draft_preparation_quality_passed"]

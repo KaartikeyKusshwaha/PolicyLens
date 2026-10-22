@@ -56,11 +56,17 @@ keys and submit reviewed new runs after deployment.
 
 Replay is sequential, with a configurable 0–60 second inter-request interval
 (default three). Each case makes at most one model attempt. Access failures,
-request rejection or rate limits stop the batch after retaining the failed run
+configuration/request rejection or rate limits stop the batch after retaining the failed run
 and `replay-stopped.json`; **no partial scorecard is published**. Do not repeatedly
 restart a rate-limited batch. Other individual run failures remain in the full
 score denominator. An interrupted run retains its completed artifacts; there is
 currently no automatic resume or retry facility.
+
+Provider `json_validate_failed`/`structured_generation_failed` responses are
+individual failed model outputs, not configuration failures: they count in the
+denominator and the remaining cases continue, with no retry of the failed run.
+Other request rejections retain a bounded provider error code for diagnosis.
+Strict-schema requirements follow the [provider documentation](https://console.groq.com/docs/structured-outputs).
 
 The output contains the normalized dataset, initial manifest, one complete run
 JSON per case and, only after every case has a terminal run, `scorecard.json`.
@@ -110,3 +116,8 @@ A live check found and corrected strict-schema handling of nullable fields. Two
 subsequent live cases completed with verified citations and `confirmed` drafts;
 the third hit `groq_rate_limited`, stopping the run. This is **not** a complete
 50-case live scorecard, and no full live citation/agreement claim is made from it.
+
+A subsequent replay paced at 60-second intervals completed three cases, then
+stopped on a provider request rejection in case four. Replaying that case alone
+for diagnosis succeeded; the original error was not reproduced. No complete
+live scorecard or successful full gate is established by either attempt.

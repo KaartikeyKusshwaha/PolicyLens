@@ -101,6 +101,7 @@ def score_case(label, job):
         "job_id": job["id"],
         "state": job["state"],
         "error_code": payload.get("error", {}).get("code"),
+        "provider_error_code": payload.get("error", {}).get("provider_error_code"),
         "identity": identity,
         "job_sha256": sha(job),
         "context_sha256": sha(context),
