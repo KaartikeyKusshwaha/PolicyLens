@@ -262,7 +262,11 @@ class Checkpoints:
             )
         return document
 
-    def capture(self, org_id, *, include_events=False):
+    def capture(self, org_id, *, include_events=False, snapshot_reader=None):
+        if snapshot_reader is not None and not include_events:
+            raise ValueError(
+                "A consistent evidence snapshot requires the audit bundle."
+            )
         # Resolve through registered workspace membership before creating any paths.
         store = self.hub.store(org_id)
         root = self.root()
@@ -298,6 +302,7 @@ class Checkpoints:
                     result = verify_chain(
                         rows, previous["payload"] if previous else None
                     )
+                snapshot = snapshot_reader(db) if snapshot_reader is not None else None
             if previous and previous["payload"]["sequence"] == result["sequence"]:
                 document = previous
             else:
@@ -341,11 +346,12 @@ class Checkpoints:
                 os.replace(temporary, target)
             self.errors.pop(org_id, None)
             if include_events:
-                return {
+                bundle = {
                     "format": "policylens.audit-bundle.v1",
                     "checkpoint": document,
                     "events": events,
                 }
+                return (bundle, snapshot) if snapshot_reader is not None else bundle
             return document
 
     def status(self, org_id):

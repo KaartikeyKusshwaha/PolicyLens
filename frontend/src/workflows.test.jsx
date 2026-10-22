@@ -122,6 +122,43 @@ test("unconfigured checkpoint storage never offers an unsigned substitute", asyn
   render(<App />);
   await screen.findByText(/External checkpoint storage is not configured/);
   expect(screen.queryByRole("button", { name: "Export signed audit bundle" })).toBeNull();
+  expect(screen.getByRole("button", { name: "Download sponsor evidence pack" }).disabled).toBe(true);
+});
+
+test("sponsor evidence pack failures remain visible and allow retry", async () => {
+  window.history.replaceState({}, "", "/audit");
+  mockRoutes({
+    "/api/audit/checkpoints": () => response({ configured: true, status: "retained" }),
+    "/api/evidence/sponsor-pack": () => response({ detail: { message: "Complete evidence exceeds the pilot export bound." } }, 413),
+  });
+  render(<App />);
+  const button = await screen.findByRole("button", { name: "Download sponsor evidence pack" });
+  await waitFor(() => expect(button.disabled).toBe(false));
+  fireEvent.click(button);
+  await screen.findByText("Complete evidence exceeds the pilot export bound.");
+  expect(button.disabled).toBe(false);
+});
+
+test("sponsor evidence download checks the archive type and releases its temporary URL", async () => {
+  window.history.replaceState({}, "", "/audit");
+  const archive = new Blob(["fixture zip bytes"], { type: "application/zip" });
+  const create = vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:fixture");
+  const release = vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => {});
+  const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+  mockRoutes({
+    "/api/audit/checkpoints": () => response({ configured: true, status: "retained" }),
+    "/api/evidence/sponsor-pack": () => ({ ok: true, headers: new Headers({ "content-type": "application/zip" }), blob: async () => archive }),
+  });
+  render(<App />);
+  const button = await screen.findByRole("button", { name: "Download sponsor evidence pack" });
+  await waitFor(() => expect(button.disabled).toBe(false));
+  fireEvent.click(button);
+  await waitFor(() => expect(click).toHaveBeenCalledOnce());
+  expect(create).toHaveBeenCalledWith(archive);
+  expect(release).toHaveBeenCalledWith("blob:fixture");
+  create.mockRestore();
+  release.mockRestore();
+  click.mockRestore();
 });
 
 test("empty dashboard displays truthful zeroes and actionable onboarding", async () => {

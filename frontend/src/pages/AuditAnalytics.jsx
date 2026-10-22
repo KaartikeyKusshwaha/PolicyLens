@@ -30,6 +30,25 @@ export default function AuditAnalytics() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const { user } = useSession();
+  async function exportSponsorPack() {
+    setBusy(true);
+    setError("");
+    let url;
+    try {
+      const archive = await api("/evidence/sponsor-pack", { responseType: "blob" });
+      url = URL.createObjectURL(archive);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "policylens-sponsor-evidence.zip";
+      link.click();
+      checkpoints.reload();
+    } catch (failure) {
+      setError(failure.message);
+    } finally {
+      if (url) URL.revokeObjectURL(url);
+      setBusy(false);
+    }
+  }
   async function exportSigned() {
     setBusy(true);
     setError("");
@@ -79,6 +98,13 @@ export default function AuditAnalytics() {
         recorded events.
       </PageHeading>
       <ErrorNotice message={error || audit.error || checkpoints.error} />
+      <section className="panel section-padding">
+        <h2>Sponsor evidence pack</h2>
+        <p>Download policy versions, controls and approval history, cases and notes, source freshness, agent runs and the signed audit snapshot as PDF and JSON with an offline verifier.</p>
+        <p className="privacy-note">Contains private records for this entire workspace. Human review is required. Obtain the signing fingerprint separately before verification.</p>
+        <button className="button secondary" disabled={busy || !checkpoints.data?.configured || checkpoints.data.status === "failed"} onClick={exportSponsorPack}><Download size={15} /> Download sponsor evidence pack</button>
+        {checkpoints.data?.configured === false && <p>Configure external checkpoint storage before generating a signed pack.</p>}
+      </section>
       <section className="panel section-padding">
         <h2>External audit checkpoints</h2>
         {checkpoints.loading ? <p>Checking external checkpoint storage…</p> : checkpoints.error ? <p>External checkpoint status is unavailable.</p> : checkpoints.data?.configured ? <>

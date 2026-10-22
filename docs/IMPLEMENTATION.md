@@ -69,11 +69,15 @@ review and market validation. None of those gates can be inferred from a green C
 
 ## Phase 3: evidence and traceability
 
-- [ ] Sponsor evidence pack: PDF, JSON, verification script; policy versions,
-  controls/approvals, dispositions/notes, audit checkpoint, source freshness, agent logs.
+- [x] Implement sponsor evidence pack: PDF, JSON, signed manifest and offline
+  verification script; policy versions, controls/approvals, dispositions/notes,
+  audit checkpoint, source freshness, agent logs. See `SPONSOR_EVIDENCE.md`.
+  Production provisioning and browser acceptance are pending.
 - [ ] Policy obligation matrix: linked controls, latest simulation, alert volumes,
   evidence and explicit coverage gaps.
-- [ ] Seeded pack generation within approximately one minute; chain re-verification.
+- [x] Automated seeded pack and synthetic 50-case export within one minute;
+  offline chain/signature re-verification and tampering/tenant/concurrency checks.
+  Deployed performance remains unverified.
 
 ## Phase 4: adapters and controls-as-code
 
@@ -111,6 +115,12 @@ Parked as specified: HA/multiple workers, SSO, Postgres migration, PEP/adverse-m
 data, SAR filing, payment blocking and additional sanctions sources.
 
 ## Implemented MFA boundaries
+
+Sponsor evidence checkpoint: 159 backend tests, 30 frontend tests, Ruff, ESLint,
+production build and dependency consistency passed. The archive verifier ran in a
+separate subprocess; a 50-case synthetic pack generated within one minute. PDF
+pages were rendered with Poppler and visually inspected. No browser testing or
+production deployment occurred.
 
 External checkpoint checkpoint: 145 backend tests passed, including signed bundle
 tampering, database rewrite/truncation detection, missing-key recovery boundaries,

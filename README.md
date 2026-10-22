@@ -38,6 +38,7 @@ Business data starts empty. Offline/provider failures remain visible and never p
 | Governed toolkit | Scoped expiring agent keys, per-tool permissions, request/run budgets, audited MCP stdio tools, thin CLI and Python SDK. Agents cannot approve, activate controls, close cases or file. |
 | Continuous screening | Opt-in scheduled refresh of selected sanctions feeds and customer name screening. Creates review cases for potential matches; uses no model calls. Requires the Python process to stay running. |
 | Audit and operations | Real counts, corridor/disposition analytics, overdue cases, hash-linked audit events, downloadable checkpoints, workspace SQLite backup and integrity verification. |
+| Sponsor evidence | Workspace-wide PDF and JSON, policy/control/approval records, case notes, source freshness, agent logs, signed audit snapshot and offline archive verifier. |
 
 React supplies the interactive interface, with responsive layouts, light/dark themes, loading/error/empty states, accessible form labels and source provenance.
 
@@ -97,6 +98,8 @@ Account MFA is configured in Workspace settings -> Account. Public enrollment re
 Use **Audit & analytics -> Create backup** for an administrator-only workspace backup. A full disaster-recovery backup must also include `identity.db` and every workspace database. See [deployment and recovery](docs/DEPLOYMENT.md).
 
 Configure `CHECKPOINT_DIRECTORY` outside the database directory to retain signed audit checkpoints automatically. Audit & analytics shows retention status and exports a signed audit bundle; `manage.py verify-checkpoint` verifies it offline against an independently trusted signing fingerprint. Retained checkpoints detect conflicting database rewrites. Same-host storage does not protect against host or signing-key compromise and is not off-machine retention. See [external checkpoint operations](docs/EXTERNAL_CHECKPOINTS.md).
+
+The same area exports a [sponsor evidence pack](docs/SPONSOR_EVIDENCE.md) with a printable PDF, complete business JSON, signed file manifest and offline verifier. Generation requires configured external checkpoints and refuses oversized exports without silently dropping records. Exported copies contain private workspace data and need their own access controls.
 
 The operator command `python manage.py backup --output <new-private-folder>` takes a verified full snapshot while the server is stopped. `manage.py verify` checks it, and `manage.py restore ... --destination <new-folder>` performs a separate restore with rebased workspace paths and revoked sessions. The OS installation lock rejects concurrent server/backup writers. Private environment/API keys are excluded from snapshots.
 
