@@ -19,7 +19,15 @@ def bash_path():
 
 
 @pytest.mark.parametrize(
-    "mode", ["database_only", "combined", "snapshot_failure", "history_failure"]
+    "mode",
+    [
+        "database_only",
+        "combined",
+        "snapshot_failure",
+        "history_failure",
+        "checkpoint_combined",
+        "checkpoint_failure",
+    ],
 )
 def test_real_backup_shell_preserves_old_snapshots_and_restarts_on_failure(
     tmp_path, mode
@@ -39,6 +47,7 @@ def test_real_backup_shell_preserves_old_snapshots_and_restarts_on_failure(
 printf 'python %s\\n' "$*" >> "$TEST_TRACE"
 if [[ "$1" == "manage.py" && "$TEST_MODE" == "snapshot_failure" ]]; then exit 31; fi
 if [[ "$1" == "deploy/deletion_state_backup.py" && "$TEST_MODE" == "history_failure" ]]; then exit 32; fi
+if [[ "$1" == "deploy/checkpoint_backup.py" && "$TEST_MODE" == "checkpoint_failure" ]]; then exit 33; fi
 exit 0
 """,
         encoding="utf-8",
@@ -61,6 +70,9 @@ exit 0
         "TEST_BACKUP_ROOT": root.as_posix(),
         "TEST_TRACE": trace.as_posix(),
         "TEST_MODE": mode,
+        "CHECKPOINT_DIRECTORY": (tmp_path / "anchors").as_posix()
+        if mode.startswith("checkpoint_")
+        else "",
         "DELETION_STATE_DIRECTORY": ""
         if mode == "database_only"
         else (tmp_path / "external-state").as_posix(),
@@ -98,5 +110,20 @@ source """ + shlex.quote(script_path.as_posix())
         assert not history and result.returncode == 31
     else:
         assert len(history) == 1 and history[0] > snapshot
-        assert result.returncode == (32 if mode == "history_failure" else 0)
+        assert result.returncode == (
+            32
+            if mode == "history_failure"
+            else 33
+            if mode == "checkpoint_failure"
+            else 0
+        )
+    checkpoints = [
+        index
+        for index, call in enumerate(calls)
+        if call == "python deploy/checkpoint_backup.py stage"
+    ]
+    if mode.startswith("checkpoint_"):
+        assert len(checkpoints) == 1 and checkpoints[0] > history[0] > snapshot
+    else:
+        assert not checkpoints
     assert retained.read_text() == "Retain until independently reviewed removal"

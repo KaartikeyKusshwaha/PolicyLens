@@ -13,6 +13,9 @@ cd /opt/policylens
 if [[ -n "${DELETION_STATE_DIRECTORY:-}" ]]; then
     .venv/bin/python deploy/deletion_state_backup.py stage
 fi
+if [[ -n "${CHECKPOINT_DIRECTORY:-}" ]]; then
+    .venv/bin/python deploy/checkpoint_backup.py stage
+fi
 systemctl start policylens
 trap - EXIT
 # Retained snapshots may be subject to approved preservation periods and holds.

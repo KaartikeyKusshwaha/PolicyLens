@@ -15,6 +15,7 @@ from cryptography.exceptions import InvalidSignature
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
 from auth import Hub  # noqa: E402
 from checkpoints import Checkpoints, verify_signature, ZERO  # noqa: E402
@@ -26,6 +27,7 @@ from runtime import InstallationLock  # noqa: E402
 SCHEMA = "policylens.checkpoint-history-backup.v1"
 MAX_BYTES = 32 * 1024 * 1024
 MAX_ANCHORS = 10000
+STAGING_ROOT = Path("/var/backups/policylens-checkpoint-history")
 
 
 def verify(content, fingerprint, *, max_age_hours=30, at=None):
@@ -313,10 +315,77 @@ def recover(archive, fingerprint, key_file, destination, trusted_bundle_sha256):
     }
 
 
+def staging_root(root):
+    root = Path(root).absolute()
+    if root.resolve() != root:
+        raise ValueError("Checkpoint staging cannot be redirected")
+    root.mkdir(parents=True, exist_ok=True, mode=0o700)
+    if os.name != "nt" and root.stat().st_mode & 0o077:
+        raise ValueError("Checkpoint staging permissions must be 0700")
+    return root
+
+
+def stage(settings, root=STAGING_ROOT):
+    from deploy.deletion_state_backup import staged_files
+
+    root = staging_root(root)
+    if root.is_relative_to(settings.database_path.parent.resolve()):
+        raise ValueError("Checkpoint staging must be outside database storage")
+    with InstallationLock(root):
+        files, total = staged_files(root)
+        content = export_bundle(settings)
+        if len(files) >= 2000 or total + len(content) > 256 * 1024 * 1024:
+            raise ValueError("Checkpoint staging has no publication capacity")
+        digest = hashlib.sha256(content).hexdigest()
+        target = root / (
+            "state-"
+            + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
+            + "-"
+            + digest
+            + ".json"
+        )
+        if target.exists():
+            raise ValueError("Checkpoint staging identity already exists")
+        pending = target.with_suffix(".pending")
+        descriptor = os.open(pending, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        with os.fdopen(descriptor, "wb") as stream:
+            stream.write(content)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(pending, target)
+        sync_directory(root)
+        return {"staged": True, "bundle_sha256": digest, "file": target.name}
+
+
+def latest(settings, root=STAGING_ROOT):
+    from deploy.deletion_state_backup import staged_files
+
+    if not Path(root).is_dir():
+        raise ValueError("Checkpoint staging is unavailable")
+    root = staging_root(root)
+    with InstallationLock(root):
+        files, total = staged_files(root)
+        if not files or total > 256 * 1024 * 1024:
+            raise ValueError("Checkpoint staging inventory missing or oversized")
+        path = max(files)
+        if path.stat().st_size > MAX_BYTES:
+            raise ValueError("Staged checkpoint bundle oversized")
+        with path.open("rb") as stream:
+            content = stream.read(MAX_BYTES + 1)
+        if hashlib.sha256(content).hexdigest() != path.stem.rsplit("-", 1)[1]:
+            raise ValueError("Staged checkpoint checksum changed")
+        manager = Checkpoints(None, settings)
+        _, fingerprint = manager.identity(manager.signing_key(manager.root()))
+        verify(content, fingerprint)
+        return content
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("export")
+    commands.add_parser("stage")
+    commands.add_parser("latest")
     receive = commands.add_parser("receive")
     receive.add_argument("--fingerprint", required=True)
     receive.add_argument("--key-file", type=Path, required=True)
@@ -331,6 +400,10 @@ def main():
     try:
         if args.command == "export":
             sys.stdout.buffer.write(export_bundle(Settings()))
+        elif args.command == "stage":
+            print(json.dumps(stage(Settings())))
+        elif args.command == "latest":
+            sys.stdout.buffer.write(latest(Settings()))
         elif args.command == "receive":
             content = sys.stdin.buffer.read(MAX_BYTES + 1)
             print(

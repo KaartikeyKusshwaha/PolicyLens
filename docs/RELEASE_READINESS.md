@@ -34,8 +34,9 @@ has not been started under the user's implementation-before-browser constraint.
 No production log, current timer result, new deployed binary or live encrypted
 storage claim can be inferred from local/CI success.
 
-Immediate source follow-up includes checkpoint-backup scheduling integration and
-complete copy-discovery coverage. The partner-selected adapter has an unresolved
+Immediate source follow-up includes complete copy-discovery coverage. Checkpoint
+backup scheduling source is implemented; actual transfer and installation remain
+unverified. The partner-selected adapter has an unresolved
 external specification. Automatic briefs remain gated. Deployed/operator, market
 and independent-review evidence cannot be manufactured by adding more unit tests.
 Keep the full master-plan objective active while those requirements remain open.

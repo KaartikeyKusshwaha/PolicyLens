@@ -6,6 +6,10 @@ encrypts it with a separate Fernet key, and reconstructs a new checkpoint root.
 This source functionality has been tested on isolated synthetic installations.
 No actual off-machine transfer or schedule is installed.
 
+The [daily pipeline integration](SCHEDULED_CHECKPOINT_BACKUP.md) now stages history
+while stopped and lets the receiver/Windows installer require checkpoint copies
+before recording combined success. Actual rollout remains pending.
+
 Stop the authoritative installation and select its original configuration/key:
 
 ```sh

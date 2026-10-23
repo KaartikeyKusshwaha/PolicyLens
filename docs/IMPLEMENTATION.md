@@ -6,6 +6,19 @@ review and market validation. None of those gates can be inferred from a green C
 
 ## Operational watchdog checkpoint
 
+Checkpoint scheduling source: configured daily backup now stages signed complete
+history while stopped. A fixed strict-SSH exporter verifies the latest staged
+bundle without fallback after corruption. Receiver/Windows task options require
+both checkpoint destination and independently trusted fingerprint; success updates
+only after every configured DB/deletion/checkpoint copy verifies. Failure preserves
+the prior success receipt and exposes a failed latest attempt. Initial 24 scheduling,
+deletion and shell tests pass, with the full three-artifact regression running.
+The final 29 checkpoint/scheduling/shell tests now pass, including the actual
+three-artifact encrypted receiver and previous-success preservation on failure.
+Source contains 536 backend tests; exact latest CI is pending.
+Bash/PowerShell syntax checks and Ruff pass. No server/task installation occurred.
+See `SCHEDULED_CHECKPOINT_BACKUP.md`.
+
 Checkpoint-history backup source now exports every workspace's complete signed
 anchor history after capture, verifies outer/individual Ed25519 signatures and
 predecessor continuity, and encrypts at a receiver using only its archive key and

@@ -142,7 +142,11 @@ def verify_archive(payload, max_age_hours=30, *, database_key_file=None):
     return manifest
 
 
-def collect(host, identity, known_hosts, *, deletion_state=False):
+def collect(
+    host, identity, known_hosts, *, deletion_state=False, checkpoint_history=False
+):
+    if deletion_state and checkpoint_history:
+        raise ValueError("Select exactly one fixed SSH export kind")
     if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_-]*@[A-Za-z0-9][A-Za-z0-9.-]*", host):
         raise ValueError("Use a user@hostname SSH target.")
     for path in (identity, known_hosts):
@@ -174,7 +178,9 @@ def collect(host, identity, known_hosts, *, deletion_state=False):
         if deletion_state
         else "/opt/policylens/deploy/export_backup.py",
     ]
-    if deletion_state:
+    if checkpoint_history:
+        command[-1] = "/opt/policylens/deploy/checkpoint_backup.py"
+    if deletion_state or checkpoint_history:
         command.append("latest")
     result = subprocess.run(command, capture_output=True, timeout=180, check=False)
     if result.returncode:
@@ -249,6 +255,8 @@ def main():
         help="Separate protected recovery copy of the original raw installation key; requires SQLCipher snapshots.",
     )
     parser.add_argument("--destination", type=Path, required=True)
+    parser.add_argument("--checkpoint-destination", type=Path)
+    parser.add_argument("--checkpoint-fingerprint")
     parser.add_argument(
         "--deletion-state-destination",
         type=Path,
@@ -260,6 +268,16 @@ def main():
     args = parser.parse_args()
     args.destination.mkdir(parents=True, exist_ok=True, mode=0o700)
     try:
+        if (args.checkpoint_destination is None) != (
+            args.checkpoint_fingerprint is None
+        ):
+            raise ValueError(
+                "Checkpoint copies require both destination and independently trusted fingerprint"
+            )
+        if args.checkpoint_fingerprint is not None and not re.fullmatch(
+            r"[a-f0-9]{64}", args.checkpoint_fingerprint
+        ):
+            raise ValueError("Invalid trusted checkpoint fingerprint")
         if (
             args.deletion_state_destination is not None
             and args.database_key_file is None
@@ -287,6 +305,17 @@ def main():
                 args.key_file,
                 args.deletion_state_destination,
                 max_age_hours=args.max_age_hours,
+            )
+        if args.checkpoint_destination is not None:
+            from deploy.checkpoint_backup import persist as persist_checkpoints
+
+            result["checkpoint_history"] = persist_checkpoints(
+                collect(
+                    args.host, args.identity, args.known_hosts, checkpoint_history=True
+                ),
+                args.checkpoint_fingerprint,
+                args.key_file,
+                args.checkpoint_destination,
             )
     except Exception:
         result = {

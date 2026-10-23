@@ -6,7 +6,9 @@ param(
     [Parameter(Mandatory)][string]$EncryptionKey,
     [Parameter(Mandatory)][string]$Destination,
     [string]$DatabaseKey,
-    [string]$DeletionStateDestination
+    [string]$DeletionStateDestination,
+    [string]$CheckpointDestination,
+    [string]$CheckpointFingerprint
 )
 $ErrorActionPreference = 'Stop'
 $backupScript = Join-Path $PSScriptRoot 'pull_backup.py'
@@ -22,15 +24,19 @@ $EncryptionKey = (Resolve-Path -LiteralPath $EncryptionKey).Path
 if ($DatabaseKey) { $DatabaseKey = (Resolve-Path -LiteralPath $DatabaseKey).Path }
 if ($DeletionStateDestination -and -not $DatabaseKey) { throw 'Deletion history requires DatabaseKey.' }
 if ($DeletionStateDestination) { $DeletionStateDestination = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($DeletionStateDestination) }
+if ([bool]$CheckpointDestination -ne [bool]$CheckpointFingerprint) { throw 'Checkpoint copies require destination and trusted fingerprint.' }
+if ($CheckpointFingerprint -and $CheckpointFingerprint -notmatch '^[a-f0-9]{64}$') { throw 'Invalid trusted checkpoint fingerprint.' }
+if ($CheckpointDestination) { $CheckpointDestination = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($CheckpointDestination) }
 $Destination = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Destination)
 if ($SshTarget -notmatch '^[A-Za-z_][A-Za-z0-9_-]*@[A-Za-z0-9][A-Za-z0-9.-]*$') { throw 'Invalid SSH target.' }
-foreach ($backupArgument in @($backupScript, $Identity, $KnownHosts, $EncryptionKey, $Destination, $DatabaseKey, $DeletionStateDestination)) {
+foreach ($backupArgument in @($backupScript, $Identity, $KnownHosts, $EncryptionKey, $Destination, $DatabaseKey, $DeletionStateDestination, $CheckpointDestination, $CheckpointFingerprint)) {
     if (-not $backupArgument) { continue }
     if ($backupArgument.Contains('"') -or $backupArgument.Contains("`n") -or $backupArgument.Contains("`r")) { throw 'Invalid task argument.' }
 }
 $backupValues = @($backupScript, '--host', $SshTarget, '--identity', $Identity, '--known-hosts', $KnownHosts, '--key-file', $EncryptionKey, '--destination', $Destination)
 if ($DatabaseKey) { $backupValues += @('--database-key-file', $DatabaseKey) }
 if ($DeletionStateDestination) { $backupValues += @('--deletion-state-destination', $DeletionStateDestination) }
+if ($CheckpointDestination) { $backupValues += @('--checkpoint-destination', $CheckpointDestination, '--checkpoint-fingerprint', $CheckpointFingerprint) }
 $backupArguments = ($backupValues | ForEach-Object { '"' + [regex]::Replace($_, '(\\+)$', '$1$1') + '"' }) -join ' '
 $backupAction = New-ScheduledTaskAction -Execute (Resolve-Path -LiteralPath $Python).Path -Argument $backupArguments
 $backupTrigger = New-ScheduledTaskTrigger -Daily -At '09:00'

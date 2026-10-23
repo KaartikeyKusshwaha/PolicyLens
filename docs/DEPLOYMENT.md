@@ -92,6 +92,9 @@ reconstruction. It is not yet installed or scheduled on the pilot/receiver.
 The [scheduling integration](SCHEDULED_DELETION_BACKUP.md) is now available in the
 daily backup, fixed SSH exporter and optional receiver/task arguments. Combined
 success requires both copies to verify. Operator rollout remains pending.
+Optional [checkpoint-history scheduling](SCHEDULED_CHECKPOINT_BACKUP.md) also
+stages while stopped and requires an independently trusted public fingerprint
+at the receiver. Combined success includes every configured artifact family.
 
 The read-only [operational watchdog](OPERATIONAL_WATCHDOG.md) checks readiness,
 receiver disk space and fresh matching backup receipts/encrypted bytes. It emits
