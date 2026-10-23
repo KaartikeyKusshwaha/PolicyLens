@@ -86,6 +86,9 @@ snapshots preserve receipts and need matching external state at startup. An old
 authentic guard cannot establish current state. Key/host compromise or deliberate
 code/raw-database bypass remains outside these checks.
 
+The [encrypted complete-history backup tool](DELETION_STATE_BACKUP.md) now supports
+stopped-source export, authenticated receiver retention and recovery into a new
+directory. Its actual off-machine transfer and scheduling remain pending.
 Automatic off-machine guard publication, complete historical-copy discovery,
 physical compaction/media erasure and deployed crash/recovery acceptance remain
 pending. This command has been exercised only on isolated synthetic data. It is

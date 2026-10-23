@@ -85,6 +85,11 @@ Treat the cloud installation as the authoritative pilot after signing in there. 
 
 ## Back up and recover
 
+Database snapshots require separately retained current deletion state. The
+[complete deletion-history backup tool](DELETION_STATE_BACKUP.md) supports
+stopped-source export, authenticated encrypted receiver retention and new-directory
+reconstruction. It is not yet installed or scheduled on the pilot/receiver.
+
 The read-only [operational watchdog](OPERATIONAL_WATCHDOG.md) checks readiness,
 receiver disk space and fresh matching backup receipts/encrypted bytes. It emits
 JSON and exits nonzero on failure. Optional service/timer templates are supplied;

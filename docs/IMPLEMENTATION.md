@@ -6,6 +6,19 @@ review and market validation. None of those gates can be inferred from a green C
 
 ## Operational watchdog checkpoint
 
+External deletion-history backup checkpoint: the operator tool now exports all
+authenticated committed/aborted state from a stopped, runtime-verified installation.
+The receiver authenticates embedded guards, encrypts the bundle, verifies all
+prior retained encrypted history and refuses changed/omitted artifacts or older
+source state. Recovery reconstructs original state into a new directory with a
+blocking pending marker until all bytes are flushed. Keys are excluded; a current
+independently retained bundle digest is required. All seventeen initial synthetic
+tests pass, including real executed and aborted history recovery, interruption,
+tampering and monotonic retained history. A further actual CLI refusal test
+verifies generic failure output. Ruff passes. Actual off-machine
+transfer, scheduling and operator acceptance remain pending. See
+`DELETION_STATE_BACKUP.md`.
+
 Readiness hardening: probes now open identity and every registered tenant
 read-only and query core business tables, including uncached tenants. Missing,
 damaged or incomplete tenant storage returns generic 503 without initializing
