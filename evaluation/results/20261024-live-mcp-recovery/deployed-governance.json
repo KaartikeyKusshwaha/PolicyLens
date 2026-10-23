@@ -1,0 +1,33 @@
+{
+  "audit_entries_checked": 83,
+  "audit_valid": true,
+  "finished_at": "2026-10-23T19:15:46.392817+00:00",
+  "hold_release": {
+    "copies_removed": false,
+    "deletion_executed": false,
+    "execution_available": false,
+    "independently_released": true,
+    "no_blocking_holds_after_release": true,
+    "other_blocker_codes": [
+      "external_copy_reconciliation_required",
+      "open_case",
+      "open_task",
+      "registered_copy_outstanding",
+      "retention_period_not_elapsed",
+      "unresolved_shared_or_text_references"
+    ],
+    "requester_self_approval_denied": true
+  },
+  "passed": true,
+  "scope": "Actual deployed isolated synthetic HTTPS API acceptance only; not browser/MFA acceptance or real retention authority. No deletion or copy-removal execution.",
+  "started_at": "2026-10-23T19:15:43.982671+00:00",
+  "tuning": {
+    "alerts_unchanged": true,
+    "draft_id": "a357ec57-37cd-4f14-be62-aa0f95ef2a2d",
+    "independent_activation": true,
+    "maker_denied": true,
+    "parent_superseded": true,
+    "preview_sha256": "ad2e4c6e26dc5c68bb6de8bd6eb88fd54d5b477f010a1fe851fddcd5c2fa0983",
+    "selected_threshold": "4000"
+  }
+}

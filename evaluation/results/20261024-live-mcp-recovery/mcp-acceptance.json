@@ -1,0 +1,163 @@
+{
+  "audit_chain_valid": true,
+  "audit_tool_event_summary": [
+    {
+      "action": "tool_http_rejected",
+      "tool": null
+    },
+    {
+      "action": "tool_denied",
+      "tool": "close_case"
+    },
+    {
+      "action": "tool_request_received",
+      "tool": null
+    },
+    {
+      "action": "tool_http_rejected",
+      "tool": null
+    },
+    {
+      "action": "tool_denied",
+      "tool": "approve_control"
+    },
+    {
+      "action": "tool_request_received",
+      "tool": null
+    },
+    {
+      "action": "tool_completed",
+      "tool": "create_review_task"
+    },
+    {
+      "action": "tool_started",
+      "tool": "create_review_task"
+    },
+    {
+      "action": "tool_request_received",
+      "tool": null
+    },
+    {
+      "action": "tool_completed",
+      "tool": "verify_evidence"
+    },
+    {
+      "action": "tool_started",
+      "tool": "verify_evidence"
+    },
+    {
+      "action": "tool_request_received",
+      "tool": null
+    },
+    {
+      "action": "tool_completed",
+      "tool": "get_agent_run"
+    },
+    {
+      "action": "tool_started",
+      "tool": "get_agent_run"
+    },
+    {
+      "action": "tool_request_received",
+      "tool": null
+    },
+    {
+      "action": "tool_completed",
+      "tool": "get_agent_run"
+    },
+    {
+      "action": "tool_started",
+      "tool": "get_agent_run"
+    },
+    {
+      "action": "tool_request_received",
+      "tool": null
+    },
+    {
+      "action": "tool_completed",
+      "tool": "get_agent_run"
+    },
+    {
+      "action": "tool_started",
+      "tool": "get_agent_run"
+    },
+    {
+      "action": "tool_request_received",
+      "tool": null
+    },
+    {
+      "action": "tool_completed",
+      "tool": "get_agent_run"
+    },
+    {
+      "action": "tool_started",
+      "tool": "get_agent_run"
+    },
+    {
+      "action": "tool_request_received",
+      "tool": null
+    },
+    {
+      "action": "tool_completed",
+      "tool": "draft_investigation_brief"
+    },
+    {
+      "action": "tool_started",
+      "tool": "draft_investigation_brief"
+    },
+    {
+      "action": "tool_request_received",
+      "tool": null
+    },
+    {
+      "action": "tool_completed",
+      "tool": "list_tools"
+    },
+    {
+      "action": "tool_request_received",
+      "tool": null
+    },
+    {
+      "action": "tool_completed",
+      "tool": "get_case_context"
+    },
+    {
+      "action": "tool_started",
+      "tool": "get_case_context"
+    },
+    {
+      "action": "tool_request_received",
+      "tool": null
+    }
+  ],
+  "case_remained_open": true,
+  "citation_count": 4,
+  "denials": {
+    "approve_control": true,
+    "close_case": true
+  },
+  "error_code": null,
+  "finished_at": "2026-10-23T19:05:07.838025+00:00",
+  "model": "openai/gpt-oss-20b",
+  "model_attempts": 1,
+  "model_identity": [
+    {
+      "requested_model": "openai/gpt-oss-20b",
+      "returned_model": "openai/gpt-oss-20b",
+      "revision_enforced": false,
+      "system_fingerprint": "fp_a4315eb300"
+    }
+  ],
+  "model_revision": "provider-unreported",
+  "passed": true,
+  "quotation_verification": true,
+  "required_completion_and_denial_events_verified": true,
+  "requires_approval": true,
+  "review_task_created": true,
+  "run_id": "b8816857-5c80-48fb-afd7-936c69ba8d91",
+  "scope": "Local loopback HTTP with real MCP stdio subprocess and one live provider attempt; synthetic data and synthetic empty sanctions snapshot only. No deployed HTTPS, official-feed, decision-quality or host-UI claim.",
+  "server_stopped": true,
+  "started_at": "2026-10-23T19:04:57.061200+00:00",
+  "state": "completed",
+  "temporary_key_revoked": true
+}

@@ -1,6 +1,9 @@
 # Agent replay and scorecards
 
-Source implementation; browser acceptance and Oracle deployment remain pending.
+Implemented and deployed; the reference scorecard and its limitations were viewed
+in the deployed synthetic browser pass. The retained live synthetic 50-case run
+is under `evaluation/results/20261023-gpt-oss-20b/`. Human-label validation and
+historical-source acceptance remain open, and the preparation gate remains failed.
 The harness replays the existing `AgentEngine` investigation workflow in a **new,
 isolated installation**. It uses the same one-attempt rule, saved model/revision,
 prompt version, context limit, citation verifier, run budget and audit writes as
