@@ -4,11 +4,16 @@
 verifies it against an independently supplied public fingerprint at a receiver,
 encrypts it with a separate Fernet key, and reconstructs a new checkpoint root.
 This source functionality has been tested on isolated synthetic installations.
-No actual off-machine transfer or schedule is installed.
+The actual Oracle pilot now has verified encrypted off-machine transfer and a
+Windows receiver schedule; see `DEPLOYED_CHECKPOINT_20261023.md`. Its next daily
+receiver trigger remains unobserved. A separate populated local recovery drill
+verified 77 audit entries against recovered history; see
+`evaluation/results/20261024-live-mcp-recovery/` for scope and limits.
 
 The [daily pipeline integration](SCHEDULED_CHECKPOINT_BACKUP.md) now stages history
 while stopped and lets the receiver/Windows installer require checkpoint copies
-before recording combined success. Actual rollout remains pending.
+before recording combined success. The actual configured rollout is recorded in
+the dated deployment checkpoint; independent notification delivery remains open.
 
 Stop the authoritative installation and select its original configuration/key:
 
