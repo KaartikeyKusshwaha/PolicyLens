@@ -114,13 +114,66 @@ of the next unattended daily backup or continuous availability.
 
 The optional `--report-directory` must be an existing private directory. Reports
 replace `latest.json` atomically; failures also replace `last-failure.json`, which
-survives a later healthy run. Only these two bounded files are retained. Actual
+survives a later healthy run. These two bounded reports are retained; opting into
+Telegram also retains one bounded notification-state file. Actual
 reports are under `C:\Users\LENONO\PolicyLens-Recovery\monitor`, restricted to
 the current user and SYSTEM. Report-write failure exits 2 rather than claiming
 healthy operation. An isolated invocation with an intentionally impossible disk
 floor exited 1 and retained `disk_below_floor`; actual archive receipts were not
 modified. Focused tests also verify failure retention after recovery.
 
-No external notification integration or delivery has been configured. This local
-receiver monitor is not an independent availability service. Backup/restore
+Telegram notification support is implemented as described below, but actual bot
+credentials, pairing and delivery are still pending. This local receiver monitor
+is not an independent availability service. Backup/restore
 evidence and its remaining limits are recorded in `DEPLOYED_CHECKPOINT_20261023.md`.
+
+## Optional Telegram alerts
+
+Telegram was selected by the operator. `--telegram-config PRIVATE_JSON` opts in
+using exactly two private fields: `bot_token` and numeric `chat_id` (as strings).
+It requires `--report-directory`; keep the configuration outside the repository,
+archive directories and report directory, with POSIX mode 0600 or an equivalent
+private Windows ACL. The prepared local file is
+`C:\Users\LENONO\PolicyLens-Recovery\telegram.json`, restricted to the user and
+SYSTEM. It contains blank values until the operator pairs a bot. No token is
+passed in process arguments or printed.
+
+Create a dedicated bot through official [BotFather](https://t.me/BotFather), then
+run this in an interactive local terminal from the repository root:
+
+```powershell
+.venv\Scripts\python.exe deploy/setup_telegram.py --config C:\Users\LENONO\PolicyLens-Recovery\telegram.json --report-directory C:\Users\LENONO\PolicyLens-Recovery\monitor
+```
+
+The helper prompts for a hidden token, prints a random pairing message, and asks
+the operator to send it to the bot in a **private** chat. It selects exactly that
+message's private chat; unrelated/old messages or groups cannot select the
+recipient. Ambiguous matches fail. It does not remove a webhook, acknowledge
+updates by advancing their offset or overwrite an existing nonblank configuration.
+It preserves the prepared Windows file ACL, saves the configuration and sends an
+explicit test. A successful API response proves Telegram accepted the message,
+not that the person read it. The operator must verify the intended recipient.
+
+After successful pairing, rerun `install_watchdog.ps1` with the existing verified
+arguments plus `-TelegramConfig C:\Users\LENONO\PolicyLens-Recovery\telegram.json`.
+Pairing alone does not update the installed task. An explicit later test can use
+the normal watchdog arguments plus `--telegram-config ... --test-telegram`; a test
+does not alter incident state or suppress an actual failure.
+
+The first healthy run establishes a quiet baseline. A failure or changed failure
+sends check names/codes; recovery sends a single recovery message. Unchanged
+results are suppressed. No customer/case data, raw errors, local paths, archive
+contents or credentials enter the text. `telegram-state.json` contains only a
+schema, opaque destination digest and incident digest. Delivery failure leaves
+the last accepted state unchanged for the next run to retry, and exits 2 even if
+operational checks are healthy. The normal local reports preserve that failure.
+Health failures still exit 1 when notification delivery succeeds.
+
+Requests use only the official HTTPS Bot API, bounded responses, no proxy
+inheritance, no redirects and no automatic HTTP retries. Telegram rejection,
+network errors, malformed/oversized responses, invalid private configuration and
+corrupt state return a generic failure without exposing the token-bearing URL.
+An acknowledgement lost after remote acceptance, or a local state-write failure,
+can cause a duplicate on the next run; exactly-once delivery is not claimed.
+No periodic reminders or inbound bot commands are implemented. The receiver must
+still be awake and signed in. See Telegram's [sendMessage API](https://core.telegram.org/bots/api#sendmessage).
