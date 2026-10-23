@@ -18,7 +18,7 @@ verified completion measure.
 | Inbox | Inspect native/imported alerts, open customer cases, assign work, add notes/tasks, review cited preparation, escalate and request independent resolution. View relationships inside the case. |
 | Policies & Controls | Upload operating policies, retain versions, retrieve cited excerpts, inspect obligation/control gaps, draft controls, simulate historical effects and obtain independent activation. |
 | Evidence | Download signed sponsor packs containing PDF, JSON, policy/control/approval history, case evidence, freshness records, agent work and audit checkpoints. Inspect scorecards and their limits. |
-| Settings & Agents | Manage team/account access, optional TOTP MFA, connections/sources, scoped agent keys, run configuration, retention policies, holds and custody records. |
+| Settings & Agents | Manage team/account/password access, connections/sources, scoped agent keys, run configuration, retention policies, holds and custody records. Account 2FA was removed at the owner's request. |
 | Advanced | Inspect detailed agent logs, additional analytics and per-source diagnostics under `/advanced`. These are outside the four primary areas. |
 
 The starter monitoring engine supports amount, velocity, same-currency aggregate,
@@ -65,10 +65,10 @@ Internal thresholds are supplied by users; they are not statutory limits.
    the browser, including a real local Git commit. Supplied Git metadata is an
    assertion, not remote-repository verification. Actual Marble-account comparison
    and a partner-named transaction source remain missing.
-8. **Trust baseline:** account TOTP/recovery controls, SQLCipher, versioned
+8. **Trust baseline:** email/password/session controls, SQLCipher, versioned
    retention policies/holds, scoped keys and outside-database checkpoints are
-   implemented. Oracle encrypted migration and separate restore passed. MFA
-   browser enrollment/recovery remains user-performed and unverified. Complete
+   implemented. Oracle encrypted migration and separate restore passed. Account
+   2FA was removed by the owner's 24 October scope amendment. Complete
    historical copy discovery and physical-erasure evidence remain unresolved.
 
 ## Deployment and operations
@@ -110,7 +110,7 @@ composition; a green CI run alone is not proof of deployment.
   sign-in/out, simulation, distinct-reviewer activation, YAML/Git round trip,
   evidence download, case notes, policy approval, effective pending hold and
   mobile drawer exercised. A real mobile graph overflow was fixed and rechecked.
-  MFA/password lifecycle, remaining deletion/custody and model-backed mappings
+  Password lifecycle, remaining deletion/custody and model-backed mappings
   are not fully accepted in the browser.
 
 Full CI at runtime source `9522903` passed **585 backend tests** and **73 frontend
@@ -137,7 +137,7 @@ guard, revokes credentials and refuses overwriting an existing installation.
 
 | Requirement | Required evidence/action |
 | --- | --- |
-| User account acceptance | Finish MFA enrollment, second-factor/recovery and password/session browser checks without exposing secrets. |
+| User account acceptance | Verify normal email/password sign-in and password/session browser checks without exposing secrets. 2FA is removed from scope. |
 | Final populated browser pass | Complete remaining mapped-policy, live preparation, custody/deletion and account scenarios; retain actual outcomes. API checks do not replace browser observations. |
 | Production-owner acceptance | Authenticated acceptance in the owner's intended operational workspace, separately from fictional acceptance. |
 | Provider identity/quality | Immutable provider revision remains unproved; fix and independently validate the failed preparation gate before considering automatic briefs. |

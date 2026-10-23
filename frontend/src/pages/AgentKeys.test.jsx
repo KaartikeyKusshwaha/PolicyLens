@@ -16,6 +16,7 @@ test("keys expose only selected scopes and the new credential is displayed once"
   });
   render(<AgentKeys />);
   await screen.findByText("No agent keys have been created.");
+  expect(screen.queryByLabelText(/Authenticator|recovery code/i)).toBeNull();
   expect(screen.getByRole("button", { name: "Create scoped key" }).disabled).toBe(true);
   fireEvent.click(screen.getByLabelText(/search_policy/));
   fireEvent.change(screen.getByLabelText("Agent name"), { target: { value: "Research agent" } });
@@ -25,6 +26,8 @@ test("keys expose only selected scopes and the new credential is displayed once"
   const body = api.mock.calls.find(([path, options]) => path === "/agent-keys" && options?.method === "POST")[1].body;
   expect(body.scopes).toEqual(["search_policy"]);
   expect(body.pseudonymize).toBe(true);
+  expect(body.password).toBe("Test-password-long");
+  expect(body).not.toHaveProperty("second_factor");
   expect(screen.getByLabelText("Current password").value).toBe("");
   fireEvent.click(screen.getByRole("button", { name: /I saved the key/ }));
   expect(screen.queryByText("test-private-key")).toBeNull();

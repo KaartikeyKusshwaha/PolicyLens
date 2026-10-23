@@ -1,4 +1,9 @@
 PolicyLens: market fit, agentic toolkit direction, and plan
+
+Scope amendment, 24 October 2026: the owner requested removal of PolicyLens 2FA
+and retention of normal email/password sign-in. This supersedes the original
+MFA requirements below. See [current authentication](ACCOUNT_AUTHENTICATION.md).
+The original plan is otherwise retained for scope/history.
 Market reality first
 Closest competitor is Marble. It is an open-core engine covering transaction monitoring, sanctions screening, case management and API ingestion, and it can be self-hosted. It claims 100+ banks, fintechs and crypto exchanges across 25+ countries. Its license is source-available (Elastic License 2.0), not OSI open source.
 openapps.pro

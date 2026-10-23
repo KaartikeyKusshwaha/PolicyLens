@@ -1,5 +1,9 @@
 # Deployed synthetic browser acceptance, 23 October 2026
 
+Scope amendment, 24 October 2026: account 2FA was removed at the owner's request.
+Older MFA/enrollment references below describe the historical pass, not a current
+acceptance requirement. See [current authentication](ACCOUNT_AUTHENTICATION.md).
+
 The final browser pass started after full CI passed for `ecbaea0` and PR #3
 merged as `3f4d976`. It used the connected Edge extension directly, without the
 computer-use skill. The separate HTTPS acceptance installation on the actual

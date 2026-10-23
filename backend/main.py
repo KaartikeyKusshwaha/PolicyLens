@@ -731,7 +731,6 @@ def create_app(settings=None, transport=None, *, start_worker=True):
 
     from product_api import router
     from access_api import router as access_router
-    from mfa_api import router as mfa_router
     from toolkit_api import router as toolkit_router
     from checkpoint_api import router as checkpoint_router
     from evidence_api import router as evidence_router
@@ -742,7 +741,6 @@ def create_app(settings=None, transport=None, *, start_worker=True):
 
     app.include_router(router)
     app.include_router(access_router)
-    app.include_router(mfa_router)
     app.include_router(toolkit_router)
     app.include_router(checkpoint_router)
     app.include_router(evidence_router)

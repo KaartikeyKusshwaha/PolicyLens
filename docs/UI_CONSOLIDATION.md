@@ -8,7 +8,7 @@ browser/mobile acceptance; the user requires finishing implementation first.
 | Inbox | `/inbox` | Open/overdue investigations, paged native/imported alerts, control/policy/retention reviews, customers and starter transaction ingestion |
 | Policies & Controls | `/policies` | Traceability first; policy library, control versions/tuning/YAML, policy changes and cited research |
 | Evidence | `/evidence` | Signed sponsor packs, external checkpoints, audit chain and advisory assessment records |
-| Settings & Agents | `/settings` | Workspace/account/MFA, connections, agent keys, playbooks/recent runs, imports and retention/holds |
+| Settings & Agents | `/settings` | Workspace/account/password, connections, agent keys, playbooks/recent runs, imports and retention/holds |
 
 The sidebar has exactly four primary links. Secondary navigation groups related
 work and highlights the area on detail/editor routes. Settings sections use

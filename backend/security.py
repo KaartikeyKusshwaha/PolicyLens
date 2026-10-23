@@ -1,38 +1,12 @@
-"""TOTP primitives and purpose-bound encryption for installation secrets."""
+"""Purpose-bound encryption for installation secrets."""
 
 import base64
-import hashlib
-import hmac
 import os
-import re
 import secrets
-import struct
-import time
 from pathlib import Path
 
 from cryptography.exceptions import InvalidTag
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-
-
-def totp(secret, counter, digits=6):
-    key = base64.b32decode(secret, casefold=True)
-    value = hmac.new(key, struct.pack(">Q", counter), hashlib.sha1).digest()
-    offset = value[-1] & 15
-    number = struct.unpack(">I", value[offset : offset + 4])[0] & 0x7FFFFFFF
-    return str(number % (10**digits)).zfill(digits)
-
-
-def matching_counter(secret, code, last=-1, stamp=None):
-    if not re.fullmatch(r"[0-9]{6}", code):
-        return None
-    current = int((time.time() if stamp is None else stamp) // 30)
-    # Check the entire bounded window, then consume the matching counter atomically.
-    matches = [
-        counter
-        for counter in (current - 1, current, current + 1)
-        if counter >= 0 and hmac.compare_digest(totp(secret, counter), code)
-    ]
-    return max(matches) if matches and max(matches) > last else None
 
 
 class SecretBox:

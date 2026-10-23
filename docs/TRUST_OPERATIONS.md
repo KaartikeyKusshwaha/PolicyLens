@@ -2,40 +2,27 @@
 
 Governed access, SQLCipher and retention workflows are deployed on Oracle.
 Migration, verified off-machine transfer, separate restore and selected populated
-synthetic browser checks have passed. Full browser/operator acceptance, MFA,
+synthetic browser checks have passed. Full browser/operator acceptance,
 independent security review and real-data gates remain open. Read the dated
 `DEPLOYED_CHECKPOINT_20261023.md` and `RELEASE_READINESS.md` before taking operator
 actions. `SECURITY_REVIEW_HANDOFF.md` prepares the independent review.
 
-## Account MFA
+## Account sign-in and installation keys
 
-Account settings supports manual authenticator setup, confirmation, recovery-code
-replacement and disablement. Sign-in and invitation acceptance have an optional
-second-factor field that becomes mandatory for accounts with MFA enabled.
-Codes follow [RFC 6238](https://datatracker.ietf.org/doc/html/rfc6238).
-Lifecycle/recovery boundaries follow the [OWASP MFA guidance](https://cheatsheetseries.owasp.org/cheatsheets/Multifactor_Authentication_Cheat_Sheet.html).
-
-- Seeds are encrypted with AES-256-GCM, bound to the account ID.
-- Recovery codes contain 80 random bits and are stored only as account-bound hashes.
-- TOTP and recovery consumption are serialized in an immediate database transaction.
-- Six-digit TOTP codes accept one adjacent 30-second step for clock skew. Replayed
-  counters are rejected even if two requests arrive concurrently.
-- Enrollment requires password reauthentication and expires after ten minutes.
-- Activation, disabling and recovery-code replacement revoke existing sessions.
-- Password reset preserves the factor. Existing-account invitations and password
-  changes also enforce the factor.
-- Restoring snapshots removes pending enrollment and invalidates all backed-up
-  recovery codes. The authenticator remains enabled; used codes cannot reappear.
-- Users with no factor and no recovery codes need an independently verified operator
-  recovery process. The software has no unauthenticated MFA-reset bypass.
+PolicyLens uses normal email/password sign-in. Account 2FA and its enrollment,
+verification and recovery-code interfaces were removed at the owner's request.
+Password changes, operator-issued single-use reset links and session revocation
+remain. See [account authentication](ACCOUNT_AUTHENTICATION.md) for current behavior
+and compatibility with obsolete factor records in historical databases/backups.
 
 The existing Oracle installation already uses its protected original key at
 `/etc/policylens-secrets/installation.key`. Keep that configured identity and its
-protected recovery copy. Do not generate another key or change its path merely
-to enable MFA: the same original installation identity is needed for the encrypted
-databases, MFA and derived audit signing. No rotation procedure is implemented.
+protected recovery copy. Do not generate another key or change its path when
+changing account features: the same original installation identity is needed for
+encrypted databases, protected integration data and derived audit signing.
+No rotation procedure is implemented.
 
-For a **new installation only**, provision a private key before setup/enrollment,
+For a **new installation only**, provision a private key before encrypted setup,
 using an operator-selected, persistent path. For example:
 
 ```sh
@@ -47,13 +34,12 @@ sudo chmod 600 /etc/policylens/security.key
 
 Set `SECURITY_KEY_PATH=/etc/policylens/security.key` in the private service
 environment and restart after deploying the reviewed source. Key generation is
-exclusive and refuses to overwrite an existing file. Public enrollment refuses
+exclusive and refuses to overwrite an existing file. Public deployments refuse
 to auto-generate keys. Store a protected recovery copy separately from database
-snapshots; loss of this key prevents decrypting enrolled seeds. Local development
+snapshots; loss of this key prevents database decryption. Local development
 can create `backend/data/.security-key` automatically. Windows operators must
 restrict the key's ACL to the service/current user and SYSTEM.
 
-MFA encryption alone does not encrypt the SQLite file. Explicit
 `DATABASE_ENCRYPTION=sqlcipher4` enables purpose-separated whole-file encryption;
 the current Oracle pilot was migrated into new encrypted files, with originals
 preserved. See `DATABASE_ENCRYPTION.md` for the migration, key recovery procedure
@@ -100,7 +86,7 @@ Example manual transfer on Windows (paths are operator-specific):
 ```
 
 The key file is a Fernet key, compatible with the earlier encrypted off-machine
-copies. It is different from the raw 32-byte MFA installation key.
+copies. It is different from the raw 32-byte installation key.
 
 After deploying `deploy/export_backup.py`, `deploy/install_backup_pull.ps1`
 can register a daily 09:00 local-time Windows task. The installer first requires a
@@ -115,14 +101,14 @@ before promising that availability. The server's backup schedule is 08:00–08:0
 nonzero. `last-success.json` remains the last verified successful transfer.
 Check both: a historical success does not erase a newer failure. Encrypted
 archives are retained; this puller does not delete previous backups automatically.
-Server snapshots exclude environment/API secrets and the MFA key. Retention and
+Server snapshots exclude environment/API secrets and the installation key. Retention and
 deletion of all copies must be included in the upcoming retention policy.
 
 ## Remaining operational acceptance
 
 Verified SSH, server timer logs, live transfer, receiver registration, triggered
 execution and selected populated mobile checks are recorded in the dated evidence.
-The next unattended daily receiver trigger, Telegram pairing/delivery, MFA,
+The next unattended daily receiver trigger, Telegram pairing/delivery,
 owner-workspace authentication/recovery acceptance and remaining browser scenarios
 are still open. Source tests do not establish these observations. Before real
 customer data, complete independent review/remediation and a signed agreement.

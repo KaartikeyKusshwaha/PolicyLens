@@ -19,8 +19,8 @@ are refused; administrators must reissue keys and submit reviewed new runs.
 
 An administrator creates a key in Settings & Agents -> Agent keys. Choose a distinct
 agent name, individual tools, expiry (up to 90 days), requests/minute, daily model-run
-budget and optional identifier masking. Creation requires password reauthentication
-and the current second factor when MFA is enabled. The credential is returned once;
+budget and optional identifier masking. Creation requires password reauthentication.
+The credential is returned once;
 only its SHA-256 hash is stored. Store it in the agent's protected environment or a
 private credential file, not source control or chat.
 

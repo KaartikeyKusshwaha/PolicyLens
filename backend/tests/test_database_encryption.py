@@ -17,7 +17,8 @@ from recovery import (
     restore_snapshot,
     verify_snapshot,
 )
-from security import SecretBox, matching_counter, totp
+from security import SecretBox
+from test_password_auth import legacy_factor
 from store import Store
 from test_product import add_customer, add_policy
 from test_workflows import authenticate
@@ -243,16 +244,7 @@ def test_encrypted_snapshot_rejects_wrong_mode_key_and_corrupt_page(tmp_path):
         verify_snapshot(backup, settings)
 
 
-def test_plaintext_migration_preserves_source_identity_fts_and_recovery(
-    tmp_path, monkeypatch
-):
-    stamp = [1800000000]
-    monkeypatch.setattr(
-        "mfa.matching_counter",
-        lambda secret, code, last=-1: matching_counter(
-            secret, code, last, stamp=stamp[0]
-        ),
-    )
+def test_plaintext_migration_preserves_source_identity_fts_and_recovery(tmp_path):
     plain = configured(tmp_path).model_copy(update={"database_encryption": "none"})
     with TestClient(create_app(plain, start_worker=False)) as client:
         identity = authenticate(client)
@@ -261,23 +253,11 @@ def test_plaintext_migration_preserves_source_identity_fts_and_recovery(
         second = client.post(
             "/api/auth/workspaces", json={"name": "Migration tenant two"}
         ).json()["id"]
-        # Existing encrypted MFA material and signing derivations must remain valid.
+        # Historic encrypted material and signing derivations still need the same key.
         protected = SecretBox(plain).encrypt(
             "fictional-existing-secret", "migration-test"
         )
-        enrollment = client.post(
-            "/api/auth/mfa/enroll", json={"password": "Test-only-password-2026"}
-        ).json()
-        assert (
-            client.post(
-                "/api/auth/mfa/confirm",
-                json={
-                    "password": "Test-only-password-2026",
-                    "code": totp(enrollment["secret"], stamp[0] // 30),
-                },
-            ).status_code
-            == 200
-        )
+        legacy_factor(client.app.state.hub, identity["id"])
     originals = {
         path: path.read_bytes() for path in plain.database_path.parent.rglob("*.db")
     }
@@ -309,22 +289,17 @@ def test_plaintext_migration_preserves_source_identity_fts_and_recovery(
     restarted_settings = encrypted_settings.model_copy(
         update={"database_path": restored / plain.database_path.name}
     )
-    stamp[0] += 30
     with TestClient(create_app(restarted_settings, start_worker=False)) as client:
         response = client.post(
             "/api/auth/login",
             json={
                 "email": "owner@example.invalid",
                 "password": "Test-only-password-2026",
-                "second_factor": totp(enrollment["secret"], stamp[0] // 30),
             },
         )
         assert response.status_code == 200
         client.headers["X-CSRF-Token"] = response.json()["csrf"]
-        assert client.get("/api/auth/mfa").json() == {
-            "enabled": True,
-            "recovery_codes_remaining": 0,
-        }
+        assert client.get("/api/auth/mfa").status_code == 404
         assert {w["id"] for w in client.get("/api/auth/workspaces").json()} == {
             identity["org_id"],
             second,

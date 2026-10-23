@@ -1,5 +1,9 @@
 # Governed toolkit implementation ledger
 
+Account-authentication amendment, 24 October 2026: the owner removed PolicyLens
+2FA and retained normal email/password sign-in. Historical MFA implementation
+entries below are superseded by [current authentication](ACCOUNT_AUTHENTICATION.md).
+
 The full user-provided master plan is retained in `MASTER_PLAN.md`. This ledger
 tracks implementation separately from deployment, browser acceptance, external
 review and market validation. None of those gates can be inferred from a green CI run.

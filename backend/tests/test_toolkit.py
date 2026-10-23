@@ -469,30 +469,20 @@ def test_masked_citations_verify_against_the_same_masked_snapshot(workspace):
     ).json()["valid"]
 
 
-def test_key_creation_requires_the_enrolled_second_factor(workspace):
-    import time
-    from security import totp
+def test_key_creation_requires_the_current_password(workspace):
+    from test_password_auth import legacy_factor
 
     client, _, _, _ = workspace
-    enrolled = client.post("/api/auth/mfa/enroll", json={"password": PASSWORD}).json()
-    enabled = client.post(
-        "/api/auth/mfa/confirm",
-        json={
-            "password": PASSWORD,
-            "code": totp(enrolled["secret"], int(time.time() // 30)),
-        },
-    ).json()
-    client.headers["X-CSRF-Token"] = enabled["user"]["csrf"]
+    legacy_factor(client.app.state.hub, client.get("/api/auth/me").json()["id"])
     body = {
-        "name": "Step-up protected agent",
+        "name": "Password protected agent",
         "scopes": ["search_policy"],
-        "password": PASSWORD,
+        "password": "Incorrect-password-2026",
         "pseudonymize": False,
     }
     assert client.post("/api/agent-keys", json=body).status_code == 401
-    body["second_factor"] = enabled["recovery_codes"][0]
+    body["password"] = PASSWORD
     assert client.post("/api/agent-keys", json=body).status_code == 201
-    assert client.post("/api/agent-keys", json=body).status_code == 401
 
 
 def test_prompt_version_change_never_reinterprets_a_queued_run(workspace, monkeypatch):

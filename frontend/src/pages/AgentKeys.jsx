@@ -17,7 +17,7 @@ export default function AgentKeys() {
     setBusy(true); setError(""); setToken(null); setMessage("");
     try {
       const result = await api("/agent-keys", { method: "POST", body: {
-        name: values.name, password: values.password, second_factor: values.second_factor,
+        name: values.name, password: values.password,
         scopes, expires_days: Number(values.expires_days), daily_runs: Number(values.daily_runs),
         requests_per_minute: Number(values.requests_per_minute), pseudonymize: values.pseudonymize === "on",
       } });
@@ -67,7 +67,6 @@ export default function AgentKeys() {
       <label className="checkbox-row"><input type="checkbox" name="pseudonymize" defaultChecked /><span>Mask structured customer identifiers and omit private notes from tool responses and model calls.</span></label>
       <p className="privacy-note">Masking is not complete anonymization. Unrecognized information in free text may remain. Internal record and citation references remain usable. The workspace run budget also applies.</p>
       <Field label="Current password"><input name="password" type="password" required minLength={12} maxLength={128} autoComplete="current-password" /></Field>
-      <Field label="Authenticator or recovery code"><input name="second_factor" maxLength={64} autoComplete="one-time-code" /></Field>
       <Submit busy={busy} disabled={busy || !scopes.length || Boolean(registry.error)}>Create scoped key</Submit>
     </form>
   </div>;
