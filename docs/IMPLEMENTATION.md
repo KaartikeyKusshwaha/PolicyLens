@@ -6,6 +6,22 @@ review and market validation. None of those gates can be inferred from a green C
 
 ## Operational watchdog checkpoint
 
+Synthetic HTTP load checkpoint: a separate single-worker server now exercises
+SQLCipher, real maker/checker setup, concurrent duplicate transaction ingestion,
+populated reads, tenant isolation, exact counts, audit integrity and signed pack
+verification. The 100-customer/1,000-unique-transaction/four-client run found the
+PDF's old 200,000-character cap. The print envelope now matches the existing
+2 MB complete snapshot envelope without omitting records. A fresh run passed all
+invariants and the chosen endpoint p95 limits, with zero HTTP failures and a
+verified pack in 19.785 seconds. Both failure and success reports are retained.
+First/middle/final PDF pages were rendered and inspected; PDFium confirmed the
+middle-page layout after Poppler font substitution artifacts. All 25 focused
+load/evidence tests and Ruff pass; a further retained-report test rechecks trusted
+digests and recomputes both passing and failed gates. No browser testing occurred.
+Source now has 470 backend tests; actual Oracle/partner/worker/provider load remains unproven.
+See `PILOT_LOAD.md`. Exact prior `995b64a` CI passed 458 backend and 73 frontend
+tests (run `39954596113`).
+
 Source now includes the read-only readiness/backup/disk watchdog, exit-code JSON
 reports and optional hardened systemd units. Receiver success receipts now bind
 the actual encrypted bytes and SHA-256. Fifty-seven watchdog/offsite tests pass
@@ -320,7 +336,9 @@ deployment occurred.
   URL or private-path output. The backup receiver records encrypted integrity
   metadata; optional hardened systemd timer/service templates are supplied.
   Local watchdog/offsite tests pass; actual installation, failure notification
-  integration, deployed measurements and load tests remain pending. See
+  integration and deployed measurements remain pending. The retained local
+  synthetic load run passes its chosen envelope; actual partner/Oracle capacity
+  remains unproven. See `PILOT_LOAD.md` and
   `OPERATIONAL_WATCHDOG.md`.
 - [ ] Independent security review and documented remediation.
 - [ ] Synthetic/non-production pilot; signed agreement and review before real data.

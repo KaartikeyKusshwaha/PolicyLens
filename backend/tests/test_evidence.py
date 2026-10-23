@@ -290,3 +290,40 @@ def test_record_and_printable_bounds_refuse_complete_export(
     monkeypatch.setattr(evidence, "MAX_ROWS", 5000)
     monkeypatch.setattr(evidence, "MAX_REPORT_CHARACTERS", 1)
     assert client.get("/api/evidence/sponsor-pack").status_code == 413
+
+
+def test_complete_printable_snapshot_above_old_limit_keeps_first_and_last_notes(
+    workspace, tmp_path
+):
+    from operations import Operations
+
+    client, store, manager, org = setup_pack(workspace, tmp_path)
+    customer = add_customer(client)
+    case = client.post(
+        "/api/cases",
+        json={
+            "customer_id": customer["id"],
+            "title": "Complete printable evidence scale",
+            "description": "Synthetic evidence to verify complete record rendering above the old print limit.",
+        },
+    ).json()
+    for index in range(90):
+        Operations(store).save(
+            "case_note",
+            {
+                "case_id": case["id"],
+                "notes": f"SYNTHETIC-PRINT-NOTE-{index:03} "
+                + "Retain complete synthetic review evidence. " * 55,
+            },
+            "synthetic-test",
+        )
+    content = evidence.export_pack(manager, org)
+    files = unpack(content)
+    snapshot = json.loads(files["evidence.json"])
+    assert len(json.dumps(snapshot, ensure_ascii=True)) > 200000
+    assert len(snapshot["records"]["case_note"]) == 90
+    text = "\n".join(
+        page.extract_text() for page in PdfReader(io.BytesIO(files["report.pdf"])).pages
+    )
+    assert "SYNTHETIC-PRINT-NOTE-000" in text and "SYNTHETIC-PRINT-NOTE-089" in text
+    assert verify_pack(content, manager.status(org)["fingerprint"])["valid"]

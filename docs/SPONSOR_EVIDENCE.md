@@ -44,11 +44,18 @@ cannot contain its own final file hash. Delivery is not proof of recipient custo
 or erasure. See `RETENTION.md` for boundaries and remaining discovery work.
 
 No date filtering or silent sampling occurs. Exports refuse more than 5,000 rows per
-section, 2 MB per business section/complete JSON snapshot, 200,000 printable snapshot
+section, 2 MB per business section/complete JSON snapshot, 2,000,000 printable snapshot
 characters, or the checkpoint's 100,000-event/8 MB audit bound. The offline verifier
 limits compressed and total uncompressed archive bytes to 32 MB. A refusal returns a
 visible error and no partial/unsigned replacement. Automatic checkpoint retention
 is separate from these download limits.
+
+The printable bound was raised after the retained synthetic HTTP load run exposed
+the old 200,000-character cap on an otherwise valid 1,000-transaction snapshot.
+The full labelled PDF remains complete, with no record sampling. A fresh run
+generated and verified the signed pack in 19.785 seconds on the recorded local
+machine; its complete PDF has 955 pages. This is not a 1 GB Oracle hardware claim.
+See `PILOT_LOAD.md` for the failed result, successful rerun and remaining limits.
 
 ## Verify independently
 

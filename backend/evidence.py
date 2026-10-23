@@ -20,7 +20,9 @@ from verify_evidence_pack import verify_pack
 
 MAX_ROWS = 5000
 MAX_SNAPSHOT_BYTES = 2_000_000
-MAX_REPORT_CHARACTERS = 200_000
+# Matches the complete snapshot envelope. Measured full synthetic 1,000-
+# transaction export remains bounded; no records are omitted for printability.
+MAX_REPORT_CHARACTERS = 2_000_000
 RECORD_KINDS = (
     "customer",
     "rule",
@@ -172,7 +174,7 @@ def pdf_report(snapshot):
     output = io.BytesIO()
     if len(json.dumps(snapshot, ensure_ascii=True)) > MAX_REPORT_CHARACTERS:
         raise EvidenceLimit(
-            "Printable evidence exceeds the 200,000-character pilot bound."
+            "Printable evidence exceeds the 2,000,000-character pilot bound."
         )
     styles = getSampleStyleSheet()
     styles.add(

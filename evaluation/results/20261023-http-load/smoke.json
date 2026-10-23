@@ -1,0 +1,125 @@
+{
+  "schema": "policylens.synthetic-http-load.v1",
+  "started_at": "2026-10-23T12:42:09.950130+00:00",
+  "configuration": {
+    "schema": "policylens.synthetic-http-load.v1",
+    "customers": 4,
+    "unique_transactions": 8,
+    "each_transaction_submitted": 2,
+    "concurrency": 2,
+    "read_rounds": 1,
+    "chosen_p95_ms": 2000,
+    "workers": 1,
+    "database_encryption": "sqlcipher4",
+    "model_calls": 0,
+    "provider_network": "disabled",
+    "agent_worker": "disabled"
+  },
+  "environment": {
+    "platform": "Windows-11-10.0.26200-SP0",
+    "python": "3.12.10",
+    "logical_cpus": 20,
+    "oracle_vm_proven": false
+  },
+  "invariants": {
+    "maker_self_approval_refused": true,
+    "exactly_one_original_per_reference": true,
+    "exactly_one_duplicate_per_reference": true,
+    "unique_transaction_count": true,
+    "one_case_per_flagged_customer": true,
+    "exact_alert_count": true,
+    "distinct_alert_ids": true,
+    "digest_counts_match": true,
+    "audit_chain_valid": true,
+    "no_model_jobs": true,
+    "encrypted_database_headers": true,
+    "second_tenant_empty": true,
+    "cross_tenant_customer_refused": true
+  },
+  "request_failures": 0,
+  "ingestion_seconds": 1.39,
+  "ingestion_requests_per_second": 11.51,
+  "evidence_pack_seconds": 0.359,
+  "evidence_pack_verified": true,
+  "evidence_pack_bytes": 25748,
+  "server_stopped": true,
+  "latencies": {
+    "GET /api/alerts": {
+      "requests": 1,
+      "p50_ms": 74.045,
+      "p95_ms": 74.045,
+      "max_ms": 74.045,
+      "http_statuses": {
+        "200": 1
+      }
+    },
+    "GET /api/analytics": {
+      "requests": 1,
+      "p50_ms": 79.103,
+      "p95_ms": 79.103,
+      "max_ms": 79.103,
+      "http_statuses": {
+        "200": 1
+      }
+    },
+    "GET /api/cases": {
+      "requests": 1,
+      "p50_ms": 93.526,
+      "p95_ms": 93.526,
+      "max_ms": 93.526,
+      "http_statuses": {
+        "200": 1
+      }
+    },
+    "GET /api/evidence/digest": {
+      "requests": 1,
+      "p50_ms": 42.242,
+      "p95_ms": 42.242,
+      "max_ms": 42.242,
+      "http_statuses": {
+        "200": 1
+      }
+    },
+    "GET /api/monitor/transactions": {
+      "requests": 1,
+      "p50_ms": 48.04,
+      "p95_ms": 48.04,
+      "max_ms": 48.04,
+      "http_statuses": {
+        "200": 1
+      }
+    },
+    "GET /api/traceability": {
+      "requests": 1,
+      "p50_ms": 42.625,
+      "p95_ms": 42.625,
+      "max_ms": 42.625,
+      "http_statuses": {
+        "200": 1
+      }
+    },
+    "POST /api/monitor/transactions": {
+      "requests": 16,
+      "p50_ms": 82.766,
+      "p95_ms": 792.474,
+      "max_ms": 792.474,
+      "http_statuses": {
+        "201": 16
+      }
+    }
+  },
+  "elapsed_seconds": 8.096,
+  "gate": {
+    "passed": true,
+    "checks": {
+      "all_correctness_invariants": true,
+      "no_request_failures": true,
+      "chosen_http_p95_met": true,
+      "signed_pack_within_minute": true,
+      "server_stopped": true
+    },
+    "scope": "Chosen synthetic envelope only; not a partner SLA, Oracle VM capacity proof or security review."
+  },
+  "limits": "Isolated synthetic HTTP run on the recorded machine. No browser, real customer data, full sanctions feeds, model/network providers, agent-worker throughput, 1-GB Oracle VM or partner workload acceptance was tested. Setup/correctness/evidence export are outside concurrent-read/ingestion latency samples. Test credentials, keys and databases remain private inside the run directory; do not publish that directory.",
+  "report_sha256": "4ed1f0113f5e7ba876b7a2730060be06f5dd14221b31a11c955ee6f5e7507b5b"
+}
