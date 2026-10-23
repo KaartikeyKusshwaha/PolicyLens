@@ -6,6 +6,19 @@ review and market validation. None of those gates can be inferred from a green C
 
 ## Operational watchdog checkpoint
 
+Final browser preparation: `evaluation/browser_fixture.py` creates a new isolated
+SQLCipher installation with three random-password human accounts, the fictional
+policy/customer/payment pack, four independently approved controls, one draft,
+six transactions/alerts and three open cases. Input hashes and object IDs are
+retained separately from private credentials. External providers and the worker
+are disabled; no successful model, fresh feed or browser result is invented.
+An actual preparation completed. Both focused tests pass, including restart and
+role/count verification plus refusal to overwrite an existing directory. Ruff
+passes. The final acceptance instructions and README now distinguish implemented
+logical deletion from unfinished physical/cross-copy handling. Exact `790d8f7`
+CI completed successfully (run `39975691261`); current changes await new CI.
+No browser, merge or deployment action occurred at this checkpoint.
+
 Recovery-set consistency: combined receiver success now additionally verifies
 each signed checkpoint head against its snapshot's exact full audit chain and
 matches workspace rosters. Deletion receipts must match external hashes, removed

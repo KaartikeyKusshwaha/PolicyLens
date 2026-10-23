@@ -6,10 +6,12 @@ prepares that pass; no item below is established by writing this document.
 
 ## Entry evidence required before opening the browser
 
-- Reconcile every master-plan implementation item against `IMPLEMENTATION.md`.
-  Retention execution/copy reconciliation, partner transaction integration,
-  scorecard/tuning/preparation, four-area UI and operational hardening currently
-  remain incomplete. Record genuinely external gates separately; never substitute
+- Reconcile every master-plan implementation item against `RELEASE_READINESS.md`
+  and `IMPLEMENTATION.md`. Offline logical deletion, scorecard, tuning, four-area
+  UI and operational tools now have source/test evidence. Complete copy
+  reconciliation, partner transaction integration and deployed operations remain
+  incomplete; automatic briefs remain disabled by the failed quality gate.
+  Record genuinely external gates separately; never substitute
   public prospect research for partner interviews or a signed agreement.
 - Record exact Git SHA, clean worktree, remote SHA, PR merge state, full backend
   and frontend tests, lint/build/audit results and seeded scorecard artifact.
@@ -30,6 +32,25 @@ prepares that pass; no item below is established by writing this document.
   citation verification to obtain a passing result.
 
 ## One final browser pass
+
+For local synthetic preparation (not production acceptance), run:
+
+```powershell
+.venv\Scripts\python.exe evaluation/browser_fixture.py prepare --directory .pytest-tmp/browser-final
+.venv\Scripts\python.exe evaluation/browser_fixture.py serve --directory .pytest-tmp/browser-final --port 8765
+```
+
+Preparation creates only a **new** isolated SQLCipher installation. `fixture.json`
+records input digests, object IDs and verified expected counts: six transactions,
+six native alerts, three open cases, four independently approved controls and one
+pending draft. Three randomly generated human accounts are stored only in
+`private/accounts.json`; do not publish that directory or capture passwords.
+Existing directories are refused rather than reused or overwritten. The server
+binds only to `127.0.0.1`, disables the worker and external provider calls, and
+loads no repository `.env`. No successful model draft, fresh external feed,
+imported record, resolved case or browser result is fabricated by this fixture.
+Those remaining scenarios need explicit setup during acceptance. Run the reviewed
+frontend build first; record the exact Git SHA and screenshots when testing.
 
 Use the connected browser extension directly, without the computer-use skill.
 Record the deployed SHA, URL, timestamp, synthetic workspace, viewport and
