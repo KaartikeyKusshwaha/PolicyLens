@@ -32,3 +32,20 @@ screening accuracy, sustained load, live case/model integration or production
 source configuration. No complete-browser or sanctions-clearance claim is made.
 The actual feed snapshot, private key and store remain outside Git; only aggregate
 results are retained. Artifact SHA-256 binds bytes, not independent attestation.
+
+## UN and UK follow-up
+
+The same isolated encrypted source store subsequently downloaded and validated
+both other configured official feeds, sequentially through deployed `sync` code.
+UN returned 1,010 entries with publication value `2026-10-22T23:00:06.809Z`;
+UK returned 6,408 entries with publication value `16/10/2026`. Exact fetch times,
+URLs and SHA-256 values are in `un-uk-summary.json`. Both were marked ready after
+fetch; publisher update age and time since successful retrieval are distinct.
+No publication timestamp was replaced by the fetch timestamp.
+
+The unprivileged hardened service completed with exit zero, about 158.4 MiB peak
+memory, 6.624 CPU seconds and zero peak swap, under the same 384 MiB ceiling.
+Both live HTTPS sites remained ready. Across the separate runs, each of the three
+configured feeds has now completed an actual host-side download and parse. This
+does not establish combined enabled-feed screening, UI sync, scheduled refresh,
+completeness of publisher data, identity matching accuracy or legal clearance.
