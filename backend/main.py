@@ -3,6 +3,7 @@ import hmac
 import logging
 import time
 import uuid
+from contextlib import closing
 from contextlib import asynccontextmanager, suppress
 from pathlib import Path
 from urllib.parse import urlparse
@@ -31,7 +32,12 @@ from operations import Operations, audit
 from product_models import NamedWorkspace
 from providers import extract_document, problem, verify_citations
 from store import Store, now
-from database import INTEGRITY_ERRORS, STORAGE_ERRORS, encryption_status
+from database import (
+    INTEGRITY_ERRORS,
+    STORAGE_ERRORS,
+    connect_database,
+    encryption_status,
+)
 from runtime import InstallationLock
 from retention_api import router as retention_router
 
@@ -126,6 +132,13 @@ def create_app(settings=None, transport=None, *, start_worker=True):
         path = request.url.path
         writing = request.method not in ("GET", "HEAD", "OPTIONS")
         try:
+            if path == "/api/ready" and (
+                not app.state.hub.path.is_file() or app.state.hub.path.is_symlink()
+            ):
+                # Session lookup uses normal writable application handles. Do
+                # not let a probe recreate identity storage before its read-only
+                # readiness checks get a chance to report the missing file.
+                raise RuntimeError("Identity storage is unavailable")
             if (
                 public_deployment
                 and request.url.scheme != "https"
@@ -439,8 +452,27 @@ def create_app(settings=None, transport=None, *, start_worker=True):
     def readiness():
         worker = app.state.worker
         try:
-            with app.state.hub.connect() as db:
-                db.execute("SELECT 1 FROM organizations LIMIT 1").fetchone()
+            with closing(
+                connect_database(app.state.hub.path, settings, readonly=True)
+            ) as db:
+                for row in db.execute("SELECT db_path FROM organizations"):
+                    path = Path(row[0])
+                    # A readiness probe must never initialize/recreate storage.
+                    # Probe every registered tenant, including uncached ones.
+                    if not path.is_file() or path.is_symlink():
+                        return JSONResponse({"status": "not_ready"}, status_code=503)
+                    with closing(
+                        connect_database(path, settings, readonly=True)
+                    ) as tenant:
+                        for table in (
+                            "records",
+                            "policies",
+                            "transactions",
+                            "alerts",
+                            "jobs",
+                            "audit_chain",
+                        ):
+                            tenant.execute(f"SELECT 1 FROM {table} LIMIT 1").fetchone()
             if worker is not None and worker.done():
                 return JSONResponse({"status": "not_ready"}, status_code=503)
             if (

@@ -6,6 +6,16 @@ review and market validation. None of those gates can be inferred from a green C
 
 ## Operational watchdog checkpoint
 
+Readiness hardening: probes now open identity and every registered tenant
+read-only and query core business tables, including uncached tenants. Missing,
+damaged or incomplete tenant storage returns generic 503 without initializing
+replacement files. Identity presence is checked before session authentication so
+an authenticated probe cannot recreate a missing identity database. Seven new
+tests cover plaintext/encrypted uncached tenants and missing identity storage.
+Full schema/page integrity and workload acceptance remain separate checks.
+All 30 storage-readiness/hardening/encryption tests and Ruff pass locally. Exact
+preceding `0733c7c` CI passed 470 backend and 73 frontend tests (run `39957149581`).
+
 Synthetic HTTP load checkpoint: a separate single-worker server now exercises
 SQLCipher, real maker/checker setup, concurrent duplicate transaction ingestion,
 populated reads, tenant isolation, exact counts, audit integrity and signed pack

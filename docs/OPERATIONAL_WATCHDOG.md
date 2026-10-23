@@ -22,8 +22,12 @@ makes no model calls and does not write receipts or change backup data.
   TLS/network errors and negative readiness fail. HTTPS is mandatory except for
   HTTP loopback. URLs may not contain credentials, paths, queries or fragments.
   Proxy environment variables are ignored; no account or agent key is sent.
-  Existing readiness detects identity storage failure, terminated worker and
-  recorded checkpoint failures. It does not prove every business workflow works.
+  Readiness detects identity storage failure, missing/damaged registered tenant
+  databases, terminated worker and recorded checkpoint failures. Every tenant,
+  including uncached ones, is opened read-only and its core tables queried; the
+  probe never initializes replacement storage. Identity file presence is checked
+  before session lookup. It does not run full database integrity checks or prove
+  every business workflow works. Probe cost grows with the tenant count.
 - **Backup:** both `last-attempt.json` and `last-success.json` must describe the
   same successful completed attempt and archive. A newer failed attempt stays a
   failure even if an older success exists. Both completion and snapshot timestamps
