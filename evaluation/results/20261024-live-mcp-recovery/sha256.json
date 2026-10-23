@@ -1,5 +1,6 @@
 {
   "mcp-acceptance.json": "a663b6941c2ecda14826f3e1035cccf8152e48963aa3c518ab160ffc57d85970",
   "live-run.json": "3cb698d756516449472f44ee621c0aa17a58329a45e668eb81230658baf5fcdf",
-  "recovery-acceptance.json": "c077e4190bb768d03821bde80d43f560f91b539229959b300990abb8b77a944c"
+  "recovery-acceptance.json": "c077e4190bb768d03821bde80d43f560f91b539229959b300990abb8b77a944c",
+  "deployed-governance.json": "f94de8eb6ba630ed1c9d96419802b7b14a0ee73fd75ba48e964affdf1543e4ff"
 }

@@ -54,3 +54,23 @@ off-machine custody, production recovery, MFA recovery or independent review.
 The source key, archive key, databases and credentials remain private and are
 excluded from these artifacts. `sha256.json` binds the retained aggregate reports
 and synthetic run; it is not an independent signature or time attestation.
+
+## Deployed governance API follow-up
+
+`deployed-governance.json` records a separate HTTPS check on the existing isolated
+Oracle acceptance installation, using distinct owner/reviewer API sessions. It
+did not operate the browser tab handed to the user for MFA.
+
+A fresh tuning draft against the active YAML-imported control compared the
+fictional 4,000/7,000 candidates against a caller-supplied target of one match.
+The author was refused approval (HTTP 403). The separate reviewer activated the
+selected 4,000 draft, superseding its parent; the existing alerts were unchanged.
+These numbers measure synthetic workload and are not detection or legal advice.
+
+The requester of the existing fictional pending hold release was refused
+self-approval (HTTP 403); a different reviewer released it. The subsequent
+deletion preview had no blocking holds, while open cases/tasks, retention time,
+shared/text references and registered/external copy blockers remained. It exposed
+no deletion execution. No records or external copies were removed. The deployed
+audit chain verified 83 entries. These are API observations; browser hold-release,
+MFA/recovery, complete deletion and genuine legal authority remain unverified.
