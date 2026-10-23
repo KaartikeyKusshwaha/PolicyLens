@@ -6,6 +6,19 @@ review and market validation. None of those gates can be inferred from a green C
 
 ## Operational watchdog checkpoint
 
+Recovery-set consistency: combined receiver success now additionally verifies
+each signed checkpoint head against its snapshot's exact full audit chain and
+matches workspace rosters. Deletion receipts must match external hashes, removed
+targets must be absent, and uncommitted history needs a matching proved-abort
+request. Individually valid but inconsistent generations fail without a new
+success receipt. The existing 19 combined-backup tests pass; dedicated stale-head,
+pre-deletion snapshot and roster regression tests pass. All 24 combined recovery/
+scheduling tests and five final consistency tests pass, including proved abort
+and historical deletion guards before later tenant creation. Ruff passes.
+Exact preceding `ad42486` CI passed 572 backend and 73 frontend tests
+(run `39974775463`); source now has 577 backend tests. No deployment or
+live-source consistency claim follows from this local verification.
+
 History-archive monitoring: deletion/checkpoint receiver receipts now record exact
 saved ciphertext size/SHA-256 and source creation time. Optional watchdog archive
 directories require matching latest combined receipts, fresh source metadata and

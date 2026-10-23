@@ -287,8 +287,10 @@ def main():
             )
         if args.key_file.resolve().is_relative_to(args.destination.resolve()):
             raise ValueError("Keep the decryption key outside the backup destination.")
+        database_content = collect(args.host, args.identity, args.known_hosts)
+        deletion_content, checkpoint_content = None, None
         result = persist(
-            collect(args.host, args.identity, args.known_hosts),
+            database_content,
             args.key_file,
             args.destination,
             args.max_age_hours,
@@ -297,10 +299,11 @@ def main():
         if args.deletion_state_destination is not None:
             from deploy.deletion_state_backup import persist as persist_deletion_state
 
+            deletion_content = collect(
+                args.host, args.identity, args.known_hosts, deletion_state=True
+            )
             result["deletion_state"] = persist_deletion_state(
-                collect(
-                    args.host, args.identity, args.known_hosts, deletion_state=True
-                ),
+                deletion_content,
                 args.database_key_file,
                 args.key_file,
                 args.deletion_state_destination,
@@ -309,13 +312,25 @@ def main():
         if args.checkpoint_destination is not None:
             from deploy.checkpoint_backup import persist as persist_checkpoints
 
+            checkpoint_content = collect(
+                args.host, args.identity, args.known_hosts, checkpoint_history=True
+            )
             result["checkpoint_history"] = persist_checkpoints(
-                collect(
-                    args.host, args.identity, args.known_hosts, checkpoint_history=True
-                ),
+                checkpoint_content,
                 args.checkpoint_fingerprint,
                 args.key_file,
                 args.checkpoint_destination,
+            )
+        if deletion_content is not None or checkpoint_content is not None:
+            from deploy.recovery_set import verify as verify_recovery_set
+
+            result["recovery_set"] = verify_recovery_set(
+                database_content,
+                database_key_file=args.database_key_file,
+                checkpoint_content=checkpoint_content,
+                fingerprint=args.checkpoint_fingerprint,
+                deletion_content=deletion_content,
+                max_age_hours=args.max_age_hours,
             )
     except Exception:
         result = {

@@ -54,6 +54,20 @@ saved. A successful combined receipt includes checkpoint archive/digest/fingerpr
 anchor count and workspace heads. The existing watchdog observes latest-attempt
 failure; receipt success alone does not prove continued history freshness.
 
+The receiver cross-checks selected artifacts before combined success. Every signed
+checkpoint head must exactly anchor its snapshot workspace's full audit chain;
+history/snapshot workspace rosters must match. For deletion history, snapshot
+receipts must match external hashes, committed targets must be absent, and
+uncommitted entries require matching cancelled requests/proved-abort links.
+Pre-deletion databases with newer history, or older checkpoint prefixes with
+newer database events, fail the attempt. Individually verified ciphertext may
+already be saved on cross-check failure; it is not a verified recovery set and
+no new success receipt is produced. This is selected-copy consistency evidence,
+not proof of current source state, physical erasure or deployed recovery.
+Historical deletion guards may predate newly added workspaces; their older rosters
+must be subsets of the snapshot roster, while current checkpoint history must
+cover it exactly. A historical guard naming an omitted tenant still fails.
+
 The Windows installer accepts `-CheckpointDestination` and
 `-CheckpointFingerprint`, together with existing DB/deletion options. Validation
 and argument quoting apply, and the first complete transfer must pass before

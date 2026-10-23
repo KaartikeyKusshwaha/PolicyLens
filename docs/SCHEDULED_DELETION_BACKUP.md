@@ -52,6 +52,11 @@ The two receivers verify/decrypt/re-encrypt their content. `last-success.json` i
 updated only after **both** succeed. If history verification fails, the latest
 attempt reports failure and the command exits 1 even if a DB archive was saved.
 Existing success receipts remain. The watchdog detects that failed latest attempt.
+Cross-artifact verification also checks snapshot receipts/removed targets against
+the supplied history before success. A post-deletion history bundle cannot certify
+an older snapshot containing those records. Matching proved-abort metadata is
+required for uncommitted history entries. See `SCHEDULED_CHECKPOINT_BACKUP.md`
+for the combined database/history consistency boundary.
 A successful receipt includes history digest/filename/count; preserve the current
 digest independently of database/archive rollback.
 
