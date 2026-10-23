@@ -89,3 +89,12 @@ before the browser connection disappeared, and the mapping UI was not accepted.
 See `evaluation/results/20261024-deployed-policy-analysis/` for retained evidence,
 the repaired transient-service restart failure and exact limitations. MFA remains
 deferred as requested; this follow-up does not mark the browser pass complete.
+
+A subsequent connected browser session mapped the velocity obligation to its
+active control with an explicit rationale. The card initially showed two alerts
+and a missing-simulation gap. A browser-run historical simulation recorded two
+matches across six transactions; returning to traceability displayed the result
+and removed that gap. The four remaining unmapped obligations stayed flagged.
+Separate HTTPS matrix retrieval confirmed five obligations/four gaps. Private
+mapping and aggregate screenshots were retained. This verifies this mapping and
+simulation flow, not version-change/unlink acceptance or full policy coverage.

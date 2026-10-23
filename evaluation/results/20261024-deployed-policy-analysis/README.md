@@ -37,3 +37,23 @@ is included. These are prioritized suggestions from an invented software-accepta
 policy, not legal advice, a complete obligation inventory, validated mappings or
 proof of effective detection. Independent review and full browser acceptance remain
 required.
+
+## Browser mapping and simulation follow-up
+
+A newly connected browser session signed into the same fictional workspace.
+The velocity suggestion was explicitly linked to the existing active velocity
+control, with a rationale explaining the limited applicability assertion.
+The saved card displayed two recorded alerts and an **Active Control Without
+Recorded Simulation** gap. Historical simulation was then run through that
+control's browser action: two matches across six transactions, with no new alerts
+or cases. Returning to traceability displayed the recorded simulation and removed
+that gap from the mapped obligation. Four other obligations remained unmapped,
+and the aggregate changed from five gaps to four. Separate HTTPS retrieval
+confirmed the aggregate counts. No model call was needed for these actions.
+
+`mapping-acceptance.json` records the follow-up. Private screenshots retain the
+mapping and the aggregate four-gap result. The earlier missing-analysis-screenshot
+limitation remains; this follow-up establishes mapping/simulation behavior only.
+Version-change gaps, unlinking, remaining account/custody scenarios and full
+browser acceptance remain open. A mapping and passing historical simulation do
+not establish full policy coverage or detection accuracy.
