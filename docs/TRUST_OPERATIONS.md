@@ -1,10 +1,11 @@
 # Trust baseline: implementation and deployment
 
-This document describes new source on the governance branch, not protections
-already deployed to Oracle. Browser acceptance is deferred until implementation
-is complete, as requested. Governed agent access, SQLCipher storage and offline
-migration/backup/restore are implemented in source. Retention workflows and
-deployment acceptance remain outstanding; see `IMPLEMENTATION.md`.
+Governed access, SQLCipher and retention workflows are deployed on Oracle.
+Migration, verified off-machine transfer, separate restore and selected populated
+synthetic browser checks have passed. Full browser/operator acceptance, MFA,
+independent security review and real-data gates remain open. Read the dated
+`DEPLOYED_CHECKPOINT_20261023.md` and `RELEASE_READINESS.md` before taking operator
+actions. `SECURITY_REVIEW_HANDOFF.md` prepares the independent review.
 
 ## Account MFA
 
@@ -28,7 +29,14 @@ Lifecycle/recovery boundaries follow the [OWASP MFA guidance](https://cheatsheet
 - Users with no factor and no recovery codes need an independently verified operator
   recovery process. The software has no unauthenticated MFA-reset bypass.
 
-Provision the production key before enabling enrollment:
+The existing Oracle installation already uses its protected original key at
+`/etc/policylens-secrets/installation.key`. Keep that configured identity and its
+protected recovery copy. Do not generate another key or change its path merely
+to enable MFA: the same original installation identity is needed for the encrypted
+databases, MFA and derived audit signing. No rotation procedure is implemented.
+
+For a **new installation only**, provision a private key before setup/enrollment,
+using an operator-selected, persistent path. For example:
 
 ```sh
 sudo install -d -m 750 -o root -g policylens /etc/policylens
@@ -47,8 +55,10 @@ restrict the key's ACL to the service/current user and SYSTEM.
 
 MFA encryption alone does not encrypt the SQLite file. Explicit
 `DATABASE_ENCRYPTION=sqlcipher4` enables purpose-separated whole-file encryption;
-the current pilot has not been migrated. See `DATABASE_ENCRYPTION.md` for the
-non-destructive migration, key recovery procedure and remaining deployment gates.
+the current Oracle pilot was migrated into new encrypted files, with originals
+preserved. See `DATABASE_ENCRYPTION.md` for the migration, key recovery procedure
+and remaining deployment gates. Never infer encryption of historical copies from
+the current live configuration.
 
 ## Automatic off-machine backups
 
@@ -108,8 +118,11 @@ archives are retained; this puller does not delete previous backups automaticall
 Server snapshots exclude environment/API secrets and the MFA key. Retention and
 deletion of all copies must be included in the upcoming retention policy.
 
-## Not yet verified on production
+## Remaining operational acceptance
 
-SSH reachability, the expired OCI session refresh, current daily timer results,
-live transfer and task registration, MFA enrollment, authenticated production
-workflows and mobile acceptance. Source tests do not establish those conditions.
+Verified SSH, server timer logs, live transfer, receiver registration, triggered
+execution and selected populated mobile checks are recorded in the dated evidence.
+The next unattended daily receiver trigger, Telegram pairing/delivery, MFA,
+owner-workspace authentication/recovery acceptance and remaining browser scenarios
+are still open. Source tests do not establish these observations. Before real
+customer data, complete independent review/remediation and a signed agreement.
