@@ -73,3 +73,19 @@ acceptance record are retained in the operator workspace. Some first mobile
 captures used a browser screenshot method that produced scaled captures; the
 native-size case recheck is the evidence for the measured overflow correction.
 Passwords and session tokens are excluded from this document and the record.
+
+Follow-up on 24 October: the fictional Maple case was assigned to the reviewer.
+That assigned investigator's browser resolution attempt was refused. The separate
+administrator then recorded an explicitly fictional insufficient-evidence
+disposition; the resolved status and distinct actors appeared in Activity.
+Screenshots of refusal and independent resolution were retained privately.
+The acceptance fixture now has two open and two resolved cases.
+
+The browser also started one real policy-analyst run and displayed its completed
+five cited suggestions. Separate HTTPS retrieval reverified all five quotations;
+the traceability API shows five unmapped obligations/gaps. The temporary provider
+enablement was rolled back. No screenshot of that analysis result was saved
+before the browser connection disappeared, and the mapping UI was not accepted.
+See `evaluation/results/20261024-deployed-policy-analysis/` for retained evidence,
+the repaired transient-service restart failure and exact limitations. MFA remains
+deferred as requested; this follow-up does not mark the browser pass complete.

@@ -1,0 +1,214 @@
+{
+  "actor": "cde4d5e6-43cc-4a5a-831f-f2956a392f99",
+  "created_at": "2026-10-23T19:45:51.946979+00:00",
+  "id": "59f0a2d7-3b81-48f9-9f9e-6dc1547bed46",
+  "kind": "policy_analyst",
+  "payload": {
+    "max_model_calls": 1,
+    "model": "openai/gpt-oss-20b",
+    "model_attempts": 1,
+    "model_revision": "provider-unreported",
+    "prompt_version": "policylens-governance-v2",
+    "pseudonymize": false,
+    "requested_by": "cde4d5e6-43cc-4a5a-831f-f2956a392f99",
+    "result": {
+      "coverage": {
+        "complete": true,
+        "document_characters": 1719,
+        "included_characters": 1719
+      },
+      "limitations": [
+        "Policy is fictional and not regulatory guidance.",
+        "Does not provide legal obligations or regulatory thresholds.",
+        "All customer and payment data are fictional.",
+        "Internal test settings; thresholds are illustrative, not legal.",
+        "No automated payment approval or regulatory filing permitted.",
+        "Sanctions matches require human investigation; no name match equates to clearance."
+      ],
+      "obligations": [
+        {
+          "citation": {
+            "chunk_id": "0b39504a-6fff-4a44-b2a9-be150a3991d7:1.0:agent:0",
+            "policy_id": "0b39504a-6fff-4a44-b2a9-be150a3991d7",
+            "quote": "Identity and purpose All international transaction transfers require verified sender and receiver identity.",
+            "source_url": "",
+            "title": "FICTIONAL acceptance policy \u2014 not regulatory guidance",
+            "version": "1.0"
+          },
+          "control_kind": "kyc",
+          "obligation": "Verify sender and receiver identity for every international transaction.",
+          "requires_human_interpretation": true
+        },
+        {
+          "citation": {
+            "chunk_id": "0b39504a-6fff-4a44-b2a9-be150a3991d7:1.0:agent:0",
+            "policy_id": "0b39504a-6fff-4a44-b2a9-be150a3991d7",
+            "quote": "Missing or expired customer due diligence requires investigation.",
+            "source_url": "",
+            "title": "FICTIONAL acceptance policy \u2014 not regulatory guidance",
+            "version": "1.0"
+          },
+          "control_kind": "manual",
+          "obligation": "Investigate any transaction with missing or expired customer due diligence.",
+          "requires_human_interpretation": true
+        },
+        {
+          "citation": {
+            "chunk_id": "0b39504a-6fff-4a44-b2a9-be150a3991d7:1.0:agent:0",
+            "policy_id": "0b39504a-6fff-4a44-b2a9-be150a3991d7",
+            "quote": "Illustrative internal controls For this test organization only, a single USD transaction of 5,000.00 or more requires a documented review.",
+            "source_url": "",
+            "title": "FICTIONAL acceptance policy \u2014 not regulatory guidance",
+            "version": "1.0"
+          },
+          "control_kind": "amount",
+          "obligation": "Review any single USD transaction of $5,000.00 or more.",
+          "requires_human_interpretation": true
+        },
+        {
+          "citation": {
+            "chunk_id": "0b39504a-6fff-4a44-b2a9-be150a3991d7:1.0:agent:0",
+            "policy_id": "0b39504a-6fff-4a44-b2a9-be150a3991d7",
+            "quote": "Three or more transactions for one customer within one hour require review.",
+            "source_url": "",
+            "title": "FICTIONAL acceptance policy \u2014 not regulatory guidance",
+            "version": "1.0"
+          },
+          "control_kind": "velocity",
+          "obligation": "Review when a customer initiates three or more transactions within one hour.",
+          "requires_human_interpretation": true
+        },
+        {
+          "citation": {
+            "chunk_id": "0b39504a-6fff-4a44-b2a9-be150a3991d7:1.0:agent:0",
+            "policy_id": "0b39504a-6fff-4a44-b2a9-be150a3991d7",
+            "quote": "A total of USD 8,000.00 or more for one customer within 24 hours requires review.",
+            "source_url": "",
+            "title": "FICTIONAL acceptance policy \u2014 not regulatory guidance",
+            "version": "1.0"
+          },
+          "control_kind": "aggregate",
+          "obligation": "Review when a customer's total transactions reach $8,000.00 or more within 24 hours.",
+          "requires_human_interpretation": true
+        }
+      ],
+      "output_scope": "Prioritized suggested obligations, not an exhaustive inventory. Review the full source document before implementation.",
+      "requires_approval": true,
+      "summary": "This fictional acceptance policy outlines internal controls for cross\u2011border payments, emphasizing identity verification, due diligence, and transaction reviews based on amount, velocity, and aggregate thresholds. It requires manual investigation for missing due diligence, high\u2011value transactions, rapid repeat transfers, and large 24\u2011hour sums. Sanctions screening mandates human review of matches, and automated approval is disallowed. The policy is purely illustrative, with no legal authority or regulatory thresholds, and all examples are fictional."
+    }
+  },
+  "state": "completed",
+  "steps": [
+    {
+      "created_at": "2026-10-23T19:45:52.258541+00:00",
+      "output": {
+        "coverage": {
+          "complete": true,
+          "document_characters": 1719,
+          "included_characters": 1719
+        },
+        "policies": [
+          {
+            "chunk_id": "0b39504a-6fff-4a44-b2a9-be150a3991d7:1.0:agent:0",
+            "policy_id": "0b39504a-6fff-4a44-b2a9-be150a3991d7",
+            "source_url": "",
+            "text": "SAMPLE POLICY - FICTIONAL SOFTWARE ACCEPTANCE DATA Cross-border payments review policy, version 1.0 This policy is invented solely for testing PolicyLens. It does not describe legal obligations or regulatory thresholds. Every customer and payment in this pack is fictional. Identity and purpose All international transaction transfers require verified sender and receiver identity. Investigators must collect the payment purpose and supporting invoice. A manually recorded due diligence status does not establish verified identity by itself. Missing or expired customer due diligence requires investigation. Illustrative internal controls For this test organization only, a single USD transaction of 5,000.00 or more requires a documented review. Three or more transactions for one customer within one hour require review. A total of USD 8,000.00 or more for one customer within 24 hours requires review. These are invented internal test settings, not legal thresholds. Amount controls use the configured currency; EUR and USD amounts must not be added together. Sanctions and investigation Screen supplied names against every enabled current official sanctions list. Potential sanctions name matches must be investigated by a human using additional identity evidence. No name match is not sanctions clearance. No automated payment approval or regulatory filing is permitted. Independent review and evidence Assign an investigator to each case. A different authorized reviewer must record the final disposition. Preserve the policy version, original alert facts, source snapshot timestamps and checksums, investigation notes and review rationale. Agents prepare drafts and cannot activate controls or resolve cases.",
+            "title": "FICTIONAL acceptance policy \u2014 not regulatory guidance",
+            "version": "1.0"
+          }
+        ],
+        "task": "Extract up to five prioritized obligation themes from supplied policy excerpts, grouping closely related requirements. Keep the summary under 120 words, each obligation concise, and each quotation to one exact supporting sentence. Identify exceptions, ambiguity, omitted requirements, and missing coverage in limitations. This is not an exhaustive obligation inventory. All proposed controls require human review. Do not invent legal requirements or thresholds."
+      },
+      "step": "collect_evidence"
+    },
+    {
+      "created_at": "2026-10-23T19:45:55.160214+00:00",
+      "output": {
+        "requested_model": "openai/gpt-oss-20b",
+        "returned_model": "openai/gpt-oss-20b",
+        "revision_enforced": false,
+        "system_fingerprint": "fp_5979a0e1b7"
+      },
+      "step": "model_identity"
+    },
+    {
+      "created_at": "2026-10-23T19:45:55.173287+00:00",
+      "output": {
+        "limitations": [
+          "Policy is fictional and not regulatory guidance.",
+          "Does not provide legal obligations or regulatory thresholds.",
+          "All customer and payment data are fictional.",
+          "Internal test settings; thresholds are illustrative, not legal.",
+          "No automated payment approval or regulatory filing permitted.",
+          "Sanctions matches require human investigation; no name match equates to clearance."
+        ],
+        "obligations": [
+          {
+            "citation": {
+              "chunk_id": "0b39504a-6fff-4a44-b2a9-be150a3991d7:1.0:agent:0",
+              "quote": "Identity and purpose All international transaction transfers require verified sender and receiver identity."
+            },
+            "control_kind": "kyc",
+            "obligation": "Verify sender and receiver identity for every international transaction.",
+            "requires_human_interpretation": true
+          },
+          {
+            "citation": {
+              "chunk_id": "0b39504a-6fff-4a44-b2a9-be150a3991d7:1.0:agent:0",
+              "quote": "Missing or expired customer due diligence requires investigation."
+            },
+            "control_kind": "manual",
+            "obligation": "Investigate any transaction with missing or expired customer due diligence.",
+            "requires_human_interpretation": true
+          },
+          {
+            "citation": {
+              "chunk_id": "0b39504a-6fff-4a44-b2a9-be150a3991d7:1.0:agent:0",
+              "quote": "Illustrative internal controls For this test organization only, a single USD transaction of 5,000.00 or more requires a documented review."
+            },
+            "control_kind": "amount",
+            "obligation": "Review any single USD transaction of $5,000.00 or more.",
+            "requires_human_interpretation": true
+          },
+          {
+            "citation": {
+              "chunk_id": "0b39504a-6fff-4a44-b2a9-be150a3991d7:1.0:agent:0",
+              "quote": "Three or more transactions for one customer within one hour require review."
+            },
+            "control_kind": "velocity",
+            "obligation": "Review when a customer initiates three or more transactions within one hour.",
+            "requires_human_interpretation": true
+          },
+          {
+            "citation": {
+              "chunk_id": "0b39504a-6fff-4a44-b2a9-be150a3991d7:1.0:agent:0",
+              "quote": "A total of USD 8,000.00 or more for one customer within 24 hours requires review."
+            },
+            "control_kind": "aggregate",
+            "obligation": "Review when a customer's total transactions reach $8,000.00 or more within 24 hours.",
+            "requires_human_interpretation": true
+          }
+        ],
+        "summary": "This fictional acceptance policy outlines internal controls for cross\u2011border payments, emphasizing identity verification, due diligence, and transaction reviews based on amount, velocity, and aggregate thresholds. It requires manual investigation for missing due diligence, high\u2011value transactions, rapid repeat transfers, and large 24\u2011hour sums. Sanctions screening mandates human review of matches, and automated approval is disallowed. The policy is purely illustrative, with no legal authority or regulatory thresholds, and all examples are fictional."
+      },
+      "step": "draft_analysis"
+    },
+    {
+      "created_at": "2026-10-23T19:45:55.194744+00:00",
+      "output": {
+        "checks": [
+          "policy_snapshot",
+          "citation_ids",
+          "verbatim_quotations",
+          "allowed_output_schema",
+          "human_approval_boundary"
+        ],
+        "passed": true,
+        "scope": "Verifies evidence references and constraints, not every inference in the narrative."
+      },
+      "step": "verify_evidence"
+    }
+  ],
+  "target_id": "0b39504a-6fff-4a44-b2a9-be150a3991d7",
+  "updated_at": "2026-10-23T19:45:55.207895+00:00"
+}

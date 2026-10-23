@@ -1,0 +1,18 @@
+{
+  "audit_entries_checked": 87,
+  "audit_valid": true,
+  "main_pilot_unmodified": true,
+  "matrix_counts": {
+    "obligations": 5,
+    "policies_without_current_analysis": 0,
+    "with_gaps": 5
+  },
+  "model_attempts": 1,
+  "original_runner_sha256": "ebdbd07337f77ebc0cf61e949d398d89f599517ca3cdb1bb5dc9c0eaebacbd2e",
+  "provider_disabled_restored": true,
+  "run_id": "59f0a2d7-3b81-48f9-9f9e-6dc1547bed46",
+  "scope": "Real deployed isolated synthetic policy analysis started through browser, verified through HTTPS API; not complete mapping/browser acceptance or legal obligation inventory.",
+  "state": "completed",
+  "transient_service_restart_failure_repaired": true,
+  "verified_obligation_quotations": 5
+}
