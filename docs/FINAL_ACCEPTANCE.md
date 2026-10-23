@@ -42,14 +42,20 @@ For local synthetic preparation (not production acceptance), run:
 
 Preparation creates only a **new** isolated SQLCipher installation. `fixture.json`
 records input digests, object IDs and verified expected counts: six transactions,
-six native alerts, three open cases, four independently approved controls and one
-pending draft. Three randomly generated human accounts are stored only in
+six native alerts plus one fictional imported alert, three open cases and one
+independently resolved case, four independently approved controls and one pending
+draft. Aggregate backtesting records one hit; the policy appears as lacking a
+current analysis, without inserting a simulated successful model response.
+The fictional upstream case is closed while its local case remains open.
+Three randomly generated human accounts are stored only in
 `private/accounts.json`; do not publish that directory or capture passwords.
 Existing directories are refused rather than reused or overwritten. The server
 binds only to `127.0.0.1`, disables the worker and external provider calls, and
-loads no repository `.env`. No successful model draft, fresh external feed,
-imported record, resolved case or browser result is fabricated by this fixture.
-Those remaining scenarios need explicit setup during acceptance. Run the reviewed
+loads no repository `.env`. No successful model draft, fresh external feed or
+browser result is fabricated. Imported evidence is explicitly fictional and is
+processed through preview/import; case resolution uses a separate reviewer and
+the real workflow. Model-backed mappings and live-source scenarios still need
+explicit setup during acceptance. Run the reviewed
 frontend build first; record the exact Git SHA and screenshots when testing.
 
 Use the connected browser extension directly, without the computer-use skill.

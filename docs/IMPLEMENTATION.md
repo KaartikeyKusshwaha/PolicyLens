@@ -6,6 +6,16 @@ review and market validation. None of those gates can be inferred from a green C
 
 ## Operational watchdog checkpoint
 
+Populated acceptance expansion: the isolated fixture now previews/imports an
+explicitly fictional Marble case and decision through real endpoints, retains
+an open local review despite a closed upstream case, assigns/starts a native
+investigation, refuses its investigator's final decision and resolves it through
+the separate reviewer. Aggregate simulation records the expected one hit. The
+traceability API must report the policy's missing current analysis; no model
+analysis is forged. Both focused restart/refusal tests pass, checking four cases,
+six transactions, independent resolver identity and imported provenance. Ruff
+passes. Browser/deployment acceptance remains pending.
+
 Final browser preparation: `evaluation/browser_fixture.py` creates a new isolated
 SQLCipher installation with three random-password human accounts, the fictional
 policy/customer/payment pack, four independently approved controls, one draft,
