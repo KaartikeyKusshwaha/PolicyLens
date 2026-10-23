@@ -1,6 +1,9 @@
 # Control tuning
 
-Implemented in governance source; not yet deployed to Oracle or browser-tested.
+Deployed to Oracle. The synthetic browser pass verified comparison, draft creation
+and refusal after its pinned parent was superseded; complete successful tuning
+activation and live/partner workload acceptance remain separate checks. See
+`BROWSER_ACCEPTANCE_20261023.md` for exact scope.
 The deterministic playbook makes no model call. It compares supplied numeric
 thresholds with historical transactions and creates a separate threshold-change
 draft. It never activates a control or creates live alerts/cases.

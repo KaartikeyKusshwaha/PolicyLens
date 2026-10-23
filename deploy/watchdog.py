@@ -4,9 +4,11 @@ import argparse
 import hashlib
 import ipaddress
 import json
+import os
 import re
 import shutil
 import sys
+import tempfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -301,6 +303,31 @@ def check(
     }
 
 
+def save_report(directory, result):
+    """Keep bounded current status and the most recent failure for operators."""
+    root = Path(directory).absolute()
+    if root.resolve() != root or not root.is_dir():
+        raise ValueError("Report directory must already exist without redirects")
+    content = (json.dumps(result, sort_keys=True) + "\n").encode("utf-8")
+    for name in (
+        ("last-failure.json", "latest.json")
+        if not result["healthy"]
+        else ("latest.json",)
+    ):
+        target = root / name
+        if target.is_symlink() or (target.exists() and not target.is_file()):
+            raise ValueError("Report destination is redirected or not a regular file")
+        descriptor, temporary = tempfile.mkstemp(prefix=".watchdog-", dir=root)
+        try:
+            with os.fdopen(descriptor, "wb") as stream:
+                stream.write(content)
+                stream.flush()
+                os.fsync(stream.fileno())
+            os.replace(temporary, target)
+        finally:
+            Path(temporary).unlink(missing_ok=True)
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--origin", required=True)
@@ -310,6 +337,11 @@ def main(argv=None):
     parser.add_argument("--checkpoint-directory", type=Path)
     parser.add_argument("--min-free-mib", type=int, default=1024)
     parser.add_argument("--max-backup-age-hours", type=int, default=30)
+    parser.add_argument(
+        "--report-directory",
+        type=Path,
+        help="Existing private operator directory; retain latest status and last failure",
+    )
     args = parser.parse_args(argv)
     try:
         result = check(
@@ -333,6 +365,16 @@ def main(argv=None):
                 }
             ],
         }
+    if args.report_directory:
+        try:
+            save_report(args.report_directory, result)
+        except (OSError, ValueError):
+            print(
+                json.dumps(
+                    {"schema": SCHEMA, "healthy": False, "code": "report_write_failed"}
+                )
+            )
+            return 2
     print(json.dumps(result))
     return 0 if result["healthy"] else 1
 

@@ -37,8 +37,33 @@ measured document width 375 px, graph container width 292 px and internal graph
 content width 450 px. The graph now scrolls within its panel. This is an observed
 fix and recheck, not a claim that every browser checkpoint passed.
 
+The same pass subsequently exercised these governance workflows:
+
+- Threshold tuning compared 4,000 and 7,000 against the active 5,000 threshold
+  across six historical transactions. Match counts were one and zero; the supplied
+  target was one. A separate 4,000 draft retained the comparison while the parent
+  stayed active. These are fictional workload settings, not detection labels.
+- Exported YAML was edited only to change the fictional title, committed in a
+  separate local acceptance Git repository as
+  `9d6daa7e2e4167473bd215244525672d49d1fb4d`, previewed in the browser and imported
+  as a new Draft. A different authenticated reviewer activated it. Supplied Git
+  metadata remains an assertion; PolicyLens did not fetch or verify that repo.
+- The YAML activation superseded the tuning proposal's pinned parent. Attempting
+  to approve that older proposal returned the visible active-parent refusal; the
+  4,000 proposal remained Draft. Stale evidence was not silently recomputed.
+- A clearly fictional retention policy with explicitly invented 30-day periods
+  was drafted. Its author saw the independent-review restriction, and the separate
+  reviewer approved it. This does not establish any statutory retention policy.
+- A fictional workspace hold was placed and its release requested. The hold
+  remained effective and appeared among deletion blockers while release was
+  pending. Preview also exposed open cases, copy reconciliation and retained
+  export reports. No deletion or removal report was fabricated or executed.
+
+PR #4 and its recorded mobile correction merged as `1280882` after both full CI
+jobs passed at exact head `23cfd96`. The deployed frontend includes that fix.
+
 Still unverified in this pass: MFA enrollment/recovery, password lifecycle,
-complete YAML/tuning/retention mutations, model-backed extracted obligation
+complete deletion/copy-removal/hold-release workflows, model-backed extracted obligation
 mappings, live provider/feed/MCP acceptance and owner production-workspace
 acceptance. Independent security review, partner validation and real-data gates
 remain open. No successful model response or complete erasure was fabricated.

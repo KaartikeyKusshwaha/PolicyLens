@@ -77,3 +77,12 @@ browser/mobile performance, sustained production traffic and deployed memory/CPU
 capacity remain outside this run. Run an agreed synthetic envelope on the actual
 pilot hardware before claiming deployed performance. Independent security review,
 partner acceptance and operational deployment remain separate gates.
+# Actual Oracle hardware follow-up
+
+An isolated run on the recorded Oracle micro VM passed the same synthetic
+100-customer/1,000-transaction/four-client envelope. Ingestion p95 was 398.770 ms,
+slowest read p95 1,891.485 ms, and verified signed-pack generation 47.397 seconds.
+Systemd reported 204.6 MiB peak service memory. Source hashes and host identity
+were checked separately; see the unchanged report, hardware receipt and explicit
+limits in `evaluation/results/20261024-oracle-acceptance/README.md`. This is a
+selected synthetic profile, not partner-agreed capacity or live-provider load.

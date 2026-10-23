@@ -96,5 +96,31 @@ states before installing/enabling the timer. Inspect failures with
 `systemctl list-timers policylens-watchdog.timer`. Journald is an operator-visible
 failure record, not a claim that anyone received an external notification.
 
-Operator installation, actual Oracle/receiver readings, an independent monitor,
-notification delivery and deployed backup/restore acceptance remain pending.
+## Installed Windows receiver monitor (2026-10-24 local)
+
+`deploy/install_watchdog.ps1` installs `PolicyLens-Operational-Watchdog` every
+five minutes using the matching `pythonw.exe`, an explicit repository working
+directory, limited privileges and an interactive user session. It requires a
+healthy manual baseline before registration, ignores overlapping runs and limits
+execution to two minutes. The computer must be awake and the user signed in.
+
+The actual receiver task was installed and manually triggered; Task Scheduler
+returned exit zero and a fresh report at `2026-10-23T18:58:43.142885+00:00`.
+All five checks passed against the Oracle HTTPS pilot and the encrypted database,
+deletion-history and checkpoint-history archives under
+`C:\Users\LENONO\PolicyLens-Recovery\daily`. Free receiver disk space was about
+22 GB, above the 1 GiB floor. This is a triggered scheduled invocation, not proof
+of the next unattended daily backup or continuous availability.
+
+The optional `--report-directory` must be an existing private directory. Reports
+replace `latest.json` atomically; failures also replace `last-failure.json`, which
+survives a later healthy run. Only these two bounded files are retained. Actual
+reports are under `C:\Users\LENONO\PolicyLens-Recovery\monitor`, restricted to
+the current user and SYSTEM. Report-write failure exits 2 rather than claiming
+healthy operation. An isolated invocation with an intentionally impossible disk
+floor exited 1 and retained `disk_below_floor`; actual archive receipts were not
+modified. Focused tests also verify failure retention after recovery.
+
+No external notification integration or delivery has been configured. This local
+receiver monitor is not an independent availability service. Backup/restore
+evidence and its remaining limits are recorded in `DEPLOYED_CHECKPOINT_20261023.md`.

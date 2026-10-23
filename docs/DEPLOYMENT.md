@@ -98,9 +98,10 @@ at the receiver. Combined success includes every configured artifact family.
 
 The read-only [operational watchdog](OPERATIONAL_WATCHDOG.md) checks readiness,
 receiver disk space and fresh matching backup receipts/encrypted bytes. It emits
-JSON and exits nonzero on failure. Optional service/timer templates are supplied;
-installation, notification integration and actual receiver/Oracle checks remain
-pending. New successful transfers record encrypted archive size/hash for the
+JSON and exits nonzero on failure. The Windows receiver monitor is installed and
+a triggered scheduled invocation passed all five checks; see the watchdog guide
+for its local reports and user-session limits. External notification delivery
+remains pending. New successful transfers record encrypted archive size/hash for the
 watchdog; older receipts must be refreshed by a successful verified transfer.
 
 The operator CLI now supports a complete, verified snapshot and restore drill. It shares an OS-level installation lock with the server and refuses to snapshot while that installation is running. It includes identity and all workspace databases, checks SHA-256 hashes and SQLite integrity, rebases workspace paths when restored, and revokes sessions in the restored copy. It never overwrites an existing destination.

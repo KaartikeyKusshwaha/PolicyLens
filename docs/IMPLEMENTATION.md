@@ -6,6 +6,12 @@ review and market validation. None of those gates can be inferred from a green C
 
 ## Operational watchdog checkpoint
 
+The receiver now also has `PolicyLens-Operational-Watchdog`, repeating every five
+minutes while signed in. An actual triggered invocation exited zero with all five
+checks healthy. Atomic local latest/failure reports and an isolated injected disk
+alarm were verified; 56 focused tests passed (three platform skips). External
+notification delivery remains unconfigured. See `OPERATIONAL_WATCHDOG.md`.
+
 Windows scheduled execution: a real console-launched task returned interrupted
 status despite direct CLI success. The installed task now uses matching
 `pythonw.exe` and an explicit working directory; an actual scheduled invocation

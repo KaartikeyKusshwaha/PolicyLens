@@ -1,0 +1,26 @@
+{
+  "verified_ssh_host": "129.225.126.21",
+  "recorded_oci_shape": "VM.Standard.E2.1.Micro",
+  "mem_total_kib": 976904,
+  "logical_cpus": 2,
+  "source_files_sha256": {
+    "evaluation/pilot_load.py": "0c582a90826aebaa7ea5fbfa1d212366c65a31ccbddc424572022c50ea6d8a35",
+    "backend/requirements.txt": "d73e7c5e819a6e64ba2918cd2489bac416afd72db115aabdaa690be47a2aeca3"
+  },
+  "unit": "policylens-load-20261024.service",
+  "configuration": {
+    "customers": 100,
+    "unique_transactions": 1000,
+    "each_submitted": 2,
+    "concurrency": 4,
+    "read_rounds": 10,
+    "chosen_p95_ms": 2000
+  },
+  "main_pilot_untouched_by_harness": true,
+  "scope": "Hardware identity from prior authenticated OCI inspection and this verified-SSH host measurement; not partner-agreed capacity, agent/model/full-feed load or security review",
+  "service_terminal_result": "success",
+  "service_terminal_exit_status": 0,
+  "observed_systemd_memory_peak_mib": 204.6,
+  "observed_systemd_cpu_seconds": 241.094,
+  "main_pilot_active_after_run": true
+}
