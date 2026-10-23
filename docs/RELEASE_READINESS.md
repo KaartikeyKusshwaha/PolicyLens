@@ -12,14 +12,14 @@ in `DEPLOYED_CHECKPOINT_20261023.md`; final browser acceptance remains pending.
 | --- | --- | --- |
 | Scoped MCP, CLI, SDK; agents cannot decide | Deployed HTTPS CLI/MCP context/task/denial/audit/revocation passed; separate local MCP subprocess produced a live four-citation draft, verified quotations and refused decisions | Configured Claude/Cursor host acceptance; successful deployed HTTPS model drafting and immutable provider revision remain unproved |
 | One click sponsor PDF/JSON/verifier | Signed complete packs; browser-downloaded deployed pack independently verified; actual Oracle 1,000-transaction run generated/verified a pack in 47.397 seconds | Partner data/scale and independent operator acceptance |
-| Traceability matrix and gaps | Deployed real policy analyst completed one attempt; five quotations independently reverified, API matrix shows five unmapped obligations/gaps; browser displayed the completed suggestions | Human mapping UI, version-gap and linked evidence acceptance remain open; no full legal-coverage claim |
+| Traceability matrix and gaps | Deployed real policy analyst completed one attempt; five quotations independently verified. Browser mapped velocity obligation, displayed two alerts, recorded two simulation matches across six transactions and cleared its simulation gap; mobile unlink/relink updated gaps correctly | Policy-version change and broader linked-screening acceptance remain open; four obligations are still unmapped; no full legal-coverage claim |
 | At least 50 labeled scorecard cases | Retained/recomputed live synthetic 50-case result, including failures | Human-label validation and historical-source acceptance; current quality gate failed |
 | Tuning with independent activation | Browser preview/draft and stale-parent denial; deployed HTTPS API refused maker approval, allowed a different reviewer to activate a fresh proposal and preserved existing alerts | Partner-agreed workload and remaining browser acceptance |
 | Autopilot prep | Automatic briefs disabled; deterministic digest/freshness warnings implemented | Failed preparation gate must be resolved before enabling; do not bypass master-plan stop gate |
 | Marble plus partner-selected transaction source | Marble export adapter and source interface, native CSV/webhook ingestion | Actual Marble comparison and partner-named transaction source; no partner selection exists |
 | MFA | TOTP encrypted seeds/replay protection/recovery tests | Operator key procedure, deployed acceptance and independent review |
-| Encryption | SQLCipher migration, snapshots, compaction, guarded restore and key-failure tests; actual pilot migration/key recovery/off-machine restore passed | Authenticated encrypted deployment acceptance and independent review |
-| Retention/deletion policy and holds | Browser policy approval and effective pending hold; deployed API refused release self-approval and accepted a different reviewer while other deletion blockers remained; offline logical execution/suppression/custody implemented | Complete historical/offline discovery, audit-PII handling policy, physical-copy evidence and deployed deletion drills; no complete-erasure claim |
+| Encryption | Actual pilot SQLCipher migration/key recovery/off-machine restore passed; authenticated isolated encrypted acceptance and populated recovery passed | Owner operational-workspace acceptance and independent review; original plaintext migration copies remain preserved |
+| Retention/deletion policy and holds | Browser policy/hold checks, independent API release, seven Oracle-host synthetic deletion/crash/restore tests, and actual off-machine recovery of one executed receipt with deleted customer still absent | Complete historical/offline ownership reconciliation, audit-PII handling policy, physical-copy evidence and full HTTPS deletion/operator acceptance; no complete-erasure claim |
 | Outside-DB checkpoints | Complete signed-history encrypted receiver/recovery; actual configured first transfer/recovery passed; separate populated local restore matched recovered history and 77 audit entries | Populated deployed recovery, next daily transfer and operator acceptance |
 | Off-machine backups | Actual SSH/log verification, daily server backup, combined encrypted transfer, separate restore drill and Windows task installed | Observe next daily receiver trigger; populated recovery/ongoing custody and notification handling |
 | Operational alerting | Windows receiver monitor installed every five minutes while signed in; triggered run passed five checks; isolated alarm/failure retention verified. Telegram failure/recovery notifier and private pairing helper implemented/tested after operator selected Telegram | Actual bot pairing, scheduled activation and delivery test remain pending; independent availability monitoring is not established |
@@ -49,3 +49,12 @@ Keep the full master-plan objective active while those requirements remain open.
 The live MCP and populated recovery artifacts are retained under
 `evaluation/results/20261024-live-mcp-recovery/`. They establish a local synthetic
 acceptance result and do not replace deployed, independent-review or partner gates.
+
+An actual read-only inventory of the known C: and D: receiver/recovery roots
+completed with 48 files, 21 directories and 56,340,485 bytes. Its private report
+is retained outside Git under the operator's restricted `PolicyLens-Inventory`
+directory. The exact report SHA-256 is
+`6f8a4f829bc224fe6095400e9543cb575b65c8d492f2ca185bcbf628504c4408`.
+No file was removed or automatically registered. The selected-root inventory
+does not establish complete customer ownership, external custody or system-wide
+discovery; receipt/report writers can change later state.

@@ -1,0 +1,15 @@
+{
+  "acceptance_active": true,
+  "both_https_ready_after_run": true,
+  "main_active": true,
+  "source_hashes_match_after_run": true,
+  "source_sha256": {
+    "backend/database.py": "fa373ccefa9dd888a10712e159228617ec02fd67ae6216d5cf63575f8d5ce580",
+    "backend/deletion.py": "5b6080323b8267b90c6031dce63b41fca39c7e860f11281623c84c11ab825b0b",
+    "backend/deletion_execution.py": "c0dfb3e657443311b7af932e5910cd3725efd9f8909321a1a109c5cd10693839",
+    "backend/deletion_guard.py": "f3da7c149d0b862b941f9a47ef1994642329b7461ac118a77ff4caf981ab24d3",
+    "backend/deletion_requests.py": "c202ca90305804586c5959a174fa84a3112736016ea01b7a3ce72a1c2fff9a2f",
+    "backend/recovery.py": "ce5f0179d35c4aa6dd717b177e9896b9c5e7c5853efbe9c6f403887e909d0820",
+    "backend/retention.py": "e3474cb8596febc53bf86324f96e6d99f93c5c2728aec7cc34e24e9f3708e63a"
+  }
+}
