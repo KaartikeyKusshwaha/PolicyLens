@@ -342,7 +342,21 @@ def main(argv=None):
         type=Path,
         help="Existing private operator directory; retain latest status and last failure",
     )
+    parser.add_argument(
+        "--telegram-config",
+        type=Path,
+        help="Private bot_token/chat_id JSON; requires report directory",
+    )
+    parser.add_argument(
+        "--test-telegram",
+        action="store_true",
+        help="Send an explicit test without changing incident state",
+    )
     args = parser.parse_args(argv)
+    if (args.telegram_config and not args.report_directory) or (
+        args.test_telegram and not args.telegram_config
+    ):
+        parser.error("Telegram requires configuration and a private report directory")
     try:
         result = check(
             args.origin,
@@ -365,6 +379,22 @@ def main(argv=None):
                 }
             ],
         }
+    notification_failed = False
+    if args.telegram_config:
+        if __package__:
+            from .telegram_alerts import notify
+        else:
+            from telegram_alerts import notify
+        result["telegram"] = notify(
+            args.telegram_config, args.report_directory, result, test=args.test_telegram
+        )
+        notification_failed = not result["telegram"]["ok"]
+        result["scope"] = result.get(
+            "scope", "Operational configuration failure."
+        ).replace(
+            "No notification was sent.",
+            "Telegram delivery is reported separately; API acceptance does not prove the recipient read the message.",
+        )
     if args.report_directory:
         try:
             save_report(args.report_directory, result)
@@ -376,7 +406,7 @@ def main(argv=None):
             )
             return 2
     print(json.dumps(result))
-    return 0 if result["healthy"] else 1
+    return 2 if notification_failed else 0 if result["healthy"] else 1
 
 
 if __name__ == "__main__":
