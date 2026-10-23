@@ -1,11 +1,7 @@
 import { useState } from "react";
 import ControlTuning, { TuningEvidence } from "./ControlTuning";
-import {
-  Link,
-  useNavigate,
-  useParams,
-  useSearchParams,
-} from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
+import { Link, useNavigate } from "../navigation";
 import {
   ArrowLeft,
   ArrowUpRight,

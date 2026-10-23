@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import { Link } from "../navigation";
 import { ArrowLeft, ArrowUpRight, Check, GitCompareArrows } from "lucide-react";
 import { api } from "../services/api";
 import {

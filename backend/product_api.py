@@ -320,6 +320,25 @@ async def import_csv(request: Request, file: UploadFile = File(...)):
         await file.close()
 
 
+@router.get("/alerts")
+def alerts(
+    request: Request,
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0, le=100000),
+):
+    with request.state.store.connect() as db:
+        rows = db.execute(
+            "SELECT payload FROM alerts ORDER BY created_at DESC,id LIMIT ? OFFSET ?",
+            (limit + 1, offset),
+        ).fetchall()
+    return {
+        "alerts": [json.loads(row[0]) for row in rows[:limit]],
+        "has_more": len(rows) > limit,
+        "offset": offset,
+        "limit": limit,
+    }
+
+
 @router.get("/cases")
 def cases(request: Request):
     ops = request.state.ops

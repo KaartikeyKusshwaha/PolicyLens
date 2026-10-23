@@ -186,16 +186,30 @@ No complete 50-case live scorecard is claimed.
 
 ## Phase 6: interface
 
-- [ ] Four areas: Inbox, Policies & Controls, Evidence, Settings & Agents.
-- [ ] Relationship graph becomes a case tab; data sources move to Settings.
+UI checkpoint: all 347 backend tests passed locally, including the paged alert
+feed and the corrected tuning assertion against a successful alert response.
+All 64 frontend tests passed before the last advisory/read-only record check;
+all 42 workflow tests then passed with that addition (65 frontend tests now in
+source). ESLint and the current production build pass. The source navigation has
+four primary areas; raw details live in Advanced. No browser acceptance or Oracle
+deployment occurred. Exact pushed-commit CI remains to be checked.
+
+- [x] Implement four primary areas: Inbox, Policies & Controls, Evidence, Settings & Agents.
+- [x] Move the relationship graph into a case tab and data sources into Settings.
   The graph now lives in the case Relationships tab and the duplicate customer
   tab is removed. It loads lazily, retains its customer-wide 100-transaction/
   18-node scope and can retry without losing the investigation. The populated
   case workflow checks provenance, lazy fetching and graph failure/recovery.
-  Data-source consolidation and final browser/mobile acceptance remain pending.
-- [ ] Raw runs, extra analytics and per-source details move under `/advanced`.
-- [ ] Remove duplicate panels and misleading decision/clearance wording.
-- [ ] Automated populated-screen coverage; then mobile/browser acceptance.
+  Settings now shows aggregate connections; per-source details are in Advanced.
+  Browser/mobile acceptance remains pending.
+- [x] Move raw runs, extra analytics and per-source details under `/advanced`.
+- [x] Remove obsolete dashboard/overview pages and duplicated analytics/graph/key panels.
+  Favorable AI assessments are labelled advisory; unauthorized human-review forms
+  are hidden. Backend enums and authorization boundaries are unchanged.
+- [x] Add populated component/workflow coverage for the four areas, advanced routes,
+  legacy links, alert paging, failures, role restrictions and keyboard navigation.
+- [ ] Final populated desktop/mobile browser acceptance after all implementation.
+  See `UI_CONSOLIDATION.md` for canonical routes, scope and remaining acceptance.
 
 ## Phase 7: hardening and pilot
 

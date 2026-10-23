@@ -12,7 +12,7 @@ are refused; administrators must reissue keys and submit reviewed new runs.
 
 ## Create access
 
-An administrator creates a key in Workspace settings -> Agents. Choose a distinct
+An administrator creates a key in Settings & Agents -> Agent keys. Choose a distinct
 agent name, individual tools, expiry (up to 90 days), requests/minute, daily model-run
 budget and optional identifier masking. Creation requires password reauthentication
 and the current second factor when MFA is enabled. The credential is returned once;

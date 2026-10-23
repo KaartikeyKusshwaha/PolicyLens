@@ -27,7 +27,7 @@ test("comparison uses the server-pinned request and creates only a review draft"
   fireEvent.click(screen.getByRole("button", { name: "Draft threshold change for review" }));
   await screen.findByText(/No control was activated/);
   expect(api.mock.calls[1]).toEqual(["/control-tuning/draft", { method: "POST", body: { ...request, preview_sha256: "a".repeat(64) } }]);
-  expect(screen.getByRole("link", { name: "Open the threshold-change draft" }).getAttribute("href")).toBe("/rules/draft1");
+  expect(screen.getByRole("link", { name: "Open the threshold-change draft" }).getAttribute("href")).toBe("/policies/controls/draft1");
   expect(api.mock.calls.some(([path]) => path.includes("/actions"))).toBe(false);
 });
 

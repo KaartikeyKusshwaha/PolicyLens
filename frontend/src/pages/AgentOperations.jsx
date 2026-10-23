@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import { Link } from "../navigation";
 import {
   ArrowLeft,
   ArrowUpRight,
@@ -30,13 +31,13 @@ import {
 } from "../product-components";
 import { useSession } from "../session";
 
-export function AgentOperations() {
-  const catalog = useResource("/agents/catalog");
+export function AgentOperations({ advanced = false }) {
+  const catalog = useResource(advanced ? null : "/agents/catalog");
   const jobs = useLiveResource("/agents/jobs");
-  const cases = useResource("/cases");
-  const customers = useResource("/customers");
-  const policies = useResource("/policies");
-  const changes = useResource("/policy-changes");
+  const cases = useResource(advanced ? null : "/cases");
+  const customers = useResource(advanced ? null : "/customers");
+  const policies = useResource(advanced ? null : "/policies");
+  const changes = useResource(advanced ? null : "/policy-changes");
   const [selected, setSelected] = useState("");
   const [target, setTarget] = useState("");
   const { user } = useSession();
@@ -47,16 +48,18 @@ export function AgentOperations() {
     policy_change: changes.data || [],
   };
   const agent = catalog.data?.agents.find((a) => a.id === selected);
+  const history = advanced ? jobs.data : jobs.data?.filter(job => job.kind !== "maintenance").slice(0, 10);
   return (
     <>
       <PageHeading
         eyebrow="AGENTS WITH ACCOUNTABILITY"
-        title="Your evidence desk, on demand."
+        title={advanced ? "Raw agent operations" : "Playbooks and recent runs"}
       >
         Purpose-built workflows collect facts, prepare drafts, and show their
         work. Your team owns the decisions.
       </PageHeading>
       <ErrorNotice message={catalog.error || jobs.error} />
+      {!advanced && <>
       <div className="agent-budget">
         <span>
           <Bot size={18} /> Bounded workflows · one model call per AI run
@@ -142,10 +145,11 @@ export function AgentOperations() {
           </button>
         </section>
       )}
+      </>}
       <section className="panel detail-section">
         <div className="panel-heading">
           <div>
-            <h2>Execution history</h2>
+            <h2>{advanced ? "Execution history" : "Recent model runs"}</h2>
             <p>
               Completed steps remain available after interruptions and failures.
             </p>
@@ -156,7 +160,7 @@ export function AgentOperations() {
         </div>
         {jobs.loading && !jobs.data ? (
           <Loading />
-        ) : jobs.data?.length ? (
+        ) : history?.length ? (
           <div className="table-scroll">
             <table>
               <thead>
@@ -169,7 +173,7 @@ export function AgentOperations() {
                 </tr>
               </thead>
               <tbody>
-                {jobs.data.map((j) => (
+                {history.map((j) => (
                   <tr key={j.id}>
                     <td>
                       <Link className="table-link" to={"/agents/" + j.id}>
@@ -202,6 +206,7 @@ export function AgentOperations() {
           </Empty>
         )}
       </section>
+      {!advanced && <p><Link to="/advanced/agents">Inspect raw agent operations and complete loaded run history</Link> · Showing up to ten model runs here.</p>}
     </>
   );
 }

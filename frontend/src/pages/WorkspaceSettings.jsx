@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
+import { Link } from "../navigation";
 import {
   ArrowUpRight,
   Copy,
@@ -24,14 +25,15 @@ import {
 import { Status } from "../product-components";
 import { useSession } from "../session";
 import AccountMFA from "./AccountMFA";
-import AgentKeys from "./AgentKeys";
 
 export default function WorkspaceSettings() {
   const { user } = useSession();
+  const [params, setParams] = useSearchParams();
   const team = useResource("/team");
   const prefs = useResource("/preferences");
   const workspaces = useResource("/auth/workspaces");
-  const [tab, setTab] = useState("Team");
+  const sections = ["Team", "Monitoring", "Integrations", "Workspaces", "Account"];
+  const tab = sections.includes(params.get("section")) ? params.get("section") : "Team";
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [busy, setBusy] = useState(false);
@@ -93,13 +95,13 @@ export default function WorkspaceSettings() {
         <Status value={user.role} />
       </div>
       <div className="page-tabs">
-        {["Team", "Monitoring", "Integrations", "Agents", "Workspaces", "Account"].map(
+        {sections.map(
           (t) => (
             <button
               key={t}
               className={tab === t ? "active" : ""}
               onClick={() => {
-                setTab(t);
+                setParams({ section: t });
                 setError("");
                 setSuccess("");
               }}
@@ -111,10 +113,7 @@ export default function WorkspaceSettings() {
       </div>
       <ErrorNotice message={error} />
       {success && <Success>{success}</Success>}
-      <p><Link className="button secondary" to="/settings/imports">Import records from an existing engine</Link></p>
-      {["admin", "reviewer", "auditor"].includes(user.role) && <p><Link className="button secondary" to="/settings/retention">Retention and legal holds</Link></p>}
       {copied && <Success>Copied.</Success>}
-      {tab === "Agents" && (user.role === "admin" ? <AgentKeys /> : <p>Only workspace administrators can manage agent keys.</p>)}
       {tab === "Account" && <AccountMFA />}
       {tab === "Account" && (
         <form

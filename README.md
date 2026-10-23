@@ -1,6 +1,6 @@
 # PolicyLens Operations
 
-A cross-border fintech compliance pilot built with **React 19, Python/FastAPI, and SQLite**. Connect customer activity to documented controls, investigate exceptions, and retain the evidence behind human decisions.
+A governance and evidence pilot for AI-assisted compliance built with **React 19, Python/FastAPI, and SQLite**. Connect customer activity to documented controls, investigate exceptions, and retain the evidence behind human decisions. Built-in monitoring is a starter engine; governed agents and imported engine records share the review/evidence workflow.
 
 The application runs as one native Python process with persistent SQLite storage. It does not fabricate answers, switch AI providers after failures, or seed business records. SQLite FTS5/BM25 is the primary document retrieval engine.
 
@@ -16,19 +16,24 @@ The launcher installs dependencies when their manifests change, builds React, an
 
 1. Open the local app. Read `backend/data/.bootstrap-token` locally and use it to create your owner account and first workspace. With a custom database path, the file is beside that database. The token is consumed after setup; never commit or share it.
 2. Add `GROQ_API_KEY` to ignored `backend/.env` and restart. Obtain your own [free-tier key](https://console.groq.com/keys); no other integration requires an API key.
-3. Sync the enabled feeds in **Data sources**. All three official feeds are enabled initially.
+3. Sync enabled feeds in **Settings & Agents → Connections**. All three official feeds are enabled initially.
 4. Add your operating policies and synthetic/non-production customer records. Real customer data requires independent security review, remediation and a signed agreement first.
-5. Invite a second person from **Workspace settings**. An independent administrator or reviewer must approve a drafted control before it becomes active.
+5. Invite a second person from **Settings & Agents → Workspace & account → Team**. An independent administrator or reviewer must approve a drafted control before it becomes active.
 6. Ingest transactions manually, by CSV, or through a signed webhook. Investigate triggered alerts and use agents to prepare reviewable drafts.
 
 Business data starts empty. Offline/provider failures remain visible and never produce substitute decisions. The app can manage documents and deterministic monitoring without an AI key. Agent analysis and policy Q&A require Groq.
 
 ## Product workflows
 
-| Area | Working capabilities |
+The [four-area control room](docs/UI_CONSOLIDATION.md) groups work into **Inbox**,
+**Policies & Controls**, **Evidence**, and **Settings & Agents**. Detailed agent
+logs, additional analytics and per-source metadata live under `/advanced`.
+Source implementation is separate from deployment and final browser acceptance.
+
+| Capability | Working behavior |
 | --- | --- |
 | Team access | Owner bootstrap; invite-only membership; administrator, analyst, reviewer and read-only auditor roles; TOTP MFA with encrypted seeds and single-use recovery codes; password changes; access revocation; workspace switching and separate tenant databases. |
-| Customers | Individuals and companies, country, internal risk tier, recorded due diligence status, notes, public LEI lookup, sanctions screening, and an observed transaction relationship graph. |
+| Customers | Individuals and companies, country, internal risk tier, recorded due diligence status, notes, public LEI lookup and sanctions screening. The observed relationship graph lives inside the case view. |
 | Monitoring | Validated money and UTC timestamps, idempotent external IDs, CSV validation/import results, signed webhook ingestion, explicit internal controls, immutable alert snapshots and customer case grouping. |
 | Control workbench | Amount, transaction velocity, same-currency aggregate, corridor and due diligence conditions; draft versions; independent approval; historical simulation without live alerts. No regulatory thresholds are supplied or inferred. |
 | Controls as code | Versioned YAML, policy/parent hashes, previewed atomic draft imports, supplied Git provenance and replay protection. Activation still requires independent human approval. |
@@ -96,7 +101,7 @@ The existing filename `backend/data/policylens-v2.db` is retained to preserve v2
 
 Sessions use HttpOnly, SameSite=Strict cookies, hashed session IDs and per-session CSRF tokens. Passwords use scrypt; login attempts are throttled in SQLite. Production requires HTTPS, `COOKIE_SECURE=true`, an explicit hostname allowlist and a trusted reverse proxy. Invitation tokens expire after 48 hours and are single-use/email-bound; share the generated invitation link yourself. The app does not send email.
 
-Account MFA is configured in Workspace settings -> Account. Public enrollment requires a separately provisioned `SECURITY_KEY_PATH`; seeds are encrypted with AES-256-GCM. Recovery codes are displayed once and stored hashed. Password resets preserve MFA, and existing-account invitations cannot bypass it. Keep the installation key separate from database snapshots. Explicit SQLCipher mode separately encrypts whole database files; the existing pilot has not been migrated. See the [security overview](docs/SECURITY.md), [database encryption and migration](docs/DATABASE_ENCRYPTION.md), and [trust operations](docs/TRUST_OPERATIONS.md) for protections, remaining limits and recovery procedures.
+Account MFA is configured in Settings & Agents -> Workspace & account -> Account. Public enrollment requires a separately provisioned `SECURITY_KEY_PATH`; seeds are encrypted with AES-256-GCM. Recovery codes are displayed once and stored hashed. Password resets preserve MFA, and existing-account invitations cannot bypass it. Keep the installation key separate from database snapshots. Explicit SQLCipher mode separately encrypts whole database files; the existing pilot has not been migrated. See the [security overview](docs/SECURITY.md), [database encryption and migration](docs/DATABASE_ENCRYPTION.md), and [trust operations](docs/TRUST_OPERATIONS.md) for protections, remaining limits and recovery procedures.
 
 Use **Audit & analytics -> Create backup** for an administrator-only workspace backup. A full disaster-recovery backup must also include `identity.db` and every workspace database. See [deployment and recovery](docs/DEPLOYMENT.md).
 

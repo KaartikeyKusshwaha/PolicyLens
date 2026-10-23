@@ -1,6 +1,6 @@
 import React from "react";
 import { beforeEach, expect, test, vi } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import App from "./App";
 
 const health = {
@@ -50,7 +50,13 @@ const response = (data, status = 200) => ({
   json: async () => data,
 });
 const defaults = (url) =>
-  url === "/api/audit/checkpoints"
+  url === "/api/traceability"
+    ? { obligations: [], policies_without_current_analysis: [], available_controls: [], counts: { obligations: 0, with_gaps: 0, policies_without_current_analysis: 0 }, scope: "Explicit human mappings." }
+    : url === "/api/retention"
+    ? { active_policy: null, policies: [], holds: [], copies: [], deletion_requests: [] }
+    : url.startsWith("/api/alerts?")
+    ? { alerts: [], has_more: false, offset: 0, limit: 50 }
+    : url === "/api/audit/checkpoints"
     ? { configured: false, status: "not_configured" }
     : url === "/api/auth/status"
     ? { setup_required: false }
@@ -190,7 +196,7 @@ test("control YAML export, preview and draft import preserve the review boundary
   await screen.findByRole("heading", { name: "Preview: 1 control drafts" });
   fireEvent.click(screen.getByRole("button", { name: "Import reviewed drafts" }));
   await screen.findByText("These new drafts require independent approval before activation.");
-  expect(screen.getByRole("link", { name: "Reviewed threshold draft" }).getAttribute("href")).toBe("/rules/draft2");
+  expect(screen.getByRole("link", { name: "Reviewed threshold draft" }).getAttribute("href")).toBe("/policies/controls/draft2");
   const imported = fetch.mock.calls.find(([url]) => url === "/api/control-code/import");
   expect(JSON.parse(imported[1].body).preview_sha256).toBe("a".repeat(64));
 });
@@ -235,7 +241,7 @@ test("engine imports require customer mapping and a fresh preview before commit"
   fireEvent.click(screen.getByRole("button", { name: "Preview engine import" }));
   await waitFor(() => expect(screen.getByRole("button", { name: "Import reviewed engine records" }).disabled).toBe(false));
   fireEvent.click(screen.getByRole("button", { name: "Import reviewed engine records" }));
-  expect((await screen.findByRole("link", { name: "Open imported investigation" })).getAttribute("href")).toBe("/cases/imported-case1");
+  expect((await screen.findByRole("link", { name: "Open imported investigation" })).getAttribute("href")).toBe("/inbox/cases/imported-case1");
 });
 
 test("imported alerts render source provenance without a fabricated control link", async () => {
@@ -285,12 +291,13 @@ test("sponsor evidence download checks the archive type and releases its tempora
   click.mockRestore();
 });
 
-test("empty dashboard displays truthful zeroes and actionable onboarding", async () => {
+test("empty inbox displays truthful zeroes and actionable setup", async () => {
   render(<App />);
-  await screen.findByText("Your next decision, in context.");
-  expect(screen.getByText("0 / 4")).toBeTruthy();
-  expect(screen.getByText("Get your operation ready")).toBeTruthy();
-  expect(screen.getByText("0 of 3 enabled feeds are fresh.")).toBeTruthy();
+  await screen.findByText("Work waiting for human review.");
+  await screen.findByText("Prepare your workspace");
+  expect(screen.getAllByText("0").length).toBe(3);
+  expect(screen.getByRole("link", { name: "Connect evidence sources" }).getAttribute("href")).toBe("/settings/sources");
+  expect(screen.getByRole("link", { name: "Prepare controls for independent approval" })).toBeTruthy();
   expect(screen.queryByText("API unreachable")).toBeNull();
 });
 
@@ -354,16 +361,17 @@ test("evaluation surfaces provider failure and never shows a made-up verdict", a
   expect(
     screen.getByText("Provider limit reached. No decision recorded."),
   ).toBeTruthy();
-  expect(window.location.pathname).toBe("/evaluate");
-  expect(screen.queryByText("Acceptable")).toBeNull();
+  expect(window.location.pathname).toBe("/evidence/evaluate");
+  expect(screen.queryByText("Advisory: no flag")).toBeNull();
 });
 
 test("sidebar navigation, theme, and policy input mode are interactive", async () => {
   render(<App />);
-  await screen.findByText("Your next decision, in context.");
+  await screen.findByText("Work waiting for human review.");
   fireEvent.click(screen.getByRole("button", { name: "Use dark theme" }));
   expect(localStorage.getItem("policylens-theme")).toBe("dark");
-  fireEvent.click(screen.getByRole("link", { name: "Policy library" }));
+  fireEvent.click(screen.getByRole("link", { name: "Policies & Controls" }));
+  fireEvent.click(await screen.findByRole("link", { name: "Policy library" }));
   fireEvent.click(await screen.findByRole("link", { name: /Add policy/ }));
   await screen.findByText("Add knowledge. Build clarity.");
   fireEvent.click(screen.getByRole("button", { name: /Upload document/ }));
@@ -509,12 +517,12 @@ test("failed agents expose the failure and never display an invented brief", asy
 test.each([
   ["/monitoring", "Every transaction adds context."],
   ["/cases", "From alert to accountable decision."],
-  ["/agents", "Your evidence desk, on demand."],
+  ["/agents", "Raw agent operations"],
   ["/rules", "Controls your team can explain."],
   ["/changes", "Understand what changed. Track what follows."],
-  ["/audit", "A clear view of the work—and its record."],
+  ["/audit", "Evidence packs and audit trail"],
   ["/settings", "Make the workspace work for your team."],
-  ["/sources", "Intelligence you can trace."],
+  ["/sources", "Connections and freshness"],
 ])(
   "product route %s renders its empty workspace without errors",
   async (path, heading) => {
@@ -532,4 +540,172 @@ test("account settings offer authenticated password rotation", async () => {
   fireEvent.click(await screen.findByRole("button", { name: "Account" }));
   expect(screen.getByLabelText("Current password").type).toBe("password");
   expect(screen.getByLabelText("New password").minLength).toBe(12);
+});
+
+test("four primary areas remain active through populated review and evidence routes", async () => {
+  const pending = { id: "pending-control", title: "Pending threshold proposal", version: 2, status: "draft", created_by: user.id, tuning_receipt_id: "receipt1" };
+  mockRoutes({
+    "/api/cases": () => response([{ id: "case-work", title: "Overdue fictional investigation", customer_name: "Fictional customer", status: "investigating", due_at: "2026-01-01T00:00:00Z" }]),
+    "/api/rules": () => response([pending]),
+    "/api/traceability": () => response(traceabilityFixture),
+    "/api/audit/checkpoints": () => response({ configured: true, status: "retained", fingerprint: "a".repeat(64) }),
+  });
+  render(<App />);
+  await screen.findByText("Overdue fictional investigation");
+  expect(screen.getByText("Different reviewer required")).toBeTruthy();
+  const primary = screen.getByRole("navigation", { name: "Main navigation" });
+  expect(within(primary).getAllByRole("link").map(link => link.textContent)).toEqual(["Inbox", "Policies & Controls", "Evidence", "Settings & Agents"]);
+  fireEvent.click(within(primary).getByRole("link", { name: "Policies & Controls" }));
+  await screen.findByText("Verify the identity of sender and receiver.");
+  expect(within(primary).getByRole("link", { name: "Policies & Controls" }).getAttribute("aria-current")).toBe("page");
+  fireEvent.click(within(primary).getByRole("link", { name: "Evidence" }));
+  await screen.findByText("Sponsor evidence pack");
+  expect(screen.queryByText("Observed destination corridors")).toBeNull();
+  expect(fetch.mock.calls.some(([url]) => url === "/api/analytics")).toBe(false);
+  fireEvent.click(within(primary).getByRole("link", { name: "Settings & Agents" }));
+  await screen.findByText("Workspace members");
+  fireEvent.click(screen.getByRole("link", { name: "Connections" }));
+  await screen.findByRole("heading", { name: "Connections and freshness" });
+  expect(within(primary).getByRole("link", { name: "Settings & Agents" }).getAttribute("aria-current")).toBe("page");
+  expect(fetch.mock.calls.some(([url]) => url.startsWith("/api/inbox") || url.startsWith("/api/evidence/assessments"))).toBe(false);
+});
+
+test("legacy case bookmarks preserve customer context, query and fragment", async () => {
+  window.history.replaceState({}, "", "/cases?customer=customer1#open");
+  mockRoutes({ "/api/customers": () => response([{ id: "customer1", name: "Selected fictional customer" }]) });
+  render(<App />);
+  await screen.findByRole("heading", { name: "Open a customer investigation" });
+  await waitFor(() => expect(screen.getByLabelText("Customer").value).toBe("customer1"));
+  expect(window.location.pathname).toBe("/inbox/cases");
+  expect(window.location.search).toBe("?customer=customer1");
+  expect(window.location.hash).toBe("#open");
+});
+
+test("inbox failures do not masquerade as an empty queue or a zero case count", async () => {
+  mockRoutes({ "/api/cases": () => response({ detail: { message: "Case inventory temporarily unavailable." } }, 503) });
+  render(<App />);
+  await screen.findByText("Case inventory temporarily unavailable.");
+  expect(screen.queryByText("No open investigations in the loaded queue.")).toBeNull();
+  expect(screen.queryByText("Prepare your workspace")).toBeNull();
+  expect(screen.getAllByText("—").length).toBe(2);
+  expect(screen.getByRole("button", { name: "Retry" })).toBeTruthy();
+});
+
+test("alert pagination keeps source provenance and a way back from an empty page", async () => {
+  window.history.replaceState({}, "", "/inbox/alerts");
+  mockRoutes({
+    "/api/alerts?limit=50&offset=0": () => response({ alerts: [{ id: "a1", case_id: "c1", rule_title: "Imported review signal", origin: "external_engine", external_source: { provider: "marble" }, created_at: "2026-10-01T00:00:00Z" }, { id: "a2", case_id: "c2", rule_title: "Internal threshold signal", created_at: "2026-10-01T00:00:00Z" }], has_more: true }),
+    "/api/alerts?limit=50&offset=50": () => response({ alerts: [], has_more: false }),
+  });
+  render(<App />);
+  await screen.findByText("Imported review signal");
+  expect(screen.getByText("marble")).toBeTruthy();
+  expect(screen.getByText("Starter monitoring engine")).toBeTruthy();
+  expect(document.querySelector('a[href="/inbox/cases/c1"]')).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: "Next alerts" }));
+  await screen.findByText("No alerts on this page.");
+  expect(screen.getByRole("button", { name: "Next alerts" }).disabled).toBe(true);
+  fireEvent.click(screen.getByRole("button", { name: "Previous alerts" }));
+  await screen.findByText("Imported review signal");
+});
+
+test("connection overview hides raw source metadata until advanced inspection", async () => {
+  window.history.replaceState({}, "", "/settings/sources");
+  mockRoutes({ "/api/sources": () => response({ ...sources, feeds: sources.feeds.map((feed, index) => ({ ...feed, status: index === 0 ? "ready" : "stale", sha256: "a".repeat(64) })) }) });
+  render(<App />);
+  await screen.findByText(/1 of 3 enabled feeds are fresh/);
+  expect(screen.queryByText("Snapshot checksum")).toBeNull();
+  fireEvent.click(screen.getByRole("link", { name: "Inspect per-source dates, checksums and sync controls" }));
+  await screen.findByRole("heading", { name: "Sanctions source details" });
+  expect(screen.getAllByText("Snapshot checksum").length).toBe(3);
+  expect(window.location.pathname).toBe("/advanced/sources");
+});
+
+test("additional analytics are reachable only through advanced navigation", async () => {
+  window.history.replaceState({}, "", "/evidence");
+  render(<App />);
+  await screen.findByRole("heading", { name: "Evidence packs and audit trail" });
+  expect(screen.queryByText("Observed destination corridors")).toBeNull();
+  fireEvent.click(screen.getByRole("link", { name: "Advanced diagnostics" }));
+  await screen.findByRole("heading", { name: "Diagnostics and detailed records" });
+  fireEvent.click(screen.getByRole("link", { name: "Additional activity analytics" }));
+  await screen.findByText("Observed destination corridors");
+  expect(screen.queryByText("Sponsor evidence pack")).toBeNull();
+  expect(window.location.pathname).toBe("/advanced/analytics");
+});
+
+test("settings run summaries exclude maintenance and raw logs retain the complete loaded history", async () => {
+  window.history.replaceState({}, "", "/settings/runs");
+  const jobs = [{ id: "maintenance-run", kind: "maintenance", state: "completed" }, ...Array.from({ length: 11 }, (_, index) => ({ id: "model-run-" + index, kind: "investigation", state: "completed", updated_at: "2026-10-01T00:00:00Z" }))];
+  mockRoutes({ "/api/agents/jobs": () => response(jobs) });
+  render(<App />);
+  await screen.findByRole("heading", { name: "Recent model runs" });
+  await waitFor(() => expect(screen.getAllByRole("link", { name: /^Open run / }).length).toBe(10));
+  expect(screen.queryByText("Maintenance")).toBeNull();
+  const before = fetch.mock.calls.length;
+  fireEvent.click(screen.getByRole("link", { name: "Inspect raw agent operations and complete loaded run history" }));
+  await screen.findByRole("heading", { name: "Raw agent operations" });
+  await waitFor(() => expect(screen.getAllByRole("link", { name: /^Open run / }).length).toBe(12));
+  expect(fetch.mock.calls.slice(before).some(([url]) => url === "/api/agents/catalog")).toBe(false);
+});
+
+test("case work shows a cited draft without exposing raw operations inline", async () => {
+  window.history.replaceState({}, "", "/inbox/cases/case-brief");
+  const brief = { summary: "Synthetic evidence-grounded brief remains a draft for independent human review.", recommendation: "investigate", citations: [{ chunk_id: "p1:1:0", policy_id: "p1", title: "Synthetic identity policy", version: "1", quote: "Verify sender and receiver identity.", source_url: "" }], limitations: ["Only the supplied evidence was inspected."] };
+  mockRoutes({ "/api/cases/case-brief": () => response({ id: "case-brief", title: "Review the fictional transfer", customer_id: "customer1", customer_name: "Fictional customer", customer: { name: "Fictional customer", country: "IN", kyc_status: "pending" }, status: "open", priority: "medium", created_at: "2026-10-01T00:00:00Z", description: "Synthetic investigation context.", alerts: [], transactions: [], screening_evidence: [], notes: [], tasks: [], agent_runs: [{ id: "brief-run", kind: "investigation", state: "completed", created_at: "2026-10-01T00:00:00Z", payload: { result: brief } }] }) });
+  render(<App />);
+  await screen.findByRole("heading", { name: "Review the fictional transfer" });
+  fireEvent.click(screen.getByRole("button", { name: "Agent work" }));
+  await screen.findByText(brief.summary);
+  expect(screen.getByText("Verify sender and receiver identity.")).toBeTruthy();
+  expect(screen.getByText(/does not change the case disposition/)).toBeTruthy();
+  expect(document.querySelector('a[href="/advanced/agents/brief-run"]')).toBeTruthy();
+  expect(screen.queryByText("Collected step outputs")).toBeNull();
+});
+
+test("navigation drawer traps keyboard focus and Escape restores its trigger", async () => {
+  render(<App />);
+  await screen.findByRole("heading", { name: "Work waiting for human review." });
+  const trigger = screen.getByRole("button", { name: "Open navigation" });
+  fireEvent.click(trigger);
+  const dialog = screen.getByRole("dialog", { name: "Workspace navigation" });
+  const first = within(dialog).getByRole("button", { name: "Close workspace navigation" });
+  const last = within(dialog).getByRole("link", { name: "Advanced diagnostics" });
+  expect(document.activeElement).toBe(first);
+  expect(document.querySelector(".main-shell").hasAttribute("inert")).toBe(true);
+  fireEvent.keyDown(first, { key: "Tab", shiftKey: true });
+  expect(document.activeElement).toBe(last);
+  fireEvent.keyDown(last, { key: "Tab" });
+  expect(document.activeElement).toBe(first);
+  fireEvent.keyDown(first, { key: "Escape" });
+  expect(screen.queryByRole("dialog")).toBeNull();
+  expect(document.activeElement).toBe(trigger);
+  expect(trigger.getAttribute("aria-expanded")).toBe("false");
+});
+
+test("settings section links are shareable and read-only users cannot mount key management", async () => {
+  window.history.replaceState({}, "", "/settings/agents");
+  mockRoutes({ "/api/auth/me": () => response({ ...user, role: "auditor" }) });
+  render(<App />);
+  await screen.findByText("Only workspace administrators can manage agent keys.");
+  expect(fetch.mock.calls.some(([url]) => url === "/api/agent-keys")).toBe(false);
+  fireEvent.click(screen.getByRole("link", { name: "Workspace & account" }));
+  await screen.findByText("Make the workspace work for your team.");
+  fireEvent.click(screen.getByRole("button", { name: "Account" }));
+  expect(window.location.search).toBe("?section=Account");
+  expect(screen.getByLabelText("Current password")).toBeTruthy();
+});
+
+test("a favorable assessment remains advisory and auditor access offers no review mutation", async () => {
+  window.history.replaceState({}, "", "/evidence/assessments/advisory1");
+  mockRoutes({
+    "/api/auth/me": () => response({ ...user, role: "auditor" }),
+    "/api/decisions/advisory1": () => response({ id: "advisory1", created_at: "2026-10-01T00:00:00Z", model: "test-model", processing_time_ms: 1000, transaction: { transaction_id: "FICTIONAL-ADVISORY", amount: "100", currency: "USD", sender: "Fictional sender", receiver: "Fictional receiver", sender_country: "India", receiver_country: "UK", description: "Synthetic assessment for interface verification." }, assessment: { verdict: "acceptable", risk_score: 10, reasoning: "No flag was identified within the supplied synthetic evidence scope.", risk_factors: [], citations: [], limitations: ["This is not legal approval or sanctions clearance."] }, screening: { matches: [], scope: "No match is not clearance.", source: { id: "ofac", name: "Synthetic source", sha256: "a".repeat(64), fetched_at: "2026-10-01T00:00:00Z", url: "https://example.invalid/feed" } }, exchange: { amount_usd: "100", base: "USD", rate: "1", date: "2026-10-01", source: "identity" }, reviews: [] }),
+  });
+  render(<App />);
+  await screen.findByRole("heading", { name: "FICTIONAL-ADVISORY" });
+  expect(screen.getByRole("heading", { name: "Advisory: no flag" })).toBeTruthy();
+  expect(screen.getByText("No match is not clearance.")).toBeTruthy();
+  expect(screen.queryByRole("button", { name: "Record review" })).toBeNull();
+  expect(screen.getByText(/only an authorized administrator or reviewer can append a review/)).toBeTruthy();
 });

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "../navigation";
 import { api } from "../services/api";
 import { ErrorNotice, Field, PageHeading, Submit, useResource } from "../components";
 import { label } from "../product-components";

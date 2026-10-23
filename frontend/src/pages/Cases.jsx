@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Link, useParams, useSearchParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
+import { Link } from "../navigation";
 import {
   ArrowLeft,
   ArrowUpRight,
@@ -12,6 +13,7 @@ import { api } from "../services/api";
 import {
   Empty,
   ErrorNotice,
+  Evidence,
   Field,
   formatDate,
   Loading,
@@ -492,7 +494,8 @@ export function CaseDetail() {
               {c.agent_runs.length ? (
                 <div className="compact-records">
                   {c.agent_runs.map((j) => (
-                    <Link key={j.id} to={"/agents/" + j.id}>
+                    <article key={j.id} className="section-padding case-agent-entry">
+                    <Link to={"/agents/" + j.id}>
                       <div>
                         <strong>{label(j.kind)}</strong>
                         <small>{formatDate(j.created_at)}</small>
@@ -500,6 +503,14 @@ export function CaseDetail() {
                       <Status value={j.state} />
                       <ArrowUpRight size={15} />
                     </Link>
+                    {j.state === "completed" && j.payload?.result && <>
+                      <h3>Draft for human review</h3>
+                      <p>{j.payload.result.summary}</p>
+                      <p>Suggested action: {label(j.payload.result.recommendation || "human_review")}. This does not change the case disposition.</p>
+                      {j.payload.result.citations && <Evidence citations={j.payload.result.citations} />}
+                      <ul>{(j.payload.result.limitations || []).map((item, index) => <li key={index}>{item}</li>)}</ul>
+                    </>}
+                    </article>
                   ))}
                 </div>
               ) : (

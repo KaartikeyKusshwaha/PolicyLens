@@ -7,7 +7,7 @@ import {
   LoaderCircle,
   Search,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link } from "./navigation";
 import { api } from "./services/api";
 
 export function useResource(path) {
@@ -16,6 +16,12 @@ export function useResource(path) {
   const [loading, setLoading] = useState(true);
   const [revision, setRevision] = useState(0);
   useEffect(() => {
+    if (!path) {
+      setData(null);
+      setError("");
+      setLoading(false);
+      return;
+    }
     const controller = new AbortController();
     setLoading(true);
     setError("");
@@ -52,7 +58,7 @@ export const money = (amount, currency) =>
     maximumFractionDigits: 2,
   }).format(Number(amount));
 export const verdictLabel = (value) =>
-  ({ flag: "Flagged", needs_review: "Needs review", acceptable: "Acceptable" })[
+  ({ flag: "Flagged", needs_review: "Needs review", acceptable: "Advisory: no flag" })[
     value
   ] || value;
 

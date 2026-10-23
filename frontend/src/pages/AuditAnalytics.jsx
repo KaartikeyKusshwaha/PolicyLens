@@ -1,29 +1,23 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "../navigation";
 import {
-  Activity,
   ArrowUpRight,
-  Bot,
-  Check,
   Clock3,
   Download,
   Fingerprint,
-  Workflow,
 } from "lucide-react";
 import { api } from "../services/api";
 import {
   Empty,
   ErrorNotice,
   formatDate,
-  Loading,
   PageHeading,
   useResource,
 } from "../components";
-import { label, Metric, Status } from "../product-components";
+import { label, Status } from "../product-components";
 import { useSession } from "../session";
 
 export default function AuditAnalytics() {
-  const r = useResource("/analytics");
   const audit = useResource("/audit");
   const checkpoints = useResource("/audit/checkpoints");
   const team = useResource("/team");
@@ -80,21 +74,18 @@ export default function AuditAnalytics() {
       setBusy(false);
     }
   }
-  if (r.loading) return <Loading />;
-  if (r.error) return <ErrorNotice message={r.error} />;
-  const stats = r.data;
   return (
     <>
       <PageHeading
         eyebrow="OPERATIONS YOU CAN ACCOUNT FOR"
-        title="A clear view of the work—and its record."
+        title="Evidence packs and audit trail"
         action={
           checkpoints.data?.configured && checkpoints.data.status !== "failed" ? <button className="button secondary" disabled={busy} onClick={exportSigned}>
             <Download size={15} /> Export signed audit bundle
           </button> : undefined
         }
       >
-        Measured activity, documented human outcomes, and a verifiable chain of
+        Policy, control and investigation evidence with a verifiable chain of
         recorded events.
       </PageHeading>
       <ErrorNotice message={error || audit.error || checkpoints.error} />
@@ -115,78 +106,6 @@ export default function AuditAnalytics() {
         </> : checkpoints.data?.configured === false ? <p>External checkpoint storage is not configured. A valid local hash chain alone cannot detect a complete database rewrite.</p> : <p>External checkpoint status is unavailable.</p>}
         <button className="button secondary" onClick={checkpoints.reload}>Refresh checkpoint status</button>
       </section>
-      <div className="product-metrics">
-        <Metric
-          label="Transactions received"
-          value={stats.transactions}
-          icon={Activity}
-          detail="Across monitored corridors"
-        />
-        <Metric
-          label="Open investigations"
-          value={stats.open_cases}
-          icon={Workflow}
-          detail={`${stats.escalated} escalated · ${stats.overdue} overdue`}
-        />
-        <Metric
-          label="Human-reviewed cases"
-          value={stats.resolved}
-          icon={Check}
-          detail="Recorded case dispositions"
-        />
-        <Metric
-          label="Completed agent runs"
-          value={stats.jobs.completed || 0}
-          icon={Bot}
-          detail={`${stats.jobs.failed || 0} failed · ${stats.jobs.queued || 0} queued`}
-        />
-      </div>
-      <div className="analytics-grid">
-        <section className="panel section-padding">
-          <h2>Observed destination corridors</h2>
-          <p className="section-copy">
-            Transaction counts by supplied destination country. This does not
-            measure country risk.
-          </p>
-          {stats.corridors.length ? (
-            <div className="corridor-bars">
-              {stats.corridors.map((c) => (
-                <div key={c.country}>
-                  <strong>{c.country}</strong>
-                  <span>
-                    <i
-                      style={{
-                        width: `${(c.transactions / Math.max(...stats.corridors.map((v) => v.transactions))) * 100}%`,
-                      }}
-                    />
-                  </span>
-                  <b>{c.transactions}</b>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <Empty title="Activity will bring this view to life.">
-              Corridor counts appear after monitoring receives transactions.
-            </Empty>
-          )}
-        </section>
-        <section className="panel section-padding">
-          <h2>Recorded case outcomes</h2>
-          <p className="section-copy">
-            Human dispositions for resolved cases. These labels alone do not
-            establish detection accuracy or recall.
-          </p>
-          {Object.entries(stats.dispositions).map(([key, count]) => (
-            <div className="outcome-row" key={key}>
-              <span>{label(key)}</span>
-              <strong>{count}</strong>
-            </div>
-          ))}
-          <Link className="text-link" to="/cases">
-            Review investigations <ArrowUpRight size={14} />
-          </Link>
-        </section>
-      </div>
       <section className="panel detail-section">
         <div className="panel-heading">
           <div>

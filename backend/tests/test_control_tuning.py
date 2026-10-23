@@ -65,14 +65,16 @@ def test_amount_search_drafts_only_and_independent_activation_preserves_replay(
     client, *_ = workspace
     parent, _, reviewer = setup(client)
     store, user = store_for(client)
-    before_alerts = client.get("/api/monitor/alerts").json()
+    alert_response = client.get("/api/alerts")
+    assert alert_response.status_code == 200
+    before_alerts = alert_response.json()
     result, request = propose(client, body(parent))
     pinned = result["receipt"]["preview"]
     assert pinned["before"]["match_count"] == 2
     assert pinned["selected"]["threshold"] == "200"
     assert pinned["selected"]["match_count"] == 1
     assert len(pinned["removed_match_ids"]) == 1 and not pinned["added_match_ids"]
-    assert client.get("/api/monitor/alerts").json() == before_alerts
+    assert client.get("/api/alerts").json() == before_alerts
     draft = result["control"]
     assert draft["status"] == "draft" and draft["replaces_id"] == parent["id"]
     assert draft["created_by"] == user["id"]
