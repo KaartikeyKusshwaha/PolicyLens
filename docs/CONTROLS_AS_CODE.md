@@ -1,7 +1,9 @@
 # Controls as code
 
-Implemented on the governance branch. Browser acceptance and production deployment
-remain pending. YAML creates configuration drafts; independent in-app review remains
+Deployed to Oracle. The synthetic browser pass verified export, a local Git-reviewed
+title change, preview, draft import and activation by a separate reviewer. Other
+failure paths and owner-workspace acceptance remain distinct; see
+`BROWSER_ACCEPTANCE_20261023.md`. YAML creates configuration drafts; independent in-app review remains
 the only route to activation. This feature performs no Git push, merge, fetch or
 external API operation.
 
