@@ -190,6 +190,8 @@ def persist(
             "success": True,
             "bundle_sha256": digest,
             "archive": target.name,
+            "encrypted_sha256": hashlib.sha256(target.read_bytes()).hexdigest(),
+            "encrypted_bytes": target.stat().st_size,
             "artifacts": len(inventory["files"]),
             "source_created_at": inventory["created_at"],
             "scope": "Authenticated encrypted complete deletion history copy; current recovery guard digest still requires independent retention. No physical erasure or deployed off-machine custody proof.",

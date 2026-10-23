@@ -41,6 +41,83 @@ def write_receipts(root, value):
         (root / name).write_text(json.dumps(value), encoding="utf-8")
 
 
+@pytest.mark.parametrize("kind", ["deletion_state", "checkpoint_history"])
+@pytest.mark.parametrize(
+    "change",
+    [
+        "healthy",
+        "missing",
+        "changed",
+        "stale",
+        "failed_latest",
+        "mismatched_receipt",
+        "missing_metadata",
+        "unsafe_name",
+        "wrong_identity",
+    ],
+)
+def test_configured_history_checks_refuse_lost_changed_or_stale_copies(
+    backup, tmp_path, kind, change
+):
+    root, value, at = backup
+    directory = tmp_path / "private-history"
+    directory.mkdir()
+    prefix = "deletion-state" if kind == "deletion_state" else "checkpoint-history"
+    name = prefix + "-" + "b" * 64 + ".fernet"
+    content = b"Synthetic encrypted history bytes"
+    path = directory / name
+    path.write_bytes(content)
+    metadata = {
+        "success": True,
+        "source_created_at": at.isoformat(),
+        "archive": name,
+        "bundle_sha256": "b" * 64,
+        "encrypted_sha256": hashlib.sha256(content).hexdigest(),
+        "encrypted_bytes": len(content),
+    }
+    value[kind] = metadata
+    if change == "missing":
+        path.rename(directory / "held")
+    elif change == "changed":
+        path.write_bytes(b"X" + content[1:])
+    elif change == "stale":
+        metadata["source_created_at"] = (at - timedelta(hours=31)).isoformat()
+    elif change == "missing_metadata":
+        metadata.pop("encrypted_sha256")
+    elif change == "unsafe_name":
+        metadata["archive"] = "../private-secret"
+    elif change == "wrong_identity":
+        metadata["bundle_sha256"] = "c" * 64
+    write_receipts(root, value)
+    if change == "failed_latest":
+        (root / "last-attempt.json").write_text(
+            json.dumps({"success": False}), encoding="utf-8"
+        )
+    elif change == "mismatched_receipt":
+        altered = {**value, kind: {**metadata, "bundle_sha256": "d" * 64}}
+        (root / "last-attempt.json").write_text(json.dumps(altered), encoding="utf-8")
+    options = {
+        "deletion_state_directory"
+        if kind == "deletion_state"
+        else "checkpoint_directory": directory
+    }
+    report = watchdog.check(
+        "https://pilot.example.invalid",
+        root,
+        root,
+        min_free_bytes=1,
+        at=at,
+        transport=httpx.MockTransport(ready),
+        **options,
+    )
+    check = next(item for item in report["checks"] if item["name"] == kind + "_backup")
+    assert check["healthy"] is (change == "healthy")
+    assert report["healthy"] is (change == "healthy")
+    assert "private-secret" not in json.dumps(report) and str(
+        directory
+    ) not in json.dumps(report)
+
+
 def ready(request):
     assert str(request.url) == "https://pilot.example.invalid/api/ready"
     assert "authorization" not in request.headers

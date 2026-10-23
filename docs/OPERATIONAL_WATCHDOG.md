@@ -51,6 +51,30 @@ host, prove that storage is independently off-machine, or prove recovery works.
 It also does not monitor external deletion-state freshness or replace the current
 independently retained deletion guard digest.
 
+## Optional deletion and checkpoint archive checks
+
+For a combined receiver, add `--deletion-state-directory PRIVATE_HISTORY_DIRECTORY`
+and/or `--checkpoint-directory PRIVATE_CHECKPOINT_ARCHIVE_DIRECTORY`. These paths
+refer to encrypted receiver archives, not the application's runtime state roots.
+Each configured family becomes a required check. The latest success/attempt
+receipts must agree on that family's complete metadata and successful outcome;
+the source timestamp must be fresh and its exact ciphertext file must match saved
+size/SHA-256. Unsafe names, mismatched bundle identity, missing metadata, absent
+archives, same-size byte changes and failed latest attempts report unhealthy.
+No signing, installation or archive-decryption key is needed by the watchdog.
+
+Both history receivers now record encrypted size/hash; older successful receipts
+without these fields require a new verified transfer. These checks verify retained
+bytes against local receipts, not signatures or decrypted content on each run.
+They do not detect changes to old history bundles not referenced by the latest
+receipt, prove current source history between stages, or replace independently
+trusted fingerprints/digests and full receiver/recovery verification.
+
+To use the optional checks in the Linux timer, configure an explicit reviewed
+`ExecStart` override including the selected private archive directories. The base
+template continues checking database backup only. A source update does not modify
+installed units; verify healthy and failure states before enabling monitoring.
+
 ## Optional Linux timer
 
 Source templates `deploy/policylens-watchdog.service` and `.timer` run every five

@@ -6,6 +6,16 @@ review and market validation. None of those gates can be inferred from a green C
 
 ## Operational watchdog checkpoint
 
+History-archive monitoring: deletion/checkpoint receiver receipts now record exact
+saved ciphertext size/SHA-256 and source creation time. Optional watchdog archive
+directories require matching latest combined receipts, fresh source metadata and
+unchanged archive bytes, without giving the monitor decryption keys. Eighteen
+new failure/healthy tests cover both families; the real three-artifact receiver
+test also checks its produced history receipts. All 95 focused watchdog/receiver/
+history tests pass; three Windows symlink tests remain enabled for Linux CI.
+Ruff passes. Source now contains 572 backend tests; latest exact CI is pending.
+This does not establish deployed monitoring, current source state or recovery.
+
 Discovery-evidence execution binding: the stopped operator must now provide the
 actual independently approved file. Bounded regular-file hashing and metadata
 stability checks must match its approved SHA-256 before suppression publication

@@ -146,6 +146,75 @@ def backup_check(directory, at, max_age_hours):
         }
 
 
+def history_check(receipt_directory, directory, kind, at, max_age_hours):
+    name = kind + "_backup"
+    try:
+        root = Path(directory).absolute()
+        if root.resolve() != root or not root.is_dir():
+            raise ValueError("History directory unavailable")
+        receipts = Path(receipt_directory).absolute()
+        if receipts.resolve() != receipts:
+            raise ValueError("Receipt directory redirected")
+        attempt, saved = (
+            receipt(receipts / "last-attempt.json"),
+            receipt(receipts / "last-success.json"),
+        )
+        if attempt.get("success") is not True or saved.get("success") is not True:
+            raise ValueError("Combined attempt failed")
+        if attempt["completed_at"] != saved["completed_at"] or attempt.get(
+            kind
+        ) != saved.get(kind):
+            raise ValueError("Combined history receipts disagree")
+        fresh(saved["completed_at"], at, max_age_hours)
+        metadata = saved[kind]
+        if not isinstance(metadata, dict) or metadata.get("success") is not True:
+            raise ValueError("History verification receipt missing")
+        fresh(metadata["source_created_at"], at, max_age_hours)
+        prefix = "deletion-state" if kind == "deletion_state" else "checkpoint-history"
+        archive = metadata["archive"]
+        digest, size, identity = (
+            metadata["encrypted_sha256"],
+            metadata["encrypted_bytes"],
+            metadata["bundle_sha256"],
+        )
+        if (
+            not isinstance(archive, str)
+            or not re.fullmatch(prefix + r"-[a-f0-9]{64}\.fernet", archive)
+            or archive != prefix + "-" + identity + ".fernet"
+        ):
+            raise ValueError("Unsafe history identity")
+        if (
+            type(size) is not int
+            or not 1 <= size <= MAX_ARCHIVE_BYTES
+            or not isinstance(digest, str)
+            or not re.fullmatch(r"[a-f0-9]{64}", digest)
+        ):
+            raise ValueError("History integrity metadata invalid")
+        target = root / archive
+        if target.is_symlink() or not target.is_file() or target.stat().st_size != size:
+            raise ValueError("History artifact missing or size changed")
+        actual, total = hashlib.sha256(), 0
+        with target.open("rb") as stream:
+            for block in iter(lambda: stream.read(1024 * 1024), b""):
+                total += len(block)
+                if total > size:
+                    raise ValueError("History artifact grew")
+                actual.update(block)
+        if total != size or actual.hexdigest() != digest:
+            raise ValueError("History ciphertext checksum changed")
+        return {
+            "name": name,
+            "healthy": True,
+            "code": "fresh_receipt_and_matching_history_archive",
+        }
+    except (OSError, ValueError, TypeError, KeyError, OverflowError):
+        return {
+            "name": name,
+            "healthy": False,
+            "code": "history_receipt_or_archive_invalid",
+        }
+
+
 def readiness_check(client, url):
     try:
         with client.stream("GET", url) as response:
@@ -181,6 +250,8 @@ def check(
     max_age_hours=30,
     transport=None,
     at=None,
+    deletion_state_directory=None,
+    checkpoint_directory=None,
 ):
     url = origin_url(origin)
     if (
@@ -196,6 +267,14 @@ def check(
     ) as client:
         checks = [readiness_check(client, url)]
     checks.append(backup_check(offsite_directory, at, max_age_hours))
+    for kind, directory in (
+        ("deletion_state", deletion_state_directory),
+        ("checkpoint_history", checkpoint_directory),
+    ):
+        if directory is not None:
+            checks.append(
+                history_check(offsite_directory, directory, kind, at, max_age_hours)
+            )
     try:
         free = shutil.disk_usage(disk_path).free
         checks.append(
@@ -227,6 +306,8 @@ def main(argv=None):
     parser.add_argument("--origin", required=True)
     parser.add_argument("--offsite-directory", type=Path, required=True)
     parser.add_argument("--disk-path", type=Path, required=True)
+    parser.add_argument("--deletion-state-directory", type=Path)
+    parser.add_argument("--checkpoint-directory", type=Path)
     parser.add_argument("--min-free-mib", type=int, default=1024)
     parser.add_argument("--max-backup-age-hours", type=int, default=30)
     args = parser.parse_args(argv)
@@ -237,6 +318,8 @@ def main(argv=None):
             args.disk_path,
             min_free_bytes=args.min_free_mib * 1024 * 1024,
             max_age_hours=args.max_backup_age_hours,
+            deletion_state_directory=args.deletion_state_directory,
+            checkpoint_directory=args.checkpoint_directory,
         )
     except (ValueError, TypeError):
         result = {

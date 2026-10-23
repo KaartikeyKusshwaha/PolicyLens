@@ -8,6 +8,8 @@ import pytest
 from fastapi.testclient import TestClient
 
 from deploy import checkpoint_backup as checkpoint, pull_backup
+from deploy import watchdog
+from datetime import datetime, timezone
 from deploy.export_backup import export_snapshot
 from main import create_app
 from recovery import create_snapshot
@@ -202,6 +204,13 @@ def test_all_three_real_encrypted_copies_are_required_in_combined_success_receip
     assert receipt["deletion_state"]["artifacts"] == 1
     assert receipt["checkpoint_history"]["anchors"] >= 1
     assert calls == [(False, False), (True, False), (False, True)]
+    at = datetime.now(timezone.utc)
+    assert watchdog.history_check(
+        receiver, tmp_path / "deletion-receiver", "deletion_state", at, 30
+    )["healthy"]
+    assert watchdog.history_check(
+        receiver, tmp_path / "checkpoint-receiver", "checkpoint_history", at, 30
+    )["healthy"]
 
 
 @pytest.mark.parametrize(
