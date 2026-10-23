@@ -12,6 +12,20 @@ from retained_copies import register_generated
 router = APIRouter(prefix="/api/evidence")
 
 
+@router.get("/digest")
+def work_digest(request: Request):
+    from work_digest import build_digest
+
+    try:
+        return build_digest(request.state.store, request.app.state.settings)
+    except (ValueError, KeyError, TypeError, *DB_ERRORS):
+        raise problem(
+            409,
+            "digest_unavailable",
+            "The complete workspace digest could not be calculated. No partial summary was returned.",
+        ) from None
+
+
 @router.get("/scorecards/reference")
 def reference_scorecard(request: Request):
     from evaluation_artifacts import reference_result

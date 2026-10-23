@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
-import { Clock3, FileCheck2, Workflow } from "lucide-react";
 import {
   Empty,
   ErrorNotice,
@@ -9,8 +8,9 @@ import {
   PageHeading,
   useResource,
 } from "../components";
-import { Metric, Status } from "../product-components";
+import { Status } from "../product-components";
 import { useSession } from "../session";
+import WorkDigest from "./WorkDigest";
 
 function Queue({ title, resource, rows, children, empty, footer }) {
   return (
@@ -158,9 +158,6 @@ export default function Inbox({ view = "overview" }) {
   const changes = useResource("/policy-changes");
   const { user } = useSession();
   const open = (cases.data || []).filter((item) => item.status !== "resolved");
-  const overdue = open.filter(
-    (item) => item.due_at && new Date(item.due_at).getTime() < Date.now(),
-  );
   const controls = (rules.data || []).filter((item) => item.status === "draft");
   const policyChanges = (changes.data || []).filter(
     (item) => item.status === "pending_review",
@@ -220,26 +217,7 @@ export default function Inbox({ view = "overview" }) {
                 </div>
               </section>
             )}
-          <div className="product-metrics inbox-metrics">
-            <Metric
-              label="Loaded open cases"
-              value={cases.loading || cases.error ? "—" : open.length}
-              icon={Workflow}
-              detail="Recorded investigations requiring work"
-            />
-            <Metric
-              label="Loaded overdue cases"
-              value={cases.loading || cases.error ? "—" : overdue.length}
-              icon={Clock3}
-              detail="Open cases past their recorded due time"
-            />
-            <Metric
-              label="Loaded control drafts"
-              value={rules.loading || rules.error ? "—" : controls.length}
-              icon={FileCheck2}
-              detail="Independent approval is required"
-            />
-          </div>
+          <WorkDigest key={revision} />
           <Queue
             title="Investigation queue"
             resource={cases}

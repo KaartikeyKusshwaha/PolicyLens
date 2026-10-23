@@ -143,11 +143,22 @@ Browser testing and Oracle deployment remain pending.
 
 ## Phase 5: autopilot and scorecard
 
+Workspace-digest checkpoint: Inbox now shows a single-snapshot, zero-model work
+summary and selected-feed freshness warnings. Complete counts refuse oversized
+or malformed input; previews are bounded separately. Invalid due dates remain
+visible, and future/invalid source retrieval timestamps also block screening.
+Ten new backend tests include concurrent-write snapshot consistency, tenant/role
+isolation, capacity and rolling-window boundaries. All 39 digest/workflow backend
+tests and 72 frontend tests pass, with Ruff, ESLint and production build. Details:
+`WORK_DIGEST.md`. No background email/notification delivery or agent promotion.
+
 Retained-scorecard checkpoint: all 12 artifact verification tests pass, including
 full 50-run recomputation, altered source context/labels/identities/metrics,
 missing/extra/oversized artifacts, an offline subprocess and read-only API refusal
 without partial metrics. All 69 frontend tests, Ruff, ESLint and production build
-pass. The full backend regression is running (359 backend tests now in source).
+pass. The prior local full regression passed 358 tests, followed by the final
+artifact-context test (359 tests then in source). Exact pushed `1a5b315` CI passed
+359 backend and 69 frontend tests (run `39942651455`).
 The live synthetic reference is visible in Evidence; its failed quality gate and
 four uninspectable failed drafts stay explicit. Browser acceptance and Oracle
 deployment remain pending.
@@ -181,7 +192,10 @@ Automatic preparation remains disabled. The dataset, report and all 50 runs are
 retained and recomputed; the read-only Evidence reference is explicitly separate
 from workspace results. See `AGENT_SCORECARDS.md` and the retained result README.
 
-- [ ] Opt-in cited brief preparation on new alerts, digests and stale-evidence alerts.
+- [x] In-app deterministic digests and stale-evidence warnings; complete snapshot
+  counts, explicit refresh and zero model calls. No off-app delivery is claimed.
+- [ ] Opt-in cited brief preparation on new alerts. Quality gate remains failed;
+  automatic brief preparation is disabled.
 - [x] Implement deterministic tuning playbook: before/after historical simulation,
   proposed threshold draft and independent approval; no automatic activation.
   Human control UI, scoped MCP/SDK/CLI tools, pinned evidence and atomic receipt

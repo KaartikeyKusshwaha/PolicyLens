@@ -50,7 +50,9 @@ const response = (data, status = 200) => ({
   json: async () => data,
 });
 const defaults = (url) =>
-  url === "/api/traceability"
+  url === "/api/evidence/digest"
+    ? { generated_at: "2026-10-23T12:00:00Z", queues: Object.fromEntries(["open_cases", "overdue_cases", "control_drafts", "policy_changes"].map((name) => [name, { count: 0 }])), sources: [], source_warnings: 0, recent_alerts: 0, failed_runs: 0, invalid_due_dates: 0, scope: "Current workspace snapshot." }
+    : url === "/api/traceability"
     ? { obligations: [], policies_without_current_analysis: [], available_controls: [], counts: { obligations: 0, with_gaps: 0, policies_without_current_analysis: 0 }, scope: "Explicit human mappings." }
     : url === "/api/retention"
     ? { active_policy: null, policies: [], holds: [], copies: [], deletion_requests: [] }
@@ -295,7 +297,7 @@ test("empty inbox displays truthful zeroes and actionable setup", async () => {
   render(<App />);
   await screen.findByText("Work waiting for human review.");
   await screen.findByText("Prepare your workspace");
-  expect(screen.getAllByText("0").length).toBe(3);
+  expect(within(screen.getByRole("region", { name: "Workspace digest" })).getAllByText("0").length).toBe(6);
   expect(screen.getByRole("link", { name: "Connect evidence sources" }).getAttribute("href")).toBe("/settings/sources");
   expect(screen.getByRole("link", { name: "Prepare controls for independent approval" })).toBeTruthy();
   expect(screen.queryByText("API unreachable")).toBeNull();
@@ -582,13 +584,14 @@ test("legacy case bookmarks preserve customer context, query and fragment", asyn
 });
 
 test("inbox failures do not masquerade as an empty queue or a zero case count", async () => {
-  mockRoutes({ "/api/cases": () => response({ detail: { message: "Case inventory temporarily unavailable." } }, 503) });
+  mockRoutes({ "/api/cases": () => response({ detail: { message: "Case inventory temporarily unavailable." } }, 503), "/api/evidence/digest": () => response({ detail: { message: "Complete digest unavailable." } }, 409) });
   render(<App />);
   await screen.findByText("Case inventory temporarily unavailable.");
   expect(screen.queryByText("No open investigations in the loaded queue.")).toBeNull();
   expect(screen.queryByText("Prepare your workspace")).toBeNull();
-  expect(screen.getAllByText("—").length).toBe(2);
-  expect(screen.getByRole("button", { name: "Retry" })).toBeTruthy();
+  await screen.findByText("Complete digest unavailable.");
+  expect(within(screen.getByRole("region", { name: "Workspace digest" })).queryByText("0")).toBeNull();
+  expect(screen.getAllByRole("button", { name: "Retry" }).length).toBe(2);
 });
 
 test("alert pagination keeps source provenance and a way back from an empty page", async () => {
