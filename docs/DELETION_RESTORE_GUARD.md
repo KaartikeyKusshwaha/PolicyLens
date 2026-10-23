@@ -51,6 +51,15 @@ an existing output. Oversized/malformed/unauthenticated guards, missing workspac
 unsupported target tables/kinds and altered/omitted receipts fail closed.
 The normal encrypted/plaintext integrity and credential-revocation checks remain.
 
+Snapshot verification also matches each manifest workspace path to the absolute
+tenant path captured in the identity database. Files must map one-to-one, remain
+distinct from `identity.db`, and share the captured source installation root.
+Both Windows and Unix source paths are understood without resolving those source
+paths on the recovery machine. Swapped tenant mappings, duplicate files, unknown
+extra databases and mixed roots are refused by local verification, restore,
+off-machine export and the independent receiving verifier. File checksums alone
+would not detect a manifest that mapped unchanged files to the wrong tenants.
+
 ## Remaining deletion work
 
 Production deletion execution remains unavailable. Tests seed completed receipts

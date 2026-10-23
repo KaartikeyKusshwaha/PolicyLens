@@ -6,6 +6,16 @@ review and market validation. None of those gates can be inferred from a green C
 
 ## Deletion review checkpoint
 
+Exact recovery-guard commit `25221b5` passed CI with 385 backend and 72 frontend
+tests, Ruff, ESLint, production build and dependency audit (run `39946957377`).
+Additional recovery hardening now validates manifest paths against captured
+identity-to-tenant file mappings in both local and off-machine verification.
+Swapped/duplicate mappings, extra databases and inconsistent source roots fail;
+Windows and Unix source path interpretation remains portable. Eleven new tests
+cover those rules, including encrypted/plaintext exporter, receiver and restore
+refusals. All 48 mapping/guard/off-machine backup tests and Ruff pass locally.
+The source suite contains 396 backend tests; exact new CI is pending.
+
 Recovery-guard implementation: all restores now require current external
 HMAC-authenticated deletion state and an independently retained digest, even for
 pre-deletion backups. Workspace coverage, receipt identity/hash and operational

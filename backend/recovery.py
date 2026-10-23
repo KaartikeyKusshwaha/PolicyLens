@@ -10,6 +10,7 @@ from pathlib import Path
 from runtime import InstallationLock
 from database import connect_database, database_key, descriptor, encrypted
 from security import SecretBox
+from snapshot_mapping import verify_workspace_mapping
 from sqlcipher3 import dbapi2 as cipher
 
 
@@ -190,9 +191,8 @@ def verify_snapshot(directory, settings=None):
     ).issubset(names):
         raise ValueError("Backup is missing identity or workspace databases.")
     with closing(readonly(directory / "identity.db", settings)) as db:
-        org_ids = {row[0] for row in db.execute("SELECT id FROM organizations")}
-    if org_ids != set(manifest["organization_paths"]):
-        raise ValueError("Workspace mappings do not match the identity database.")
+        organizations = db.execute("SELECT id,db_path FROM organizations").fetchall()
+    verify_workspace_mapping(manifest, organizations)
     return manifest
 
 

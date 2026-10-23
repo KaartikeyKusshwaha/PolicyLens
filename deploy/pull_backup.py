@@ -20,6 +20,7 @@ from cryptography.fernet import Fernet
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
 from database import DB_ERRORS, connect_database, descriptor  # noqa: E402
+from snapshot_mapping import verify_workspace_mapping  # noqa: E402
 
 MAX_BYTES = 128 * 1024 * 1024
 
@@ -129,16 +130,12 @@ def verify_archive(payload, max_age_hours=30, *, database_key_file=None):
                             "Snapshot SQLCipher page authentication failed."
                         )
                     if item["path"] == "identity.db":
-                        ids = {
-                            row[0]
-                            for row in connection.execute(
-                                "SELECT id FROM organizations"
-                            )
-                        }
-                        if ids != set(manifest["organization_paths"]):
-                            raise ValueError(
-                                "Snapshot workspace mappings are inconsistent."
-                            )
+                        verify_workspace_mapping(
+                            manifest,
+                            connection.execute(
+                                "SELECT id,db_path FROM organizations"
+                            ).fetchall(),
+                        )
             except DB_ERRORS as exc:
                 raise ValueError("Snapshot database could not be verified.") from exc
     return manifest
