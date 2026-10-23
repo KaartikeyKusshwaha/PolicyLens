@@ -1,0 +1,20 @@
+{
+  "after_simulation_gap_absent_for_mapped_obligation": true,
+  "before_missing_simulation_gap_visible": true,
+  "control_id": "a79272d4-91d2-48ae-8389-d9f5313cd56b",
+  "counts": {
+    "obligations": 5,
+    "policies_without_current_analysis": 0,
+    "with_gaps": 4
+  },
+  "mapping_recorded_through_browser": true,
+  "model_calls_for_mapping_and_simulation": 0,
+  "remaining_unmapped_obligations": 4,
+  "scope": "Deployed fictional browser mapping and deterministic simulation; no legal coverage or detection accuracy claim.",
+  "screenshots_private": [
+    "desktop-traceability-mapping.png",
+    "desktop-traceability-simulation-linked.png"
+  ],
+  "simulation_matches": 2,
+  "simulation_tested": 6
+}
