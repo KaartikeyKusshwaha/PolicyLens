@@ -51,3 +51,11 @@ provider context and media/controller copies remain unknown. It does not certify
 system-wide discovery, authenticate custodians, verify physical erasure, infer
 legal requirements or execute deletion. Complete historical-copy reconciliation
 and operator/deployed acceptance remain separate master-plan requirements.
+
+On 24 October 2026 local time, the actual known Windows recovery roots on C: and
+D: were inventoried successfully: 48 files, 21 directories, 56,340,485 bytes.
+The private report is protected for the current user and SYSTEM outside Git;
+its exact digest is recorded in `RELEASE_READINESS.md`. Nothing was deleted or
+automatically registered. This establishes the selected-root command on real
+receiver artifacts, not a complete ownership/custody reconciliation or current
+inventory after subsequent writes.
