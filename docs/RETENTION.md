@@ -201,6 +201,13 @@ JSON and PDF. Native backup downloads verify the saved content hash when availab
 
 ## Boundaries still requiring implementation
 
+The [explicit-root discovery command](COPY_DISCOVERY.md) now produces private,
+bounded file-hash inventories for operator-selected backup/export/original folders.
+Its report hash can support human discovery review, but it does not infer customer
+ownership, automatically register copies, authorize deletion or establish complete
+system/downstream discovery. Unreadable, redirected, changing or oversized input
+refuses a complete report instead of silently omitting files.
+
 The daily backup source script now preserves dated snapshots rather than pruning
 after thirteen days. The previous unconditional filesystem rule could bypass
 approved preservation periods and holds. Removal requires explicit operator copy

@@ -6,6 +6,15 @@ review and market validation. None of those gates can be inferred from a green C
 
 ## Operational watchdog checkpoint
 
+Copy-discovery source: `manage.py copy-inventory` hashes every regular file under
+explicit nonoverlapping roots and exports private metadata with inventory/report
+digests. It refuses unsafe/unreadable/changing input and capacity excess without
+partial success, flags hard links and never deletes/registers/infers ownership.
+Twelve tests pass locally, including actual CLI invocation and generic private
+failure output; one symlink test requires Linux CI because this Windows account
+cannot create symlinks. Ruff passes. This supports discovery review, not complete
+copy reconciliation or system-wide discovery. See `COPY_DISCOVERY.md`.
+
 Checkpoint scheduling source: configured daily backup now stages signed complete
 history while stopped. A fixed strict-SSH exporter verifies the latest staged
 bundle without fallback after corruption. Receiver/Windows task options require

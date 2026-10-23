@@ -47,6 +47,12 @@ def main():
         "backup", help="Snapshot all databases while the app is stopped."
     )
     backup.add_argument("--output", type=Path, required=True)
+    discover = commands.add_parser(
+        "copy-inventory",
+        help="Hash files under explicit roots without removing anything; no complete-system discovery or ownership claim.",
+    )
+    discover.add_argument("--root", type=Path, action="append", required=True)
+    discover.add_argument("--output", type=Path, required=True)
     compact = commands.add_parser(
         "compact-encrypted",
         help="Rebuild retained logical content into a NEW encrypted snapshot; preserves original files and does not prove physical erasure.",
@@ -143,6 +149,15 @@ def main():
                 }
             )
         )
+    elif args.command == "copy-inventory":
+        from copy_inventory import export
+
+        try:
+            print(json.dumps(export(args.root, args.output)))
+        except (OSError, ValueError, OverflowError):
+            raise ValueError(
+                "Complete copy discovery failed. Check selected-root access, path safety, input stability and capacity. No files were removed; any incomplete output is not verified evidence."
+            ) from None
     elif args.command == "migrate-encryption":
         result = migrate_encryption(Settings(), args.output)
         print(

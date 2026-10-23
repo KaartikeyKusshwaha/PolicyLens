@@ -34,7 +34,8 @@ has not been started under the user's implementation-before-browser constraint.
 No production log, current timer result, new deployed binary or live encrypted
 storage claim can be inferred from local/CI success.
 
-Immediate source follow-up includes complete copy-discovery coverage. Checkpoint
+Explicit-root local copy discovery now supports private inventory evidence;
+complete cross-system/customer ownership reconciliation remains incomplete. Checkpoint
 backup scheduling source is implemented; actual transfer and installation remain
 unverified. The partner-selected adapter has an unresolved
 external specification. Automatic briefs remain gated. Deployed/operator, market
