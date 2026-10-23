@@ -226,6 +226,12 @@ and deployed recovery acceptance remain pending; synthetic tests are not erasure
   plaintext migration originals, and prove restoration cannot silently resurrect
   deleted records. Encryption does not itself remove those copies.
 
+An offline [encrypted compaction command](ENCRYPTED_COMPACTION.md) now rebuilds
+retained logical data into new encrypted files with zero free-list pages and
+verified row hashes. It preserves original files/WAL and does not establish
+physical erasure or dispose of any copy. Guarded recovery requirements still
+apply; media disposal, audit-PII policy and complete copy reconciliation remain.
+
 All policy/hold changes and their audit events share a write transaction.
 Role checks, CSRF and tenant isolation apply; agent keys cannot call these human
 routes. History reads fail above 2,000 records per kind rather than sampling.

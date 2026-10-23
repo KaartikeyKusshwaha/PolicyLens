@@ -6,6 +6,18 @@ review and market validation. None of those gates can be inferred from a green C
 
 ## Operational watchdog checkpoint
 
+Encrypted compaction checkpoint: the stopped operator can rebuild all retained
+identity/workspace content into a new SQLCipher snapshot. Schema table inventories,
+row counts, sorted logical-row hashes, SQLite/SQLCipher integrity and zero target
+free-list pages are verified; manifests report source/target page statistics.
+Original database bytes remain intact. Four focused tests and the preceding 26
+compaction/encryption/hardening checks pass, with Ruff. This handles rebuilding
+storage, not physical/media erasure or removal of originals/WAL/copies. See
+`ENCRYPTED_COMPACTION.md`; deployed performance/recovery remain pending.
+Oracle access recheck: TCP port 22 still fails and OCI CLI reports its saved
+security-token session expired. No authentication/browser or infrastructure
+mutation was attempted; server logs/backups remain unverified.
+
 External deletion-history backup checkpoint: the operator tool now exports all
 authenticated committed/aborted state from a stopped, runtime-verified installation.
 The receiver authenticates embedded guards, encrypts the bundle, verifies all

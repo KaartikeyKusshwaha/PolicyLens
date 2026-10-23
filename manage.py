@@ -13,6 +13,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent / "backend"))
 from config import Settings  # noqa: E402
 from recovery import (
     create_snapshot,
+    compact_encrypted,
     migrate_encryption,
     restore_snapshot,
     verify_snapshot,
@@ -46,6 +47,11 @@ def main():
         "backup", help="Snapshot all databases while the app is stopped."
     )
     backup.add_argument("--output", type=Path, required=True)
+    compact = commands.add_parser(
+        "compact-encrypted",
+        help="Rebuild retained logical content into a NEW encrypted snapshot; preserves original files and does not prove physical erasure.",
+    )
+    compact.add_argument("--output", type=Path, required=True)
     migrate = commands.add_parser(
         "migrate-encryption",
         help="Export a stopped plaintext installation to a NEW SQLCipher snapshot; never overwrite source databases.",
@@ -148,6 +154,19 @@ def main():
                     "database_encryption": result["database_encryption"],
                     "source_modified": False,
                     "next_step": "Restore this encrypted snapshot into a new directory using sqlcipher4 and the original installation key before switching the service.",
+                }
+            )
+        )
+    elif args.command == "compact-encrypted":
+        result = compact_encrypted(Settings(), args.output)
+        print(
+            json.dumps(
+                {
+                    "verified": True,
+                    "databases": len(result["files"]),
+                    "source_modified": False,
+                    "physical_erasure_proven": False,
+                    "storage_rebuild": result["storage_rebuild"],
                 }
             )
         )

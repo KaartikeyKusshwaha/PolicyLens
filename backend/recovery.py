@@ -57,6 +57,15 @@ def create_snapshot(settings, destination):
     return _create_snapshot(settings, destination, settings)
 
 
+def compact_encrypted(settings, destination):
+    """Rebuild live logical content into NEW encrypted files, preserving originals."""
+    if not encrypted(settings):
+        raise ValueError(
+            "Compaction requires an explicitly encrypted SQLCipher installation"
+        )
+    return _create_snapshot(settings, destination, settings, rebuild=True)
+
+
 def migrate_encryption(settings, destination):
     """Export a stopped plaintext installation into a NEW encrypted snapshot."""
     if encrypted(settings):
@@ -75,7 +84,7 @@ def migrate_encryption(settings, destination):
     return _create_snapshot(settings, destination, target_settings)
 
 
-def _create_snapshot(settings, destination, target_settings):
+def _create_snapshot(settings, destination, target_settings, *, rebuild=False):
     root = settings.database_path.parent.resolve()
     destination = Path(destination).resolve()
     with InstallationLock(root):
@@ -119,16 +128,23 @@ def _create_snapshot(settings, destination, target_settings):
             "files": [],
             "scope": "Identity and workspace databases. Environment/API keys and the installation encryption key are excluded. Stop the installation before snapshotting. Preserve the original installation key separately. Local file permissions are not encryption.",
         }
+        if rebuild:
+            manifest["storage_rebuild"] = {
+                "method": "sqlcipher_export",
+                "scope": "Rebuilds retained logical schema/rows into new encrypted files. Source files, WAL, backups, audit text and external copies remain. This does not prove physical or media erasure.",
+            }
         for relative, source in paths.items():
             target = safe_child(destination, relative)
             target.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
-            if not encrypted(settings) and encrypted(target_settings):
+            if (not encrypted(settings) and encrypted(target_settings)) or rebuild:
                 # SQLCipher's backup API cannot copy a plaintext handle into a
                 # keyed database. Its supported export rebuilds all schema/data,
                 # including FTS, into the separately keyed attached database.
                 key_hex = database_key(target_settings).hex()
                 with closing(
-                    cipher.connect(source.as_uri() + "?mode=ro", uri=True)
+                    readonly(source, settings)
+                    if rebuild
+                    else cipher.connect(source.as_uri() + "?mode=ro", uri=True)
                 ) as db:
                     db.execute("PRAGMA temp_store=MEMORY")
                     db.execute("PRAGMA cipher_memory_security=ON")
@@ -156,6 +172,71 @@ def _create_snapshot(settings, destination, target_settings):
                     "bytes": target.stat().st_size,
                 }
             )
+            if rebuild:
+                with (
+                    closing(readonly(source, settings)) as source_db,
+                    closing(readonly(target, target_settings)) as target_db,
+                ):
+
+                    def logical_tables(connection):
+                        return {
+                            row[0]
+                            for row in connection.execute(
+                                "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
+                            )
+                        }
+
+                    tables = logical_tables(source_db)
+                    if tables != logical_tables(target_db):
+                        raise ValueError(
+                            "Rebuilt snapshot schema table inventory changed"
+                        )
+                    for table in tables:
+                        quoted = '"' + table.replace('"', '""') + '"'
+                        if (
+                            source_db.execute(
+                                f"SELECT count(*) FROM {quoted}"
+                            ).fetchone()[0]
+                            != target_db.execute(
+                                f"SELECT count(*) FROM {quoted}"
+                            ).fetchone()[0]
+                        ):
+                            raise ValueError("Rebuilt snapshot row counts changed")
+                        columns = source_db.execute(
+                            f"PRAGMA table_info({quoted})"
+                        ).fetchall()
+                        order = ",".join(
+                            str(index + 1) for index in range(len(columns))
+                        )
+
+                        def row_digest(connection):
+                            value = hashlib.sha256()
+                            for row in connection.execute(
+                                f"SELECT * FROM {quoted} ORDER BY {order}"
+                            ):
+                                value.update(repr(tuple(row)).encode("utf-8"))
+                                value.update(b"\n")
+                            return value.digest()
+
+                        if row_digest(source_db) != row_digest(target_db):
+                            raise ValueError("Rebuilt snapshot logical rows changed")
+                    if target_db.execute("PRAGMA freelist_count").fetchone()[0] != 0:
+                        raise ValueError(
+                            "Rebuilt encrypted snapshot still has free pages"
+                        )
+                    manifest["files"][-1]["storage_rebuild"] = {
+                        "source_pages": source_db.execute(
+                            "PRAGMA page_count"
+                        ).fetchone()[0],
+                        "source_free_pages": source_db.execute(
+                            "PRAGMA freelist_count"
+                        ).fetchone()[0],
+                        "target_pages": target_db.execute(
+                            "PRAGMA page_count"
+                        ).fetchone()[0],
+                        "target_free_pages": 0,
+                        "logical_rows_verified": True,
+                    }
         manifest_file = destination / "manifest.json"
         manifest_file.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
         manifest_file.chmod(0o600)

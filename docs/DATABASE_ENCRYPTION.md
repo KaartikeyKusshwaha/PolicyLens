@@ -66,6 +66,12 @@ deletion procedure, which remains unfinished.
 
 ## Snapshots and recovery
 
+For retained logical data after deletion, `manage.py compact-encrypted --output
+NEW_SNAPSHOT` rebuilds all databases into new encrypted files and verifies table
+inventories, row counts/content hashes, integrity and zero free-list pages. It
+preserves originals and does not prove physical erasure. Follow
+`ENCRYPTED_COMPACTION.md` and the same current-guard/new-directory restore process.
+
 Workspace backup downloads remain encrypted when the workspace is encrypted.
 Whole-installation `manage.py backup`, `verify` and `restore` use the configured
 database driver. Encrypted snapshots record the scheme and SHA-256 fingerprint
