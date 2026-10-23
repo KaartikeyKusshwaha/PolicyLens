@@ -548,7 +548,6 @@ class AgentEngine:
                         )
                 if "transactions" in context:
                     input_scope = transaction_input_scope(context)
-                    self.step(store, job["id"], "model_input_scope", input_scope)
                 async with self.model_lock:
                     if not self.is_running(store, job["id"]):
                         return
@@ -580,6 +579,8 @@ class AgentEngine:
                             "agent_key_revoked",
                             "The requesting agent is no longer authorized.",
                         )
+                    if input_scope is not None:
+                        self.step(store, job["id"], "model_input_scope", input_scope)
                     result = await provider.complete(schema, context)
                     self.step(
                         store, job["id"], "model_identity", provider.last_model_identity
