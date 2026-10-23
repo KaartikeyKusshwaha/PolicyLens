@@ -3,6 +3,7 @@
 import asyncio
 import json
 from datetime import datetime, timedelta, timezone
+from decimal import Decimal
 
 from fastapi import HTTPException
 from starlette.concurrency import run_in_threadpool
@@ -13,6 +14,25 @@ from operations import Operations, audit, canonical, uid
 from product_models import InvestigationBrief, PolicyAnalysis
 from providers import PROMPT_VERSION, problem, verify_citations
 from store import now
+
+
+def transaction_input_scope(context):
+    """Summarize the final bounded sample without model arithmetic or FX mixing."""
+    totals = {}
+    for transaction in context["transactions"]:
+        currency = transaction["currency"]
+        amount = Decimal(str(transaction["amount"]))
+        if not amount.is_finite():
+            raise ValueError("Invalid transaction amount in retained evidence")
+        totals[currency] = totals.get(currency, Decimal(0)) + amount
+    return {
+        "record_count": len(context["transactions"]),
+        "totals_by_currency": {
+            currency: format(total, "f") for currency, total in sorted(totals.items())
+        },
+        "scope": context["transaction_scope"],
+    }
+
 
 CATALOG = [
     {
@@ -509,6 +529,7 @@ class AgentEngine:
                 context = {**context, "sanctions_screening": screening}
             if not self.is_running(store, job["id"]):
                 return
+            input_scope = cached.get("model_input_scope")
             result = cached.get("draft_analysis")
             if not result:
                 encoded = canonical(context)
@@ -525,6 +546,9 @@ class AgentEngine:
                             "agent_context_budget",
                             "This case exceeds the free-tier context budget. Narrow the evidence scope before starting a new run.",
                         )
+                if "transactions" in context:
+                    input_scope = transaction_input_scope(context)
+                    self.step(store, job["id"], "model_input_scope", input_scope)
                 async with self.model_lock:
                     if not self.is_running(store, job["id"]):
                         return
@@ -581,6 +605,7 @@ class AgentEngine:
                 verified = {
                     **result,
                     "citations": verify_citations(result, context["policies"]),
+                    "model_input_scope": input_scope,
                     "requires_approval": True,
                 }
                 if (

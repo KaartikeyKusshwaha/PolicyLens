@@ -179,3 +179,16 @@ exercise SDK requests, the MCP protocol, a real stdio subprocess and loopback HT
 The seeded MCP journey collects case context, queues the existing runner, verifies
 cited output, requests human review and is refused approval/closure. No browser is
 required for these tests, and no real business records are inserted.
+
+Completed transaction-based drafts now retain `model_input_scope`: the transaction
+record count, exact Decimal totals separately per currency, and sampling limit
+after context-budget reduction, before provider quote encoding and identifier
+masking. It describes the selected source records, not a byte-for-byte provider
+request attestation. The same summary is retained as a run step and
+shown beside the case draft. Later customer activity does not rewrite that sample.
+Older runs without this metadata are identified explicitly; current case records
+are not substituted for the historical model input. This supports human comparison,
+not automatic validation of narrative claims, time-window breaches or decisions.
+Quotation checks establish source quotations only. A live synthetic draft with six
+verified quotations still misstated four supplied transactions as five; automatic
+briefs remain disabled and the original failed-quality evidence remains retained.
