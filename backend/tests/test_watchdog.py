@@ -16,6 +16,42 @@ from deploy.pull_backup import persist
 from test_offsite_backup import snapshot  # noqa: F401
 
 
+def test_persisted_failure_survives_recovery(tmp_path):
+    failure = {
+        "schema": watchdog.SCHEMA,
+        "healthy": False,
+        "checks": [{"code": "disk_below_floor"}],
+    }
+    recovered = {"schema": watchdog.SCHEMA, "healthy": True, "checks": []}
+    watchdog.save_report(tmp_path, failure)
+    watchdog.save_report(tmp_path, recovered)
+    assert json.loads((tmp_path / "latest.json").read_text()) == recovered
+    assert json.loads((tmp_path / "last-failure.json").read_text()) == failure
+    assert sorted(path.name for path in tmp_path.iterdir()) == [
+        "last-failure.json",
+        "latest.json",
+    ]
+
+
+def test_report_write_failure_cannot_exit_healthy(tmp_path, monkeypatch):
+    monkeypatch.setattr(watchdog, "check", lambda *args, **kwargs: {"healthy": True})
+    assert (
+        watchdog.main(
+            [
+                "--origin",
+                "https://example.invalid",
+                "--offsite-directory",
+                str(tmp_path),
+                "--disk-path",
+                str(tmp_path),
+                "--report-directory",
+                str(tmp_path / "missing"),
+            ]
+        )
+        == 2
+    )
+
+
 @pytest.fixture
 def backup(tmp_path):
     root = tmp_path / "receiver"
