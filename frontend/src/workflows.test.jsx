@@ -682,6 +682,23 @@ test("case work shows a cited draft without exposing raw operations inline", asy
   expect(screen.getByText(/does not change the case disposition/)).toBeTruthy();
   expect(document.querySelector('a[href="/advanced/agents/brief-run"]')).toBeTruthy();
   expect(screen.queryByText("Collected step outputs")).toBeNull();
+    expect(screen.getByText(/final transaction selection summary was not retained/)).toBeTruthy();
+});
+
+test("case draft shows retained sample arithmetic and quotation-verification limits", async () => {
+  window.history.replaceState({}, "", "/inbox/cases/case-sample");
+  const brief = { summary: "The model claims five transactions; the retained sample contains four.", model_input_scope: { record_count: 4, totals_by_currency: { EUR: "0.30", USD: "9200.00" }, scope: "Latest four records, not full customer history." }, citations: [], limitations: [] };
+  mockRoutes({ "/api/cases/case-sample": () => response({ id: "case-sample", title: "Review sample arithmetic", customer_id: "customer1", customer_name: "Fictional customer", customer: { name: "Fictional customer", country: "IN", kyc_status: "pending" }, status: "open", priority: "medium", created_at: "2026-10-01T00:00:00Z", description: "Synthetic context.", alerts: [], transactions: [], screening_evidence: [], notes: [], tasks: [], agent_runs: [{ id: "sample-run", kind: "investigation", state: "completed", created_at: "2026-10-01T00:00:00Z", payload: { result: brief } }] }) });
+  render(<App />);
+  await screen.findByRole("heading", { name: "Review sample arithmetic" });
+  fireEvent.click(screen.getByRole("button", { name: "Agent work" }));
+  const sample = await screen.findByRole("region", { name: "Transaction sample selected for this run" });
+  expect(within(sample).getByText(/4 selected transaction records/)).toBeTruthy();
+  expect(within(sample).getByText("0.30")).toBeTruthy();
+  expect(within(sample).getByText("9200.00")).toBeTruthy();
+  expect(screen.getByText(/Policy quotation checks do not verify/)).toBeTruthy();
+  expect(screen.getByText(brief.summary)).toBeTruthy();
+  expect(screen.queryByText(/final transaction selection summary was not retained/)).toBeNull();
 });
 
 test("navigation drawer traps keyboard focus and Escape restores its trigger", async () => {

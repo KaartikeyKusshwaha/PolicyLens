@@ -505,6 +505,13 @@ export function CaseDetail() {
                     </Link>
                     {j.state === "completed" && j.payload?.result && <>
                       <h3>Draft for human review</h3>
+                      <p>Policy quotation checks do not verify the draft’s transaction counts, calculations or conclusions. Check these against the supplied evidence.</p>
+                      {j.payload.result.model_input_scope ? <section aria-label="Transaction sample selected for this run">
+                        <h4>Transaction sample selected for this run</h4>
+                        <p>{j.payload.result.model_input_scope.record_count} selected transaction records. {j.payload.result.model_input_scope.scope}</p>
+                        <dl>{Object.entries(j.payload.result.model_input_scope.totals_by_currency).map(([currency, total]) => <div key={currency}><dt>{currency} sample total</dt><dd>{total}</dd></div>)}</dl>
+                        <p>Computed from this run’s bounded sample, separately per currency. These totals do not establish policy-window breaches or full customer activity.</p>
+                      </section> : <p>The final transaction selection summary was not retained for this older run. Open the run evidence; current case transactions may have changed.</p>}
                       <p>{j.payload.result.summary}</p>
                       <p>Suggested action: {label(j.payload.result.recommendation || "human_review")}. This does not change the case disposition.</p>
                       {j.payload.result.citations && <Evidence citations={j.payload.result.citations} />}
