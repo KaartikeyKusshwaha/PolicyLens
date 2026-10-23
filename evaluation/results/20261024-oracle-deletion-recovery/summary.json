@@ -1,0 +1,58 @@
+{
+  "cpu_seconds": 40.439,
+  "deselected": 21,
+  "elapsed_seconds": 39.69,
+  "initial_attempt": "Stopped during collection: isolated venv lacked deployed httpx dependency path; corrected PYTHONPATH before second terminal run. No test executed in first attempt.",
+  "limits": [
+    "Synthetic record aging and linked records are explicit test fixtures.",
+    "Existing production dependency directory was read through PYTHONPATH; pytest installed only in separate test venv.",
+    "Mocked/in-process provider paths and disabled OS networking, not live provider behavior.",
+    "No complete historical/offline copy discovery, physical deletion or off-machine guard recovery established."
+  ],
+  "network_disabled": true,
+  "passed": 7,
+  "peak_memory_mib_approx": 119.3,
+  "private_root": "/var/lib/policylens-synthetic-deletion-20261024",
+  "raw_junit_sha256": "f59a1f7e0fdf8853e1f06064db20bbcf6252873fb6b557bd57ad54e185a00c9b",
+  "scope": "Existing deletion/recovery tests on actual Oracle host, isolated fresh synthetic SQLCipher directories and in-process TestClient. No live workspace deletion, HTTPS deletion workflow, physical erasure or independent review claim.",
+  "swap_peak_bytes": 0,
+  "systemd_exit_status": 0,
+  "tests": [
+    {
+      "name": "test_exact_logical_deletion_keeps_governance_and_audit_and_restarts",
+      "passed": true,
+      "seconds": 6.105
+    },
+    {
+      "name": "test_linked_operational_rows_removed_atomically_in_dependency_order",
+      "passed": true,
+      "seconds": 4.028
+    },
+    {
+      "name": "test_audit_failure_rolls_back_rows_and_blocks_startup_until_proved_abort",
+      "passed": true,
+      "seconds": 6.89
+    },
+    {
+      "name": "test_guard_flush_failure_keeps_full_rollback_and_requires_abort",
+      "passed": true,
+      "seconds": 4.684
+    },
+    {
+      "name": "test_partial_guard_write_cannot_start_execute_export_or_claim_reconciliation",
+      "passed": true,
+      "seconds": 5.224
+    },
+    {
+      "name": "test_post_commit_interruption_requires_matching_receipt_and_absent_targets",
+      "passed": true,
+      "seconds": 5.392
+    },
+    {
+      "name": "test_executed_deletion_refuses_old_restore_and_retains_receipt_in_new_restore",
+      "passed": true,
+      "seconds": 6.379
+    }
+  ],
+  "unprivileged_user": "policylens"
+}
