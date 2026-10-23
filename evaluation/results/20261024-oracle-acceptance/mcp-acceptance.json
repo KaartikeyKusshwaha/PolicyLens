@@ -1,0 +1,47 @@
+{
+  "scope": "Actual CLI/MCP stdio to deployed isolated synthetic HTTPS fixture; no successful model drafting, worker throughput or real customer evidence claim",
+  "cli_case_context": true,
+  "discovered_scopes": [
+    "create_review_task",
+    "get_case_context",
+    "search_policy"
+  ],
+  "mcp_case_context": true,
+  "mcp_review_task_created": true,
+  "mcp_close_case_denied": true,
+  "mcp_approve_control_denied": true,
+  "out_of_scope_denied": true,
+  "audit_response_obtained": true,
+  "temporary_key_revoked": true,
+  "revoked_key_refused": true,
+  "audited_completed_and_denied_tools": [
+    {
+      "action": "tool_denied",
+      "tool": "get_control"
+    },
+    {
+      "action": "tool_denied",
+      "tool": "approve_control"
+    },
+    {
+      "action": "tool_denied",
+      "tool": "close_case"
+    },
+    {
+      "action": "tool_completed",
+      "tool": "create_review_task"
+    },
+    {
+      "action": "tool_completed",
+      "tool": "get_case_context"
+    },
+    {
+      "action": "tool_completed",
+      "tool": "list_tools"
+    },
+    {
+      "action": "tool_completed",
+      "tool": "get_case_context"
+    }
+  ]
+}

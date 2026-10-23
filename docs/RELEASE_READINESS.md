@@ -9,7 +9,7 @@ in `DEPLOYED_CHECKPOINT_20261023.md`; final browser acceptance remains pending.
 
 | Master-plan requirement | Current evidence | Remaining requirement |
 | --- | --- | --- |
-| Scoped MCP, CLI, SDK; agents cannot decide | Governed toolkit, actual stdio/HTTP tests, permissions/role/tenant tests | Configured-host and deployed acceptance |
+| Scoped MCP, CLI, SDK; agents cannot decide | Governed toolkit; deployed HTTPS CLI/MCP stdio context/task/denial/audit/revocation checks passed with temporary scoped key | Successful cited live-model draft and configured Claude/Cursor host acceptance |
 | One click sponsor PDF/JSON/verifier | Signed complete packs; retained 1,000-transaction local run; full PDF sampled visually | Deployed time/memory and independent verifier acceptance |
 | Traceability matrix and gaps | Explicit mappings, cited suggestions, version gaps, simulations and alert evidence in source/UI tests | Populated browser and deployed acceptance |
 | At least 50 labeled scorecard cases | Retained/recomputed live synthetic 50-case result, including failures | Human-label validation and historical-source acceptance; current quality gate failed |
@@ -23,7 +23,7 @@ in `DEPLOYED_CHECKPOINT_20261023.md`; final browser acceptance remains pending.
 | Off-machine backups | Actual SSH/log verification, daily server backup, combined encrypted transfer, separate restore drill and Windows task installed | Observe next daily receiver trigger; populated recovery/ongoing custody and notification handling |
 | Operational alerting | Readiness for registered storage/worker/checkpoints; backup/disk watchdog and service templates | Install monitor and prove authorized notification path; no messages sent |
 | Four-area web control room | Four canonical areas, populated component tests; final deployed synthetic browser pass exercised navigation, download, simulation, independent activation, notes and mobile drawer; mobile case overflow fixed and rechecked | Remaining browser scenarios in BROWSER_ACCEPTANCE_20261023.md; full acceptance is not yet proved |
-| Load/concurrency at partner scale | Retained single-worker local synthetic 100-customer/1,000-transaction/four-client results and failures | Partner-agreed profile and measurement on actual 1 GB pilot hardware; provider/agent/full-feed load unproven |
+| Load/concurrency at partner scale | Retained Windows results and actual Oracle 1 GB single-worker SQLCipher run: 100 customers, 1,000 unique transactions, four clients; chosen gate passed and pack verified in 47.397 seconds | Partner-agreed workload; sustained/provider/agent/full-feed load and independent review remain unproven |
 | Independent security review | Internal tests, source controls and honest security notes | Independent reviewer and documented remediation before real customer data |
 | Interviews/design partners | Public prospect research only; no outreach sent | Five interviews, 2–3 partners, three independent pain confirmations; no invented evidence |
 | Synthetic pilot and real-data gate | Isolated synthetic functional/load/recovery tests | Deployed synthetic pilot; signed agreement and independent review before real data |
