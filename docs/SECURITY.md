@@ -1,6 +1,8 @@
 # PolicyLens security overview
 
 Status: 24 October 2026. This is an implementation summary, not a certification.
+The [independent review handoff](SECURITY_REVIEW_HANDOFF.md) records proposed
+scope, evidence and required reviewer outputs; no independent review has occurred.
 Governance source is deployed to Oracle with SQLCipher, separate key recovery,
 verified off-machine transfer and a receiver monitor. Deployed synthetic browser
 acceptance is partial; MFA enrollment/recovery and owner-workspace acceptance
