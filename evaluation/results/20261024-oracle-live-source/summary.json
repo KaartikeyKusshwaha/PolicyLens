@@ -1,0 +1,23 @@
+{
+  "both_https_sites_ready_afterward": true,
+  "cpu_seconds": 10.764,
+  "entry_count": 19471,
+  "exact_official_entry_name_self_match": true,
+  "expired_snapshot_status_with_simulated_future_clock": "stale",
+  "fetched_at": "2026-10-23T20:35:30.415338+00:00",
+  "finished_at": "2026-10-23T20:35:31.141290+00:00",
+  "initial_attempt": "Filesystem containment refused output path before source request; corrected to allowed synthetic root.",
+  "injected_http_503_refused": true,
+  "peak_memory_mib_approx": 145.7,
+  "published_at": "10/21/2026",
+  "scope": "One actual official OFAC download/validation on Oracle, isolated encrypted source store, no customer or model data. No sanctions clearance or accuracy claim.",
+  "sha256": "421c5f6ee841eb7c0e327eb0d6bdbe24cbb58091e3cbfd77d83dd41c7b5a5e08",
+  "source_status": "ready",
+  "stale_clock_is_simulation": true,
+  "started_at": "2026-10-23T20:35:12.010307+00:00",
+  "swap_peak_bytes": 0,
+  "sync_succeeded": true,
+  "systemd_exit_status": 0,
+  "url": "https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN.XML",
+  "valid_snapshot_unchanged_after_failed_refresh": true
+}
