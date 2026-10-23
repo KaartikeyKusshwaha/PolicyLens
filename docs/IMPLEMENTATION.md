@@ -6,6 +6,18 @@ review and market validation. None of those gates can be inferred from a green C
 
 ## Operational watchdog checkpoint
 
+Discovery-evidence execution binding: the stopped operator must now provide the
+actual independently approved file. Bounded regular-file hashing and metadata
+stability checks must match its approved SHA-256 before suppression publication
+or deletion. Receipt records verified hash/size without path/content. Missing,
+empty, oversized and mismatched evidence fail with no pending state or removed
+rows. This closes an artifact-availability gap without claiming discovery truth
+or complete-system coverage. All 46 execution/history regressions and 19 scheduled
+backup regressions pass locally, with Ruff. Five new refusal tests cover absent
+argument/file, changed bytes, empty and oversized artifacts. Source now contains
+554 backend tests. Exact preceding `5bce983` CI passed 549 backend and 73 frontend
+tests (run `39973120397`). Browser/deployed/operator acceptance remains pending.
+
 Copy-discovery source: `manage.py copy-inventory` hashes every regular file under
 explicit nonoverlapping roots and exports private metadata with inventory/report
 digests. It refuses unsafe/unreadable/changing input and capacity excess without

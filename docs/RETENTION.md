@@ -40,6 +40,10 @@ Every transition and its audit event share a transaction. Review history is reta
 with at most 2,000 requests and 2 MB per pinned snapshot; capacity refusal never
 stores a partial plan. Approval is revalidated again by the offline executor,
 including expiry, holds, copy reconciliation and exact rows inside its write lock.
+The offline executor also requires the actual discovery evidence file and verifies
+its exact bytes against the independently approved SHA-256 before publishing
+suppression or deleting rows. The receipt keeps the verified hash/size. This is
+artifact binding, not proof that discovery is complete or that evidence is true.
 
 ## Policy governance
 

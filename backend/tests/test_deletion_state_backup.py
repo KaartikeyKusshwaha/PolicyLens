@@ -25,6 +25,8 @@ def fixtures(tmp_path):
         request["id"],
         REASON["reason"],
         acknowledge_retained_data=True,
+        discovery_evidence=settings.database_path.parent.parent
+        / "discovery-evidence.json",
     )
     encryption_key = tmp_path / "transfer.key"
     encryption_key.write_bytes(Fernet.generate_key())
@@ -213,6 +215,8 @@ def test_aborted_reconciliation_history_survives_encrypted_offsite_recovery(
             request["id"],
             REASON["reason"],
             acknowledge_retained_data=True,
+            discovery_evidence=settings.database_path.parent.parent
+            / "discovery-evidence.json",
         )
     monkeypatch.setattr(deletion_execution, "audit", original)
     deletion_execution.reconcile(

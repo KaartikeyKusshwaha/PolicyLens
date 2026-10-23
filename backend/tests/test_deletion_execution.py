@@ -1,4 +1,5 @@
 import uuid
+import hashlib
 import sys
 import json
 from datetime import datetime, timedelta, timezone
@@ -90,10 +91,19 @@ def prepared(tmp_path, encryption="sqlcipher4", linked=False):
                 )
         reviewer = member(client)
         request = submit(client, customer)
+        evidence = tmp_path / "discovery-evidence.json"
+        evidence.write_bytes(
+            b"Isolated synthetic copy discovery evidence; not complete real-system discovery."
+        )
         with acting_as(client, reviewer):
             result = client.post(
                 f"/api/retention/deletion-requests/{request['id']}/approve",
-                json=APPROVAL,
+                json={
+                    **APPROVAL,
+                    "discovery_evidence_sha256": hashlib.sha256(
+                        evidence.read_bytes()
+                    ).hexdigest(),
+                },
             )
             assert result.status_code == 200, result.text
         store = client.app.state.hub.store(user["org_id"])
@@ -107,6 +117,8 @@ def run(settings, user, request):
         request["id"],
         REASON["reason"],
         acknowledge_retained_data=True,
+        discovery_evidence=settings.database_path.parent.parent
+        / "discovery-evidence.json",
     )
 
 
@@ -119,6 +131,12 @@ def test_exact_logical_deletion_keeps_governance_and_audit_and_restarts(tmp_path
     assert receipt["customer_id"] == customer["id"]
     assert receipt["maker_id"] != receipt["reviewer_id"]
     assert receipt["inventory_sha256"] == request["inventory_sha256"]
+    evidence = settings.database_path.parent.parent / "discovery-evidence.json"
+    assert (
+        receipt["discovery_evidence_sha256"]
+        == hashlib.sha256(evidence.read_bytes()).hexdigest()
+    )
+    assert receipt["discovery_evidence_bytes"] == evidence.stat().st_size
     payload = read_guard(result["guard_path"], result["guard_sha256"], settings)
     assert payload["receipts"][0]["receipt_id"] == receipt["id"]
     assert Operations(store).list("retention_policy")[0]["status"] == "active"
@@ -201,7 +219,12 @@ def test_abort_reconciliation_can_resume_after_its_database_commit(
         store,
         user["org_id"],
         fresh["id"],
-        ApprovalInput(**APPROVAL),
+        ApprovalInput(
+            **{
+                **APPROVAL,
+                "discovery_evidence_sha256": old["discovery_evidence_sha256"],
+            }
+        ),
         {"id": old["approved_by"], "role": "reviewer"},
     )
     assert run(settings, user, fresh)["deleted_records"] == 1
@@ -378,7 +401,15 @@ def test_partial_guard_write_cannot_start_execute_export_or_claim_reconciliation
             self.stream.write(value[: len(value) // 2])
             raise OSError("Injected partial guard write")
 
-    monkeypatch.setattr(deletion_guard.os, "fdopen", PartialWriter)
+    monkeypatch.setattr(
+        deletion_guard.os,
+        "fdopen",
+        lambda descriptor, mode: (
+            PartialWriter(descriptor, mode)
+            if mode == "wb"
+            else original(descriptor, mode)
+        ),
+    )
     with pytest.raises(OSError, match="Injected partial"):
         run(settings, user, request)
     monkeypatch.setattr(deletion_guard.os, "fdopen", original)
@@ -574,7 +605,16 @@ def test_operator_cli_requires_explicit_acknowledgement_and_returns_guard_digest
     with pytest.raises(SystemExit) as exc:
         manage.main()
     assert exc.value.code == 2
-    monkeypatch.setattr(sys, "argv", arguments + ["--acknowledge-retained-data"])
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        arguments
+        + [
+            "--acknowledge-retained-data",
+            "--discovery-evidence",
+            str(settings.database_path.parent.parent / "discovery-evidence.json"),
+        ],
+    )
     manage.main()
     result = json.loads(capsys.readouterr().out)
     assert result["deleted_records"] == 1 and len(result["guard_sha256"]) == 64
@@ -599,3 +639,35 @@ def test_execution_requires_stopped_encrypted_installation_and_acknowledgement(
             user,
             request,
         )
+
+
+@pytest.mark.parametrize(
+    "change",
+    ["missing_argument", "missing_file", "changed_bytes", "empty", "oversized"],
+)
+def test_execution_requires_exact_approved_discovery_bytes_before_publication(
+    tmp_path, change
+):
+    settings, user, customer, request, store = prepared(tmp_path)
+    path = tmp_path / "discovery-evidence.json"
+    if change == "missing_file":
+        path.rename(tmp_path / "evidence-held")
+    elif change == "changed_bytes":
+        path.write_bytes(b"Changed after independent approval")
+    elif change == "empty":
+        path.write_bytes(b"")
+    elif change == "oversized":
+        with path.open("wb") as stream:
+            stream.truncate(16 * 1024 * 1024 + 1)
+    with pytest.raises((ValueError, OSError)):
+        execution.execute(
+            settings,
+            user["org_id"],
+            request["id"],
+            REASON["reason"],
+            acknowledge_retained_data=True,
+            discovery_evidence=None if change == "missing_argument" else path,
+        )
+    assert Operations(store).get("customer", customer["id"])
+    assert not Operations(store).list("deletion_receipt")
+    assert not list(settings.deletion_state_directory.glob("*.pending"))

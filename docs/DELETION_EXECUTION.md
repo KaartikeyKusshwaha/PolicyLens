@@ -22,11 +22,18 @@ and retained-data acknowledgements are mandatory human review evidence, not
 independent proof of complete copy discovery. Stop the Python process, then run:
 
 ```sh
-python manage.py execute-deletion --workspace WORKSPACE_UUID --request APPROVED_REQUEST_UUID --reason "Reviewed the exact inventory and operator recovery requirements." --acknowledge-retained-data
+python manage.py execute-deletion --workspace WORKSPACE_UUID --request APPROVED_REQUEST_UUID --discovery-evidence /private/review/APPROVED-EVIDENCE-FILE --reason "Reviewed the exact inventory and operator recovery requirements." --acknowledge-retained-data
 ```
 
 The command holds the installation lock and an immediate workspace transaction,
 rechecks maker/checker membership, approval, expiry and the complete pinned plan.
+The operator must supply the exact evidence file whose SHA-256 the independent
+reviewer approved. It must be a nonempty regular file of at most 16 MiB, without
+redirected paths. File identity/size/time are checked before and after bounded
+hashing. Missing, changed, oversized or mismatched evidence refuses execution
+before suppression publication or row removal. The receipt retains its verified
+hash and size, not the private path or evidence contents. This proves availability
+of the approved bytes, not authenticity, legal sufficiency or discovery completeness.
 Customer/policy/hold/custody changes invalidate the request. It publishes the
 complete prospective authenticated suppression state as `REQUEST.pending` and
 flushes it before deleting any row. Each row's complete hash and row identity are

@@ -22,6 +22,11 @@ reference and exact `report_sha256` as discovery evidence when reviewing a delet
 plan. Explicitly classify and register applicable copies through existing custody
 governance; this report does not automatically establish customer ownership,
 retention eligibility or completeness of that register.
+Offline execution now requires `--discovery-evidence` pointing to the exact approved
+artifact. Its file-byte SHA-256 must match the approved `discovery_evidence_sha256`;
+use the report's exact-byte digest, not the embedded canonical inventory digest.
+Other reviewed evidence formats remain valid; the executor hashes bytes rather
+than interpreting their claims. Keep the original approved report available.
 
 Every accessible entry must be inventoried. Symlinks, junctions/reparse points,
 redirected parents, nonregular files, unreadable directories and detectable input

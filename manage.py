@@ -87,6 +87,7 @@ def main():
     execute_deletion.add_argument("--workspace", required=True)
     execute_deletion.add_argument("--request", required=True)
     execute_deletion.add_argument("--reason", required=True)
+    execute_deletion.add_argument("--discovery-evidence", type=Path, required=True)
     execute_deletion.add_argument(
         "--acknowledge-retained-data", action="store_true", required=True
     )
@@ -215,6 +216,7 @@ def main():
                     args.request,
                     args.reason,
                     acknowledge_retained_data=args.acknowledge_retained_data,
+                    discovery_evidence=args.discovery_evidence,
                 )
             )
         )

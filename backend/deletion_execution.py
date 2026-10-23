@@ -242,7 +242,13 @@ def validate_approval(hub, value, workspace_id):
 
 
 def execute(
-    settings, workspace_id, request_id, reason, *, acknowledge_retained_data=False
+    settings,
+    workspace_id,
+    request_id,
+    reason,
+    *,
+    acknowledge_retained_data=False,
+    discovery_evidence=None,
 ):
     if not encrypted(settings):
         raise ValueError(
@@ -268,6 +274,59 @@ def execute(
                 value = get(db, "deletion_request", request_id)
                 validate_approval(hub, value, workspace_id)
                 require_live(value)
+                if discovery_evidence is None:
+                    raise ValueError(
+                        "Supply the exact independently approved discovery evidence file"
+                    )
+                from copy_inventory import safe_stat, unchanged
+                import stat
+
+                evidence_path = Path(discovery_evidence).absolute()
+                metadata = safe_stat(evidence_path, evidence_path.parent)
+                if (
+                    not stat.S_ISREG(metadata.st_mode)
+                    or not 1 <= metadata.st_size <= 16 * 1024 * 1024
+                ):
+                    raise ValueError(
+                        "Discovery evidence must be a regular nonempty file of at most 16 MiB"
+                    )
+                evidence_hash, evidence_size = hashlib.sha256(), 0
+                descriptor = os.open(
+                    evidence_path,
+                    os.O_RDONLY
+                    | getattr(os, "O_BINARY", 0)
+                    | getattr(os, "O_NOFOLLOW", 0)
+                    | getattr(os, "O_NONBLOCK", 0),
+                )
+                with os.fdopen(descriptor, "rb") as stream:
+                    opened = os.fstat(stream.fileno())
+                    if not stat.S_ISREG(opened.st_mode) or unchanged(
+                        opened
+                    ) != unchanged(metadata):
+                        raise ValueError(
+                            "Discovery evidence changed before verification"
+                        )
+                    for block in iter(lambda: stream.read(1024 * 1024), b""):
+                        evidence_size += len(block)
+                        if evidence_size > metadata.st_size:
+                            raise ValueError(
+                                "Discovery evidence grew during verification"
+                            )
+                        evidence_hash.update(block)
+                    if evidence_size != metadata.st_size or unchanged(
+                        os.fstat(stream.fileno())
+                    ) != unchanged(metadata):
+                        raise ValueError(
+                            "Discovery evidence changed during verification"
+                        )
+                if (
+                    unchanged(safe_stat(evidence_path, evidence_path.parent))
+                    != unchanged(metadata)
+                    or evidence_hash.hexdigest() != value["discovery_evidence_sha256"]
+                ):
+                    raise ValueError(
+                        "Discovery evidence does not match the independently approved SHA-256"
+                    )
                 current = current_plan(db, workspace_id, value)
                 if any(
                     item["code"] != "external_copy_reconciliation_required"
@@ -286,6 +345,8 @@ def execute(
                     "request_id": request_id,
                     "customer_id": value["customer_id"],
                     "inventory_sha256": value["inventory_sha256"],
+                    "discovery_evidence_sha256": evidence_hash.hexdigest(),
+                    "discovery_evidence_bytes": evidence_size,
                     "status": "executed",
                     "maker_id": value["created_by"],
                     "reviewer_id": value["approved_by"],
