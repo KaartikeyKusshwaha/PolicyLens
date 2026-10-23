@@ -182,7 +182,13 @@ def collect(
         command[-1] = "/opt/policylens/deploy/checkpoint_backup.py"
     if deletion_state or checkpoint_history:
         command.append("latest")
-    result = subprocess.run(command, capture_output=True, timeout=180, check=False)
+    result = subprocess.run(
+        command,
+        capture_output=True,
+        timeout=180,
+        check=False,
+        creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
+    )
     if result.returncode:
         raise RuntimeError("Verified SSH snapshot export failed.")
     return result.stdout

@@ -153,6 +153,12 @@ def test_ssh_collection_requires_verified_host_and_noninteractive_auth(
     command, options = called[0]
     assert "StrictHostKeyChecking=yes" in command and "BatchMode=yes" in command
     assert options["timeout"] == 180 and not options.get("shell")
+    import os
+    import subprocess
+
+    assert options["creationflags"] == (
+        subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
+    )
     with pytest.raises(ValueError):
         collect("ubuntu@server; command", identity, known_hosts)
     with pytest.raises(ValueError):

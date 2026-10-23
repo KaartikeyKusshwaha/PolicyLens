@@ -15,6 +15,7 @@ from types import SimpleNamespace
 from cryptography.fernet import Fernet
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from auth import Hub  # noqa: E402
 from config import Settings  # noqa: E402
 from deletion_execution import directory, state_files, verify_runtime, sync_directory  # noqa: E402
@@ -367,7 +368,9 @@ def main():
         elif args.command == "stage":
             print(json.dumps(stage(Settings())))
         elif args.command == "latest":
-            sys.stdout.buffer.write(latest(Settings()))
+            from deploy.server_settings import load_server_settings
+
+            sys.stdout.buffer.write(latest(load_server_settings()))
         elif args.command == "receive":
             content = sys.stdin.buffer.read(MAX_BUNDLE_BYTES + 1)
             print(

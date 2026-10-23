@@ -406,7 +406,9 @@ def main():
         elif args.command == "stage":
             print(json.dumps(stage(Settings())))
         elif args.command == "latest":
-            sys.stdout.buffer.write(latest(Settings()))
+            from deploy.server_settings import load_server_settings
+
+            sys.stdout.buffer.write(latest(load_server_settings()))
         elif args.command == "receive":
             content = sys.stdin.buffer.read(MAX_BYTES + 1)
             print(

@@ -6,6 +6,27 @@ review and market validation. None of those gates can be inferred from a green C
 
 ## Operational watchdog checkpoint
 
+Windows scheduled execution: a real console-launched task returned interrupted
+status despite direct CLI success. The installed task now uses matching
+`pythonw.exe` and an explicit working directory; an actual scheduled invocation
+completed with result zero and a fresh successful combined receipt. Source now
+uses that background launcher and suppresses child SSH console windows. The
+focused strict-host/noninteractive collection test passes with the platform flag
+assertion, PowerShell syntax parses, and Ruff passes. All five real watchdog
+checks pass after moving receiver storage to C:. Next daily trigger and external
+notification delivery remain unobserved.
+
+Actual deployment: PR #2 merged as `210ffd2d`; reviewed source plus built frontend
+is running on Oracle after separate SQLCipher migration/guarded restore. Verified
+SSH access, real backup logs, HTTPS asset hashes and readiness were inspected.
+The SSH exporter needed an explicit private service environment; its deployed
+hotfix is recorded on the follow-up branch. All 23 focused export/environment
+checks pass (two POSIX tests skipped on Windows), plus 19 scheduled-history
+regressions and Ruff. Combined encrypted off-machine DB/history verification and
+a separate restore drill passed. Daily Windows receiver task installed only after
+successful transfer, then moved to C: after the watchdog detected D: below its
+disk floor. See `DEPLOYED_CHECKPOINT_20261023.md`. Browser/external gates remain.
+
 Populated acceptance expansion: the isolated fixture now previews/imports an
 explicitly fictional Marble case and decision through real endpoints, retains
 an open local review despite a closed upstream case, assigns/starts a native
