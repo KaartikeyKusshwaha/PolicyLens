@@ -621,6 +621,24 @@ test("connection overview hides raw source metadata until advanced inspection", 
   expect(window.location.pathname).toBe("/advanced/sources");
 });
 
+test("connection sync reports partial progress and stops after a feed failure", async () => {
+  window.history.replaceState({}, "", "/settings/sources");
+  let firstStored = false;
+  mockRoutes({
+    "/api/sources": () => response({ ...sources, feeds: sources.feeds.map((feed, index) => ({ ...feed, status: index === 0 && firstStored ? "ready" : "not_synced" })) }),
+    "/api/sources/ofac/sync": () => { firstStored = true; return response({ count: 100 }); },
+    "/api/sources/un/sync": () => response({ detail: { message: "Second feed validation failed." } }, 502),
+  });
+  render(<App />);
+  const button = await screen.findByRole("button", { name: "Sync enabled feeds" });
+  fireEvent.click(button);
+  await screen.findByText("1 enabled feeds completed before the failure. Second feed validation failed.");
+  await screen.findByText(/1 of 3 enabled feeds are fresh/);
+  expect(fetch.mock.calls.some(([url]) => url === "/api/sources/uk/sync")).toBe(false);
+  expect(screen.queryByText("3 enabled feeds downloaded and validated.")).toBeNull();
+  expect(button.disabled).toBe(false);
+});
+
 test("additional analytics are reachable only through advanced navigation", async () => {
   window.history.replaceState({}, "", "/evidence");
   render(<App />);

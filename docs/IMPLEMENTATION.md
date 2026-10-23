@@ -189,10 +189,13 @@ No complete 50-case live scorecard is claimed.
 UI checkpoint: all 347 backend tests passed locally, including the paged alert
 feed and the corrected tuning assertion against a successful alert response.
 All 64 frontend tests passed before the last advisory/read-only record check;
-all 42 workflow tests then passed with that addition (65 frontend tests now in
-source). ESLint and the current production build pass. The source navigation has
+all 42 workflow tests then passed with that addition. Exact commit `8356b4e`
+passed CI with 347 backend and 65 frontend tests, Ruff, ESLint, production build
+and npm audit (runs `39939892756` / `39939886117`). An additional partial-feed-sync
+workflow check subsequently passed with all 43 workflow tests (66 frontend tests
+now in source). The current production build passes. The source navigation has
 four primary areas; raw details live in Advanced. No browser acceptance or Oracle
-deployment occurred. Exact pushed-commit CI remains to be checked.
+deployment occurred.
 
 - [x] Implement four primary areas: Inbox, Policies & Controls, Evidence, Settings & Agents.
 - [x] Move the relationship graph into a case tab and data sources into Settings.
