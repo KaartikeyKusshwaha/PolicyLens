@@ -165,6 +165,12 @@ budgets and human decision boundaries. Scorecards include citation validity,
 unsupported quotation rates, disposition agreement, failures and abstentions;
 test-provider measurements are explicitly distinguished from live model results.
 
+The retained [live synthetic reference scorecard](evaluation/results/20261023-gpt-oss-20b/README.md)
+completed 46 of 50 runs, with 109/109 retained citations verified and 86%
+disposition agreement across all cases including failures. Its preparation gate
+failed; automatic preparation remains disabled. Evidence → Agent scorecards
+shows the verified reference with its limits, separately from workspace results.
+
 [Control tuning](docs/CONTROL_TUNING.md) compares supplied numeric thresholds
 against a historical match-count target and drafts a separate version with pinned
 before/after evidence. A different human must approve; match volume is workload,

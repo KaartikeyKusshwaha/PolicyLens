@@ -1,0 +1,205 @@
+{
+  "id": "726433db-aab3-4d9c-b2f6-792adf1b38bb",
+  "kind": "investigation",
+  "target_id": "d3d4e653-5239-4c66-9c58-3836c78e9bcd",
+  "state": "completed",
+  "created_at": "2026-10-23T09:57:21.900247+00:00",
+  "updated_at": "2026-10-23T09:57:23.625972+00:00",
+  "actor": "042c237c-f2f3-4d04-9a6a-bb6f4abb59db",
+  "payload": {
+    "max_model_calls": 1,
+    "model": "openai/gpt-oss-20b",
+    "model_attempts": 1,
+    "model_revision": "provider-unreported",
+    "prompt_version": "policylens-governance-v2",
+    "pseudonymize": false,
+    "requested_by": "042c237c-f2f3-4d04-9a6a-bb6f4abb59db",
+    "result": {
+      "citations": [
+        {
+          "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+          "policy_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc",
+          "quote": "A documented identity mismatch or admitted falsified invoice is a supported policy breach.",
+          "source_url": "",
+          "title": "Synthetic transaction investigation policy",
+          "version": "evaluation-1"
+        }
+      ],
+      "draft_disposition": "confirmed",
+      "findings": [
+        "Customer admitted the consulting invoice was fabricated.",
+        "Original issuer confirmed the invoice was never issued.",
+        "These statements satisfy the policy criterion of a documented identity mismatch or falsified invoice.",
+        "The case therefore represents a policy breach."
+      ],
+      "limitations": [
+        "Policy is a synthetic training policy, not regulatory guidance.",
+        "No sanctions matches were identified; potential matches require human review per policy.",
+        "Policy does not cover ownership rules, PEP coverage, or transliterations."
+      ],
+      "missing_evidence": [
+        "Invoice number and date not provided.",
+        "Supporting documents or receipts are absent.",
+        "Counterparty identity records are missing."
+      ],
+      "recommendation": "investigate",
+      "requires_approval": true,
+      "summary": "The customer, Synthetic Customer 007, admitted that a consulting invoice was fabricated. The original issuer confirmed it never issued the invoice, establishing a documented identity mismatch/falsified invoice. According to the supplied policy excerpt, a documented identity mismatch or admitted falsified invoice constitutes a supported policy breach. The evidence is limited to the customer's admission and the issuer’s confirmation; details such as the invoice number, date, or supporting documentation are not provided. No sanctions matches were found, but the policy indicates that potential sanctions name matches require human investigation and are never a clearance. The policy is a synthetic training document and not regulatory guidance, which limits the scope of the assessment. The case should be escalated for human review to confirm the breach and determine any further action needed."
+    }
+  },
+  "steps": [
+    {
+      "step": "collect_evidence",
+      "created_at": "2026-10-23T09:57:21.976680+00:00",
+      "output": {
+        "alerts": [],
+        "case": {
+          "assignee_id": "",
+          "created_at": "2026-10-23T09:57:21.843418+00:00",
+          "created_by": "042c237c-f2f3-4d04-9a6a-bb6f4abb59db",
+          "customer_id": "c4b19a01-b4a6-4006-b103-aa797a514276",
+          "customer_name": "Synthetic Customer 007",
+          "description": "The customer admits the supplied consulting invoice was fabricated. The original issuer confirms it never issued that invoice.",
+          "disposition": "",
+          "due_at": "2026-10-25T09:57:21.843418+00:00",
+          "id": "d3d4e653-5239-4c66-9c58-3836c78e9bcd",
+          "priority": "medium",
+          "status": "open",
+          "title": "Synthetic transaction investigation 007",
+          "updated_at": "2026-10-23T09:57:21.843418+00:00"
+        },
+        "customer": {
+          "address": "",
+          "country": "GB",
+          "created_at": "2026-10-23T09:57:21.815725+00:00",
+          "external_id": "synthetic-customer-007",
+          "id": "c4b19a01-b4a6-4006-b103-aa797a514276",
+          "kind": "individual",
+          "kyc_status": "pending",
+          "lei": "",
+          "name": "Synthetic Customer 007",
+          "notes": "",
+          "risk_tier": "medium",
+          "updated_at": "2026-10-23T09:57:21.815725+00:00"
+        },
+        "policies": [
+          {
+            "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+            "policy_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc",
+            "rank": -6.299834574028122e-06,
+            "source_url": "",
+            "text": "Synthetic training policy for transaction investigation; this is not regulatory guidance. Investigate transaction transfers using the supplied customer and case evidence. A documented identity mismatch or admitted falsified invoice is a supported policy breach. A documented duplicate alert, verified namesake, or validated invoice explaining the alert is a false positive. Missing identity records, absent invoices, uncertain ownership, or conflicting unverified documents require more evidence. Do not infer a breach solely from payment amount, country, or transaction volume. Potential sanctions name matches require human investigation and are never clearance. Only an independent human reviewer can resolve a case.",
+            "title": "Synthetic transaction investigation policy",
+            "topic": "aml",
+            "version": "evaluation-1"
+          }
+        ],
+        "task": "Prepare an evidence-grounded investigation brief. Distinguish observations from suspicion. Recommend human action, never legal approval. Consider the explicit source and sample limitations. draft_disposition is a nonbinding suggestion: confirmed means the supplied policy breach is supported, false_positive means the alert is explained by supplied evidence, insufficient_evidence means missing evidence prevents a conclusion. Use null to abstain. No suggestion changes or closes the case.",
+        "transaction_scope": "Latest 50 transactions; not necessarily the full history.",
+        "transactions": [
+          {
+            "account_reference": "",
+            "amount": "215.00",
+            "counterparty": "Synthetic Trading Company 2",
+            "counterparty_country": "GB",
+            "currency": "USD",
+            "customer_id": "c4b19a01-b4a6-4006-b103-aa797a514276",
+            "description": "Synthetic consulting payment for evaluation only.",
+            "external_id": "synthetic-payment-007",
+            "id": "84133722-a03b-44a4-91e6-cd0547c64921",
+            "occurred_at": "2026-01-01T00:00:00+00:00",
+            "received_at": "2026-10-23T09:57:21.874088+00:00"
+          }
+        ]
+      }
+    },
+    {
+      "step": "sanctions_screening",
+      "created_at": "2026-10-23T09:57:22.022580+00:00",
+      "output": {
+        "matches": [],
+        "scope": "Enabled official sanctions lists, primary names and aliases; normalized name similarity >= 0.88. Potential matches require identity verification. No match is not clearance. Ownership rules, PEP coverage, and all transliterations are not included.",
+        "source": {
+          "count": 0,
+          "docs": "https://ofac.treasury.gov/sanctions-list-service",
+          "fetched_at": "2026-10-23T09:51:09.727083+00:00",
+          "id": "ofac",
+          "name": "OFAC SDN",
+          "published_at": "2026-10-23T09:51:09.727083+00:00",
+          "sha256": "13f9ee28b9fe6f1b02d0c0e79b31a8ab4dcf0d8b11fd7a8c7fd8a77372080379",
+          "status": "ready",
+          "url": "urn:policylens:synthetic-evaluation-feed"
+        },
+        "sources": [
+          {
+            "count": 0,
+            "docs": "https://ofac.treasury.gov/sanctions-list-service",
+            "fetched_at": "2026-10-23T09:51:09.727083+00:00",
+            "id": "ofac",
+            "name": "OFAC SDN",
+            "published_at": "2026-10-23T09:51:09.727083+00:00",
+            "sha256": "13f9ee28b9fe6f1b02d0c0e79b31a8ab4dcf0d8b11fd7a8c7fd8a77372080379",
+            "status": "ready",
+            "url": "urn:policylens:synthetic-evaluation-feed"
+          }
+        ]
+      }
+    },
+    {
+      "step": "model_identity",
+      "created_at": "2026-10-23T09:57:23.572566+00:00",
+      "output": {
+        "requested_model": "openai/gpt-oss-20b",
+        "returned_model": "openai/gpt-oss-20b",
+        "revision_enforced": false,
+        "system_fingerprint": "fp_d23c14756c"
+      }
+    },
+    {
+      "step": "draft_analysis",
+      "created_at": "2026-10-23T09:57:23.583584+00:00",
+      "output": {
+        "citations": [
+          {
+            "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+            "quote": "A documented identity mismatch or admitted falsified invoice is a supported policy breach."
+          }
+        ],
+        "draft_disposition": "confirmed",
+        "findings": [
+          "Customer admitted the consulting invoice was fabricated.",
+          "Original issuer confirmed the invoice was never issued.",
+          "These statements satisfy the policy criterion of a documented identity mismatch or falsified invoice.",
+          "The case therefore represents a policy breach."
+        ],
+        "limitations": [
+          "Policy is a synthetic training policy, not regulatory guidance.",
+          "No sanctions matches were identified; potential matches require human review per policy.",
+          "Policy does not cover ownership rules, PEP coverage, or transliterations."
+        ],
+        "missing_evidence": [
+          "Invoice number and date not provided.",
+          "Supporting documents or receipts are absent.",
+          "Counterparty identity records are missing."
+        ],
+        "recommendation": "investigate",
+        "summary": "The customer, Synthetic Customer 007, admitted that a consulting invoice was fabricated. The original issuer confirmed it never issued the invoice, establishing a documented identity mismatch/falsified invoice. According to the supplied policy excerpt, a documented identity mismatch or admitted falsified invoice constitutes a supported policy breach. The evidence is limited to the customer's admission and the issuer’s confirmation; details such as the invoice number, date, or supporting documentation are not provided. No sanctions matches were found, but the policy indicates that potential sanctions name matches require human investigation and are never a clearance. The policy is a synthetic training document and not regulatory guidance, which limits the scope of the assessment. The case should be escalated for human review to confirm the breach and determine any further action needed."
+      }
+    },
+    {
+      "step": "verify_evidence",
+      "created_at": "2026-10-23T09:57:23.605727+00:00",
+      "output": {
+        "checks": [
+          "source_freshness",
+          "citation_ids",
+          "verbatim_quotations",
+          "allowed_output_schema",
+          "human_approval_boundary"
+        ],
+        "passed": true,
+        "scope": "Verifies evidence references and constraints, not every inference in the narrative."
+      }
+    }
+  ]
+}

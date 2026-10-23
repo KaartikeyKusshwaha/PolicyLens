@@ -1,0 +1,213 @@
+{
+  "id": "6e8b304f-5846-47fa-8641-b6aae06d6f60",
+  "kind": "investigation",
+  "target_id": "959db165-e404-4ff5-888c-8bc5dadf36df",
+  "state": "completed",
+  "created_at": "2026-10-23T09:51:09.968627+00:00",
+  "updated_at": "2026-10-23T09:51:11.399395+00:00",
+  "actor": "042c237c-f2f3-4d04-9a6a-bb6f4abb59db",
+  "payload": {
+    "max_model_calls": 1,
+    "model": "openai/gpt-oss-20b",
+    "model_attempts": 1,
+    "model_revision": "provider-unreported",
+    "prompt_version": "policylens-governance-v2",
+    "pseudonymize": false,
+    "requested_by": "042c237c-f2f3-4d04-9a6a-bb6f4abb59db",
+    "result": {
+      "citations": [
+        {
+          "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+          "policy_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc",
+          "quote": "A documented identity mismatch or admitted falsified invoice is a supported policy breach.",
+          "source_url": "",
+          "title": "Synthetic transaction investigation policy",
+          "version": "evaluation-1"
+        },
+        {
+          "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+          "policy_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc",
+          "quote": "Missing identity records, absent invoices, uncertain ownership, or conflicting unverified documents require more evidence.",
+          "source_url": "",
+          "title": "Synthetic transaction investigation policy",
+          "version": "evaluation-1"
+        }
+      ],
+      "draft_disposition": "confirmed",
+      "findings": [
+        "Documented identity mismatch between account holder and payment sender.",
+        "No supporting invoice or documentation provided.",
+        "Sanctions screening returned no matches."
+      ],
+      "limitations": [
+        "Only a single transaction is available for review.",
+        "No supporting documents such as invoices or identity proofs.",
+        "Limited sanctions screening coverage (no matches found)."
+      ],
+      "missing_evidence": [
+        "Identity documents for both the account holder and the payer.",
+        "Valid invoice or proof of payment authorization."
+      ],
+      "recommendation": "investigate",
+      "requires_approval": true,
+      "summary": "The case documentation states that the account holder (Synthetic Customer 001) and the payment sender are distinct individuals, and the customer has admitted to using another person's identity.  No invoice or supporting documents are presented, and sanctions screening returned no matches.  This constitutes a documented identity mismatch, which the policy identifies as a supported breach.  The evidence is insufficient to rule out a legitimate explanation (e.g., an authorized third‑party payment) without additional documentation such as proof of identity or a valid invoice.  The limited transaction history (one synthetic payment) and absence of supporting documents are key gaps that warrant further investigation."
+    }
+  },
+  "steps": [
+    {
+      "step": "collect_evidence",
+      "created_at": "2026-10-23T09:51:09.984667+00:00",
+      "output": {
+        "alerts": [],
+        "case": {
+          "assignee_id": "",
+          "created_at": "2026-10-23T09:51:09.957448+00:00",
+          "created_by": "042c237c-f2f3-4d04-9a6a-bb6f4abb59db",
+          "customer_id": "3c0f5f74-e352-4dd8-b2bd-f34c7c7c40f4",
+          "customer_name": "Synthetic Customer 001",
+          "description": "Verified identity records show the account holder and payment sender are different people; the customer acknowledges using another person's identity.",
+          "disposition": "",
+          "due_at": "2026-10-25T09:51:09.957448+00:00",
+          "id": "959db165-e404-4ff5-888c-8bc5dadf36df",
+          "priority": "medium",
+          "status": "open",
+          "title": "Synthetic transaction investigation 001",
+          "updated_at": "2026-10-23T09:51:09.957448+00:00"
+        },
+        "customer": {
+          "address": "",
+          "country": "IN",
+          "created_at": "2026-10-23T09:51:09.950443+00:00",
+          "external_id": "synthetic-customer-001",
+          "id": "3c0f5f74-e352-4dd8-b2bd-f34c7c7c40f4",
+          "kind": "individual",
+          "kyc_status": "pending",
+          "lei": "",
+          "name": "Synthetic Customer 001",
+          "notes": "",
+          "risk_tier": "medium",
+          "updated_at": "2026-10-23T09:51:09.950443+00:00"
+        },
+        "policies": [
+          {
+            "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+            "policy_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc",
+            "rank": -6.299834574028122e-06,
+            "source_url": "",
+            "text": "Synthetic training policy for transaction investigation; this is not regulatory guidance. Investigate transaction transfers using the supplied customer and case evidence. A documented identity mismatch or admitted falsified invoice is a supported policy breach. A documented duplicate alert, verified namesake, or validated invoice explaining the alert is a false positive. Missing identity records, absent invoices, uncertain ownership, or conflicting unverified documents require more evidence. Do not infer a breach solely from payment amount, country, or transaction volume. Potential sanctions name matches require human investigation and are never clearance. Only an independent human reviewer can resolve a case.",
+            "title": "Synthetic transaction investigation policy",
+            "topic": "aml",
+            "version": "evaluation-1"
+          }
+        ],
+        "task": "Prepare an evidence-grounded investigation brief. Distinguish observations from suspicion. Recommend human action, never legal approval. Consider the explicit source and sample limitations. draft_disposition is a nonbinding suggestion: confirmed means the supplied policy breach is supported, false_positive means the alert is explained by supplied evidence, insufficient_evidence means missing evidence prevents a conclusion. Use null to abstain. No suggestion changes or closes the case.",
+        "transaction_scope": "Latest 50 transactions; not necessarily the full history.",
+        "transactions": [
+          {
+            "account_reference": "",
+            "amount": "115.00",
+            "counterparty": "Synthetic Trading Company 1",
+            "counterparty_country": "GB",
+            "currency": "USD",
+            "customer_id": "3c0f5f74-e352-4dd8-b2bd-f34c7c7c40f4",
+            "description": "Synthetic consulting payment for evaluation only.",
+            "external_id": "synthetic-payment-001",
+            "id": "84cd60b6-385f-49db-ae2c-f2f5fd10bb17",
+            "occurred_at": "2026-01-01T00:00:00+00:00",
+            "received_at": "2026-10-23T09:51:09.963499+00:00"
+          }
+        ]
+      }
+    },
+    {
+      "step": "sanctions_screening",
+      "created_at": "2026-10-23T09:51:10.020946+00:00",
+      "output": {
+        "matches": [],
+        "scope": "Enabled official sanctions lists, primary names and aliases; normalized name similarity >= 0.88. Potential matches require identity verification. No match is not clearance. Ownership rules, PEP coverage, and all transliterations are not included.",
+        "source": {
+          "count": 0,
+          "docs": "https://ofac.treasury.gov/sanctions-list-service",
+          "fetched_at": "2026-10-23T09:51:09.727083+00:00",
+          "id": "ofac",
+          "name": "OFAC SDN",
+          "published_at": "2026-10-23T09:51:09.727083+00:00",
+          "sha256": "13f9ee28b9fe6f1b02d0c0e79b31a8ab4dcf0d8b11fd7a8c7fd8a77372080379",
+          "status": "ready",
+          "url": "urn:policylens:synthetic-evaluation-feed"
+        },
+        "sources": [
+          {
+            "count": 0,
+            "docs": "https://ofac.treasury.gov/sanctions-list-service",
+            "fetched_at": "2026-10-23T09:51:09.727083+00:00",
+            "id": "ofac",
+            "name": "OFAC SDN",
+            "published_at": "2026-10-23T09:51:09.727083+00:00",
+            "sha256": "13f9ee28b9fe6f1b02d0c0e79b31a8ab4dcf0d8b11fd7a8c7fd8a77372080379",
+            "status": "ready",
+            "url": "urn:policylens:synthetic-evaluation-feed"
+          }
+        ]
+      }
+    },
+    {
+      "step": "model_identity",
+      "created_at": "2026-10-23T09:51:11.368103+00:00",
+      "output": {
+        "requested_model": "openai/gpt-oss-20b",
+        "returned_model": "openai/gpt-oss-20b",
+        "revision_enforced": false,
+        "system_fingerprint": "fp_228717f27c"
+      }
+    },
+    {
+      "step": "draft_analysis",
+      "created_at": "2026-10-23T09:51:11.388518+00:00",
+      "output": {
+        "citations": [
+          {
+            "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+            "quote": "A documented identity mismatch or admitted falsified invoice is a supported policy breach."
+          },
+          {
+            "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+            "quote": "Missing identity records, absent invoices, uncertain ownership, or conflicting unverified documents require more evidence."
+          }
+        ],
+        "draft_disposition": "confirmed",
+        "findings": [
+          "Documented identity mismatch between account holder and payment sender.",
+          "No supporting invoice or documentation provided.",
+          "Sanctions screening returned no matches."
+        ],
+        "limitations": [
+          "Only a single transaction is available for review.",
+          "No supporting documents such as invoices or identity proofs.",
+          "Limited sanctions screening coverage (no matches found)."
+        ],
+        "missing_evidence": [
+          "Identity documents for both the account holder and the payer.",
+          "Valid invoice or proof of payment authorization."
+        ],
+        "recommendation": "investigate",
+        "summary": "The case documentation states that the account holder (Synthetic Customer 001) and the payment sender are distinct individuals, and the customer has admitted to using another person's identity.  No invoice or supporting documents are presented, and sanctions screening returned no matches.  This constitutes a documented identity mismatch, which the policy identifies as a supported breach.  The evidence is insufficient to rule out a legitimate explanation (e.g., an authorized third‑party payment) without additional documentation such as proof of identity or a valid invoice.  The limited transaction history (one synthetic payment) and absence of supporting documents are key gaps that warrant further investigation."
+      }
+    },
+    {
+      "step": "verify_evidence",
+      "created_at": "2026-10-23T09:51:11.394046+00:00",
+      "output": {
+        "checks": [
+          "source_freshness",
+          "citation_ids",
+          "verbatim_quotations",
+          "allowed_output_schema",
+          "human_approval_boundary"
+        ],
+        "passed": true,
+        "scope": "Verifies evidence references and constraints, not every inference in the narrative."
+      }
+    }
+  ]
+}

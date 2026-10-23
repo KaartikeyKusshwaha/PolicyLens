@@ -1,0 +1,227 @@
+{
+  "id": "c3350400-4ef9-4481-a3d8-fa7b27ebdee7",
+  "kind": "investigation",
+  "target_id": "898b2d7b-8800-4a8f-9097-567073606749",
+  "state": "completed",
+  "created_at": "2026-10-23T10:29:26.051799+00:00",
+  "updated_at": "2026-10-23T10:29:28.368302+00:00",
+  "actor": "042c237c-f2f3-4d04-9a6a-bb6f4abb59db",
+  "payload": {
+    "max_model_calls": 1,
+    "model": "openai/gpt-oss-20b",
+    "model_attempts": 1,
+    "model_revision": "provider-unreported",
+    "prompt_version": "policylens-governance-v2",
+    "pseudonymize": false,
+    "requested_by": "042c237c-f2f3-4d04-9a6a-bb6f4abb59db",
+    "result": {
+      "citations": [
+        {
+          "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+          "policy_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc",
+          "quote": "Missing identity records, absent invoices, uncertain ownership, or conflicting unverified documents require more evidence.",
+          "source_url": "",
+          "title": "Synthetic transaction investigation policy",
+          "version": "evaluation-1"
+        },
+        {
+          "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+          "policy_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc",
+          "quote": "Do not infer a breach solely from payment amount, country, or transaction volume.",
+          "source_url": "",
+          "title": "Synthetic transaction investigation policy",
+          "version": "evaluation-1"
+        },
+        {
+          "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+          "policy_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc",
+          "quote": "Investigate transaction transfers using the supplied customer and case evidence.",
+          "source_url": "",
+          "title": "Synthetic transaction investigation policy",
+          "version": "evaluation-1"
+        }
+      ],
+      "draft_disposition": "insufficient_evidence",
+      "findings": [
+        "The transaction lacks supporting invoice or delivery documents, a requirement per policy for substantiating the nature of the payment.",
+        "The customer’s statement of service provision is unverified; no evidence of actual services rendered is provided.",
+        "The sanctions screening returned no matches, indicating no immediate sanctions concern."
+      ],
+      "limitations": [
+        "Policy is synthetic training material and does not provide regulatory guidance; conclusions are limited to the supplied evidence.",
+        "No invoice or delivery evidence is available; the customer’s claim is unverified.",
+        "No sanctions matches were found, so sanctions risk is not a factor in this assessment."
+      ],
+      "missing_evidence": [
+        "Supporting invoice or receipt documenting the consulting services",
+        "Proof of delivery or service completion records",
+        "Verification of the customer’s identity and relationship to the recipient"
+      ],
+      "recommendation": "investigate",
+      "requires_approval": true,
+      "summary": "The payment of $315 to Synthetic Trading Company 3 has no accompanying invoice or delivery record, and the customer’s claim that it was for consulting services is unverified. The policy states that absent invoices and unverified documents require additional evidence. No sanctions matches were found, and the transaction amount or country alone does not constitute a breach. Therefore, the case lacks sufficient evidence to confirm a policy violation, but the lack of documentation warrants further investigation."
+    }
+  },
+  "steps": [
+    {
+      "step": "collect_evidence",
+      "created_at": "2026-10-23T10:29:26.117757+00:00",
+      "output": {
+        "alerts": [],
+        "case": {
+          "assignee_id": "",
+          "created_at": "2026-10-23T10:29:26.009609+00:00",
+          "created_by": "042c237c-f2f3-4d04-9a6a-bb6f4abb59db",
+          "customer_id": "8ae752a6-9b05-4bb4-a55d-07f0c76139b2",
+          "customer_name": "Synthetic Customer 038",
+          "description": "The alerted payment has no supplied invoice or delivery records. The customer says it was for services but has not provided supporting evidence.",
+          "disposition": "",
+          "due_at": "2026-10-25T10:29:26.009609+00:00",
+          "id": "898b2d7b-8800-4a8f-9097-567073606749",
+          "priority": "medium",
+          "status": "open",
+          "title": "Synthetic transaction investigation 038",
+          "updated_at": "2026-10-23T10:29:26.009609+00:00"
+        },
+        "customer": {
+          "address": "",
+          "country": "US",
+          "created_at": "2026-10-23T10:29:25.976988+00:00",
+          "external_id": "synthetic-customer-038",
+          "id": "8ae752a6-9b05-4bb4-a55d-07f0c76139b2",
+          "kind": "individual",
+          "kyc_status": "pending",
+          "lei": "",
+          "name": "Synthetic Customer 038",
+          "notes": "",
+          "risk_tier": "medium",
+          "updated_at": "2026-10-23T10:29:25.976988+00:00"
+        },
+        "policies": [
+          {
+            "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+            "policy_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc",
+            "rank": -6.299834574028122e-06,
+            "source_url": "",
+            "text": "Synthetic training policy for transaction investigation; this is not regulatory guidance. Investigate transaction transfers using the supplied customer and case evidence. A documented identity mismatch or admitted falsified invoice is a supported policy breach. A documented duplicate alert, verified namesake, or validated invoice explaining the alert is a false positive. Missing identity records, absent invoices, uncertain ownership, or conflicting unverified documents require more evidence. Do not infer a breach solely from payment amount, country, or transaction volume. Potential sanctions name matches require human investigation and are never clearance. Only an independent human reviewer can resolve a case.",
+            "title": "Synthetic transaction investigation policy",
+            "topic": "aml",
+            "version": "evaluation-1"
+          }
+        ],
+        "task": "Prepare an evidence-grounded investigation brief. Distinguish observations from suspicion. Recommend human action, never legal approval. Consider the explicit source and sample limitations. draft_disposition is a nonbinding suggestion: confirmed means the supplied policy breach is supported, false_positive means the alert is explained by supplied evidence, insufficient_evidence means missing evidence prevents a conclusion. Use null to abstain. No suggestion changes or closes the case.",
+        "transaction_scope": "Latest 50 transactions; not necessarily the full history.",
+        "transactions": [
+          {
+            "account_reference": "",
+            "amount": "315.00",
+            "counterparty": "Synthetic Trading Company 3",
+            "counterparty_country": "GB",
+            "currency": "USD",
+            "customer_id": "8ae752a6-9b05-4bb4-a55d-07f0c76139b2",
+            "description": "Synthetic consulting payment for evaluation only.",
+            "external_id": "synthetic-payment-038",
+            "id": "4f34fafb-0c05-4cfd-9a96-9e063fcf50c1",
+            "occurred_at": "2026-01-01T00:00:00+00:00",
+            "received_at": "2026-10-23T10:29:26.029969+00:00"
+          }
+        ]
+      }
+    },
+    {
+      "step": "sanctions_screening",
+      "created_at": "2026-10-23T10:29:26.162994+00:00",
+      "output": {
+        "matches": [],
+        "scope": "Enabled official sanctions lists, primary names and aliases; normalized name similarity >= 0.88. Potential matches require identity verification. No match is not clearance. Ownership rules, PEP coverage, and all transliterations are not included.",
+        "source": {
+          "count": 0,
+          "docs": "https://ofac.treasury.gov/sanctions-list-service",
+          "fetched_at": "2026-10-23T09:51:09.727083+00:00",
+          "id": "ofac",
+          "name": "OFAC SDN",
+          "published_at": "2026-10-23T09:51:09.727083+00:00",
+          "sha256": "13f9ee28b9fe6f1b02d0c0e79b31a8ab4dcf0d8b11fd7a8c7fd8a77372080379",
+          "status": "ready",
+          "url": "urn:policylens:synthetic-evaluation-feed"
+        },
+        "sources": [
+          {
+            "count": 0,
+            "docs": "https://ofac.treasury.gov/sanctions-list-service",
+            "fetched_at": "2026-10-23T09:51:09.727083+00:00",
+            "id": "ofac",
+            "name": "OFAC SDN",
+            "published_at": "2026-10-23T09:51:09.727083+00:00",
+            "sha256": "13f9ee28b9fe6f1b02d0c0e79b31a8ab4dcf0d8b11fd7a8c7fd8a77372080379",
+            "status": "ready",
+            "url": "urn:policylens:synthetic-evaluation-feed"
+          }
+        ]
+      }
+    },
+    {
+      "step": "model_identity",
+      "created_at": "2026-10-23T10:29:28.312646+00:00",
+      "output": {
+        "requested_model": "openai/gpt-oss-20b",
+        "returned_model": "openai/gpt-oss-20b",
+        "revision_enforced": false,
+        "system_fingerprint": "fp_a8c584dda7"
+      }
+    },
+    {
+      "step": "draft_analysis",
+      "created_at": "2026-10-23T10:29:28.329756+00:00",
+      "output": {
+        "citations": [
+          {
+            "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+            "quote": "Missing identity records, absent invoices, uncertain ownership, or conflicting unverified documents require more evidence."
+          },
+          {
+            "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+            "quote": "Do not infer a breach solely from payment amount, country, or transaction volume."
+          },
+          {
+            "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+            "quote": "Investigate transaction transfers using the supplied customer and case evidence."
+          }
+        ],
+        "draft_disposition": "insufficient_evidence",
+        "findings": [
+          "The transaction lacks supporting invoice or delivery documents, a requirement per policy for substantiating the nature of the payment.",
+          "The customer’s statement of service provision is unverified; no evidence of actual services rendered is provided.",
+          "The sanctions screening returned no matches, indicating no immediate sanctions concern."
+        ],
+        "limitations": [
+          "Policy is synthetic training material and does not provide regulatory guidance; conclusions are limited to the supplied evidence.",
+          "No invoice or delivery evidence is available; the customer’s claim is unverified.",
+          "No sanctions matches were found, so sanctions risk is not a factor in this assessment."
+        ],
+        "missing_evidence": [
+          "Supporting invoice or receipt documenting the consulting services",
+          "Proof of delivery or service completion records",
+          "Verification of the customer’s identity and relationship to the recipient"
+        ],
+        "recommendation": "investigate",
+        "summary": "The payment of $315 to Synthetic Trading Company 3 has no accompanying invoice or delivery record, and the customer’s claim that it was for consulting services is unverified. The policy states that absent invoices and unverified documents require additional evidence. No sanctions matches were found, and the transaction amount or country alone does not constitute a breach. Therefore, the case lacks sufficient evidence to confirm a policy violation, but the lack of documentation warrants further investigation."
+      }
+    },
+    {
+      "step": "verify_evidence",
+      "created_at": "2026-10-23T10:29:28.351992+00:00",
+      "output": {
+        "checks": [
+          "source_freshness",
+          "citation_ids",
+          "verbatim_quotations",
+          "allowed_output_schema",
+          "human_approval_boundary"
+        ],
+        "passed": true,
+        "scope": "Verifies evidence references and constraints, not every inference in the narrative."
+      }
+    }
+  ]
+}

@@ -107,6 +107,25 @@ workflow and independent review remain separate work.
 
 ## Current evidence
 
+A complete paced live run finished on 23 October 2026. All 50 attempts and the
+dataset/report are retained in
+[`evaluation/results/20261023-gpt-oss-20b`](../evaluation/results/20261023-gpt-oss-20b/README.md).
+The run completed 46 cases, with four `invalid_ai_response` failures lacking a
+retained draft. All 109 retained citations verified; no known-source unsupported
+quotes or unknown IDs were observed. Disposition agreement was 43/50 (86%),
+including failures. Those citation rates do not measure raw rejected generations
+or whether every inference is supported.
+
+The quality gate **did not pass**: four cases failed and provider fingerprints
+varied under the explicitly unreported revision. Automatic preparation remains
+disabled. Evidence → Agent scorecards shows the read-only verified synthetic
+reference, not a measurement of the current workspace. The complete bundle can
+be recomputed offline with `verify_agent_evaluation.py` and an independently
+trusted scorecard digest. Tampering or missing artifacts returns no partial card.
+
+Earlier implementation checks and failed attempts are recorded below as history;
+they are not combined with the completed batch or silently substituted for it.
+
 The automated 50-case replay exercises the production runner with a deterministic
 HTTP test provider. It measures the harness, hidden-label boundary, normal audit
 and budgets, not live model quality. All 50 test runs complete with unchanged open

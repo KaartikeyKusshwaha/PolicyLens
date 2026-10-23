@@ -19,6 +19,7 @@ import ControlCode from "./pages/ControlCode";
 import EngineImports from "./pages/EngineImports";
 import Retention from "./pages/Retention";
 import AgentKeys from "./pages/AgentKeys";
+import AgentScorecards from "./pages/AgentScorecards";
 import { PageHeading } from "./components";
 import { useSession } from "./session";
 import { legacyDestination } from "./navigation";
@@ -93,6 +94,7 @@ export default function WorkspaceRoutes() {
       <Route path="/policies/changes/:id" element={<ChangeDetail />} />
       <Route path="/policies/assistant" element={<Assistant />} />
       <Route path="/evidence" element={<AuditAnalytics />} />
+    <Route path="/evidence/scorecards" element={<AgentScorecards />} />
       <Route path="/evidence/assessments" element={<Decisions />} />
       <Route path="/evidence/assessments/:id" element={<DecisionDetail />} />
       <Route path="/evidence/evaluate" element={<Evaluate />} />

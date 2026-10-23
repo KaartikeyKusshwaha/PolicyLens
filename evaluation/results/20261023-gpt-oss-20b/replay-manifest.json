@@ -1,0 +1,10 @@
+{
+  "dataset_sha256": "b1ddc272a2b33e2771c5aece1c14ff566ec8da93aed33dbf4177bf5331c83072",
+  "model": "openai/gpt-oss-20b",
+  "model_revision": "provider-unreported",
+  "prompt_version": "policylens-governance-v2",
+  "run_budget": 50,
+  "execution_mode": "live_provider",
+  "screening": "Synthetic locally supplied feed. No official sanctions status is measured.",
+  "started_at": "2026-10-23T09:51:09.472760+00:00"
+}

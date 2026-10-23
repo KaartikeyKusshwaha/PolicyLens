@@ -1,0 +1,197 @@
+{
+  "id": "1f88823a-4397-4e43-965e-92ea00af42a9",
+  "kind": "investigation",
+  "target_id": "b915ef95-329b-4ad6-b4c6-f74ee4ac8ce0",
+  "state": "completed",
+  "created_at": "2026-10-23T10:17:01.324690+00:00",
+  "updated_at": "2026-10-23T10:17:03.342112+00:00",
+  "actor": "042c237c-f2f3-4d04-9a6a-bb6f4abb59db",
+  "payload": {
+    "max_model_calls": 1,
+    "model": "openai/gpt-oss-20b",
+    "model_attempts": 1,
+    "model_revision": "provider-unreported",
+    "prompt_version": "policylens-governance-v2",
+    "pseudonymize": false,
+    "requested_by": "042c237c-f2f3-4d04-9a6a-bb6f4abb59db",
+    "result": {
+      "citations": [
+        {
+          "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+          "policy_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc",
+          "quote": "A documented duplicate alert, verified namesake, or validated invoice explaining the alert is a false positive.",
+          "source_url": "",
+          "title": "Synthetic transaction investigation policy",
+          "version": "evaluation-1"
+        }
+      ],
+      "draft_disposition": "false_positive",
+      "findings": [
+        "Identity documents and DOB confirm the customer is a namesake.",
+        "Invoice and delivery records are validated, supporting a legitimate transaction.",
+        "No sanctions matches were found in the OFAC SDN list."
+      ],
+      "limitations": [
+        "Sanctions screening does not include ownership rules, PEP coverage, or transliterations.",
+        "The policy is a synthetic training policy and does not contain regulatory guidance."
+      ],
+      "missing_evidence": [
+        "No missing evidence identified."
+      ],
+      "recommendation": "review_for_closure",
+      "requires_approval": true,
+      "summary": "The case documents provide sufficient evidence to determine that the alerted transaction is a false positive.  The customer's date of birth and identity documents confirm that the name matches a legitimate individual, indicating a namesake rather than a fraud or identity mismatch.  The accompanying invoice and delivery records have been validated, demonstrating that the payment and goods are legitimate.  No sanctions matches were found.  The sanctions screening is limited to primary names and aliases; ownership, PEP coverage, and transliterations are not covered, which represents a limitation of the screening.  No additional evidence is missing."
+    }
+  },
+  "steps": [
+    {
+      "step": "collect_evidence",
+      "created_at": "2026-10-23T10:17:01.406415+00:00",
+      "output": {
+        "alerts": [],
+        "case": {
+          "assignee_id": "",
+          "created_at": "2026-10-23T10:17:01.275582+00:00",
+          "created_by": "042c237c-f2f3-4d04-9a6a-bb6f4abb59db",
+          "customer_id": "7e611f70-750f-43ed-8abb-44248e600939",
+          "customer_name": "Synthetic Customer 026",
+          "description": "The alerted name belongs to a different person. Verified date of birth and identity documents establish the customer is a namesake; the payment invoice and delivery are validated.",
+          "disposition": "",
+          "due_at": "2026-10-25T10:17:01.276604+00:00",
+          "id": "b915ef95-329b-4ad6-b4c6-f74ee4ac8ce0",
+          "priority": "medium",
+          "status": "open",
+          "title": "Synthetic transaction investigation 026",
+          "updated_at": "2026-10-23T10:17:01.275582+00:00"
+        },
+        "customer": {
+          "address": "",
+          "country": "IN",
+          "created_at": "2026-10-23T10:17:01.243754+00:00",
+          "external_id": "synthetic-customer-026",
+          "id": "7e611f70-750f-43ed-8abb-44248e600939",
+          "kind": "individual",
+          "kyc_status": "pending",
+          "lei": "",
+          "name": "Synthetic Customer 026",
+          "notes": "",
+          "risk_tier": "medium",
+          "updated_at": "2026-10-23T10:17:01.243754+00:00"
+        },
+        "policies": [
+          {
+            "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+            "policy_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc",
+            "rank": -6.299834574028122e-06,
+            "source_url": "",
+            "text": "Synthetic training policy for transaction investigation; this is not regulatory guidance. Investigate transaction transfers using the supplied customer and case evidence. A documented identity mismatch or admitted falsified invoice is a supported policy breach. A documented duplicate alert, verified namesake, or validated invoice explaining the alert is a false positive. Missing identity records, absent invoices, uncertain ownership, or conflicting unverified documents require more evidence. Do not infer a breach solely from payment amount, country, or transaction volume. Potential sanctions name matches require human investigation and are never clearance. Only an independent human reviewer can resolve a case.",
+            "title": "Synthetic transaction investigation policy",
+            "topic": "aml",
+            "version": "evaluation-1"
+          }
+        ],
+        "task": "Prepare an evidence-grounded investigation brief. Distinguish observations from suspicion. Recommend human action, never legal approval. Consider the explicit source and sample limitations. draft_disposition is a nonbinding suggestion: confirmed means the supplied policy breach is supported, false_positive means the alert is explained by supplied evidence, insufficient_evidence means missing evidence prevents a conclusion. Use null to abstain. No suggestion changes or closes the case.",
+        "transaction_scope": "Latest 50 transactions; not necessarily the full history.",
+        "transactions": [
+          {
+            "account_reference": "",
+            "amount": "115.00",
+            "counterparty": "Synthetic Trading Company 1",
+            "counterparty_country": "GB",
+            "currency": "USD",
+            "customer_id": "7e611f70-750f-43ed-8abb-44248e600939",
+            "description": "Synthetic consulting payment for evaluation only.",
+            "external_id": "synthetic-payment-026",
+            "id": "08212336-2b86-4422-a564-70ddec60dbf9",
+            "occurred_at": "2026-01-01T00:00:00+00:00",
+            "received_at": "2026-10-23T10:17:01.300438+00:00"
+          }
+        ]
+      }
+    },
+    {
+      "step": "sanctions_screening",
+      "created_at": "2026-10-23T10:17:01.452905+00:00",
+      "output": {
+        "matches": [],
+        "scope": "Enabled official sanctions lists, primary names and aliases; normalized name similarity >= 0.88. Potential matches require identity verification. No match is not clearance. Ownership rules, PEP coverage, and all transliterations are not included.",
+        "source": {
+          "count": 0,
+          "docs": "https://ofac.treasury.gov/sanctions-list-service",
+          "fetched_at": "2026-10-23T09:51:09.727083+00:00",
+          "id": "ofac",
+          "name": "OFAC SDN",
+          "published_at": "2026-10-23T09:51:09.727083+00:00",
+          "sha256": "13f9ee28b9fe6f1b02d0c0e79b31a8ab4dcf0d8b11fd7a8c7fd8a77372080379",
+          "status": "ready",
+          "url": "urn:policylens:synthetic-evaluation-feed"
+        },
+        "sources": [
+          {
+            "count": 0,
+            "docs": "https://ofac.treasury.gov/sanctions-list-service",
+            "fetched_at": "2026-10-23T09:51:09.727083+00:00",
+            "id": "ofac",
+            "name": "OFAC SDN",
+            "published_at": "2026-10-23T09:51:09.727083+00:00",
+            "sha256": "13f9ee28b9fe6f1b02d0c0e79b31a8ab4dcf0d8b11fd7a8c7fd8a77372080379",
+            "status": "ready",
+            "url": "urn:policylens:synthetic-evaluation-feed"
+          }
+        ]
+      }
+    },
+    {
+      "step": "model_identity",
+      "created_at": "2026-10-23T10:17:03.273238+00:00",
+      "output": {
+        "requested_model": "openai/gpt-oss-20b",
+        "returned_model": "openai/gpt-oss-20b",
+        "revision_enforced": false,
+        "system_fingerprint": "fp_ef00694abe"
+      }
+    },
+    {
+      "step": "draft_analysis",
+      "created_at": "2026-10-23T10:17:03.303170+00:00",
+      "output": {
+        "citations": [
+          {
+            "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+            "quote": "A documented duplicate alert, verified namesake, or validated invoice explaining the alert is a false positive."
+          }
+        ],
+        "draft_disposition": "false_positive",
+        "findings": [
+          "Identity documents and DOB confirm the customer is a namesake.",
+          "Invoice and delivery records are validated, supporting a legitimate transaction.",
+          "No sanctions matches were found in the OFAC SDN list."
+        ],
+        "limitations": [
+          "Sanctions screening does not include ownership rules, PEP coverage, or transliterations.",
+          "The policy is a synthetic training policy and does not contain regulatory guidance."
+        ],
+        "missing_evidence": [
+          "No missing evidence identified."
+        ],
+        "recommendation": "review_for_closure",
+        "summary": "The case documents provide sufficient evidence to determine that the alerted transaction is a false positive.  The customer's date of birth and identity documents confirm that the name matches a legitimate individual, indicating a namesake rather than a fraud or identity mismatch.  The accompanying invoice and delivery records have been validated, demonstrating that the payment and goods are legitimate.  No sanctions matches were found.  The sanctions screening is limited to primary names and aliases; ownership, PEP coverage, and transliterations are not covered, which represents a limitation of the screening.  No additional evidence is missing."
+      }
+    },
+    {
+      "step": "verify_evidence",
+      "created_at": "2026-10-23T10:17:03.323441+00:00",
+      "output": {
+        "checks": [
+          "source_freshness",
+          "citation_ids",
+          "verbatim_quotations",
+          "allowed_output_schema",
+          "human_approval_boundary"
+        ],
+        "passed": true,
+        "scope": "Verifies evidence references and constraints, not every inference in the narrative."
+      }
+    }
+  ]
+}

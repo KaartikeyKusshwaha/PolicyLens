@@ -1,0 +1,201 @@
+{
+  "id": "9e911336-d337-43e3-a984-6f25a4ee8b0c",
+  "kind": "investigation",
+  "target_id": "de5e60b2-87e6-4510-852e-a6147f5d68eb",
+  "state": "completed",
+  "created_at": "2026-10-23T10:11:50.050875+00:00",
+  "updated_at": "2026-10-23T10:11:52.001224+00:00",
+  "actor": "042c237c-f2f3-4d04-9a6a-bb6f4abb59db",
+  "payload": {
+    "max_model_calls": 1,
+    "model": "openai/gpt-oss-20b",
+    "model_attempts": 1,
+    "model_revision": "provider-unreported",
+    "prompt_version": "policylens-governance-v2",
+    "pseudonymize": false,
+    "requested_by": "042c237c-f2f3-4d04-9a6a-bb6f4abb59db",
+    "result": {
+      "citations": [
+        {
+          "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+          "policy_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc",
+          "quote": "A documented duplicate alert, verified namesake, or validated invoice explaining the alert is a false positive.",
+          "source_url": "",
+          "title": "Synthetic transaction investigation policy",
+          "version": "evaluation-1"
+        }
+      ],
+      "draft_disposition": "false_positive",
+      "findings": [
+        "Invoice validated against issuer records.",
+        "Sender identity matches account holder.",
+        "No sanctions matches detected."
+      ],
+      "limitations": [
+        "Policy is synthetic training and not regulatory guidance.",
+        "Case contains no alerts, limiting the context for a typical AML review.",
+        "No evidence of potential sanctions name matches; the policy states human review is required."
+      ],
+      "missing_evidence": [
+        "No external sanctions screening matches beyond OFAC SDN.",
+        "Absence of additional independent documents confirming ownership."
+      ],
+      "recommendation": "review_for_closure",
+      "requires_approval": true,
+      "summary": "The case documents confirm that the invoiced amount of $115.00 to Synthetic Trading Company 1 was accompanied by a validated invoice and the sender identity matches the account holder. No sanctions matches were found and no other red‑flagging evidence is present. Under the synthetic training policy, a validated invoice explaining the alert constitutes a false positive. Consequently the transaction can be closed pending a final human review."
+    }
+  },
+  "steps": [
+    {
+      "step": "collect_evidence",
+      "created_at": "2026-10-23T10:11:50.126875+00:00",
+      "output": {
+        "alerts": [],
+        "case": {
+          "assignee_id": "",
+          "created_at": "2026-10-23T10:11:49.992039+00:00",
+          "created_by": "042c237c-f2f3-4d04-9a6a-bb6f4abb59db",
+          "customer_id": "b0d894fd-31f0-4c41-bbf6-d907be9a6fe2",
+          "customer_name": "Synthetic Customer 021",
+          "description": "The reviewed issuer records validate the invoice and delivery. Verified sender identity matches the account holder. The supplied invoice fully explains the alerted transfer.",
+          "disposition": "",
+          "due_at": "2026-10-25T10:11:49.993039+00:00",
+          "id": "de5e60b2-87e6-4510-852e-a6147f5d68eb",
+          "priority": "medium",
+          "status": "open",
+          "title": "Synthetic transaction investigation 021",
+          "updated_at": "2026-10-23T10:11:49.992039+00:00"
+        },
+        "customer": {
+          "address": "",
+          "country": "IN",
+          "created_at": "2026-10-23T10:11:49.943737+00:00",
+          "external_id": "synthetic-customer-021",
+          "id": "b0d894fd-31f0-4c41-bbf6-d907be9a6fe2",
+          "kind": "individual",
+          "kyc_status": "pending",
+          "lei": "",
+          "name": "Synthetic Customer 021",
+          "notes": "",
+          "risk_tier": "medium",
+          "updated_at": "2026-10-23T10:11:49.943737+00:00"
+        },
+        "policies": [
+          {
+            "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+            "policy_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc",
+            "rank": -6.299834574028122e-06,
+            "source_url": "",
+            "text": "Synthetic training policy for transaction investigation; this is not regulatory guidance. Investigate transaction transfers using the supplied customer and case evidence. A documented identity mismatch or admitted falsified invoice is a supported policy breach. A documented duplicate alert, verified namesake, or validated invoice explaining the alert is a false positive. Missing identity records, absent invoices, uncertain ownership, or conflicting unverified documents require more evidence. Do not infer a breach solely from payment amount, country, or transaction volume. Potential sanctions name matches require human investigation and are never clearance. Only an independent human reviewer can resolve a case.",
+            "title": "Synthetic transaction investigation policy",
+            "topic": "aml",
+            "version": "evaluation-1"
+          }
+        ],
+        "task": "Prepare an evidence-grounded investigation brief. Distinguish observations from suspicion. Recommend human action, never legal approval. Consider the explicit source and sample limitations. draft_disposition is a nonbinding suggestion: confirmed means the supplied policy breach is supported, false_positive means the alert is explained by supplied evidence, insufficient_evidence means missing evidence prevents a conclusion. Use null to abstain. No suggestion changes or closes the case.",
+        "transaction_scope": "Latest 50 transactions; not necessarily the full history.",
+        "transactions": [
+          {
+            "account_reference": "",
+            "amount": "115.00",
+            "counterparty": "Synthetic Trading Company 1",
+            "counterparty_country": "GB",
+            "currency": "USD",
+            "customer_id": "b0d894fd-31f0-4c41-bbf6-d907be9a6fe2",
+            "description": "Synthetic consulting payment for evaluation only.",
+            "external_id": "synthetic-payment-021",
+            "id": "5615a046-057a-4343-8433-8dc2a061265c",
+            "occurred_at": "2026-01-01T00:00:00+00:00",
+            "received_at": "2026-10-23T10:11:50.022707+00:00"
+          }
+        ]
+      }
+    },
+    {
+      "step": "sanctions_screening",
+      "created_at": "2026-10-23T10:11:50.179635+00:00",
+      "output": {
+        "matches": [],
+        "scope": "Enabled official sanctions lists, primary names and aliases; normalized name similarity >= 0.88. Potential matches require identity verification. No match is not clearance. Ownership rules, PEP coverage, and all transliterations are not included.",
+        "source": {
+          "count": 0,
+          "docs": "https://ofac.treasury.gov/sanctions-list-service",
+          "fetched_at": "2026-10-23T09:51:09.727083+00:00",
+          "id": "ofac",
+          "name": "OFAC SDN",
+          "published_at": "2026-10-23T09:51:09.727083+00:00",
+          "sha256": "13f9ee28b9fe6f1b02d0c0e79b31a8ab4dcf0d8b11fd7a8c7fd8a77372080379",
+          "status": "ready",
+          "url": "urn:policylens:synthetic-evaluation-feed"
+        },
+        "sources": [
+          {
+            "count": 0,
+            "docs": "https://ofac.treasury.gov/sanctions-list-service",
+            "fetched_at": "2026-10-23T09:51:09.727083+00:00",
+            "id": "ofac",
+            "name": "OFAC SDN",
+            "published_at": "2026-10-23T09:51:09.727083+00:00",
+            "sha256": "13f9ee28b9fe6f1b02d0c0e79b31a8ab4dcf0d8b11fd7a8c7fd8a77372080379",
+            "status": "ready",
+            "url": "urn:policylens:synthetic-evaluation-feed"
+          }
+        ]
+      }
+    },
+    {
+      "step": "model_identity",
+      "created_at": "2026-10-23T10:11:51.949625+00:00",
+      "output": {
+        "requested_model": "openai/gpt-oss-20b",
+        "returned_model": "openai/gpt-oss-20b",
+        "revision_enforced": false,
+        "system_fingerprint": "fp_e2cb7a84ec"
+      }
+    },
+    {
+      "step": "draft_analysis",
+      "created_at": "2026-10-23T10:11:51.967861+00:00",
+      "output": {
+        "citations": [
+          {
+            "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+            "quote": "A documented duplicate alert, verified namesake, or validated invoice explaining the alert is a false positive."
+          }
+        ],
+        "draft_disposition": "false_positive",
+        "findings": [
+          "Invoice validated against issuer records.",
+          "Sender identity matches account holder.",
+          "No sanctions matches detected."
+        ],
+        "limitations": [
+          "Policy is synthetic training and not regulatory guidance.",
+          "Case contains no alerts, limiting the context for a typical AML review.",
+          "No evidence of potential sanctions name matches; the policy states human review is required."
+        ],
+        "missing_evidence": [
+          "No external sanctions screening matches beyond OFAC SDN.",
+          "Absence of additional independent documents confirming ownership."
+        ],
+        "recommendation": "review_for_closure",
+        "summary": "The case documents confirm that the invoiced amount of $115.00 to Synthetic Trading Company 1 was accompanied by a validated invoice and the sender identity matches the account holder. No sanctions matches were found and no other red‑flagging evidence is present. Under the synthetic training policy, a validated invoice explaining the alert constitutes a false positive. Consequently the transaction can be closed pending a final human review."
+      }
+    },
+    {
+      "step": "verify_evidence",
+      "created_at": "2026-10-23T10:11:51.987042+00:00",
+      "output": {
+        "checks": [
+          "source_freshness",
+          "citation_ids",
+          "verbatim_quotations",
+          "allowed_output_schema",
+          "human_approval_boundary"
+        ],
+        "passed": true,
+        "scope": "Verifies evidence references and constraints, not every inference in the narrative."
+      }
+    }
+  ]
+}

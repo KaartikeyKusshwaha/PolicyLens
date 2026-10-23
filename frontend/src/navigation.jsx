@@ -88,6 +88,7 @@ export const AREAS = [
     title: "Evidence",
     links: [
       ["/evidence", "Packs & audit"],
+      ["/evidence/scorecards", "Agent scorecards"],
       ["/evidence/assessments", "Assessment records"],
       ["/evidence/evaluate", "Prepare assessment"],
     ],

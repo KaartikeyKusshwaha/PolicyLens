@@ -12,6 +12,20 @@ from retained_copies import register_generated
 router = APIRouter(prefix="/api/evidence")
 
 
+@router.get("/scorecards/reference")
+def reference_scorecard(request: Request):
+    from evaluation_artifacts import reference_result
+
+    try:
+        return reference_result()
+    except (OSError, ValueError, KeyError, TypeError, RuntimeError):
+        raise problem(
+            409,
+            "scorecard_reference_unavailable",
+            "The complete retained synthetic evaluation could not be verified. No partial metrics or promotion claim was returned.",
+        ) from None
+
+
 @router.get("/sponsor-pack")
 def sponsor_pack(request: Request):
     with request.state.store.connect() as db:

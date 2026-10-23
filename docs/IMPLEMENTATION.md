@@ -143,13 +143,23 @@ Browser testing and Oracle deployment remain pending.
 
 ## Phase 5: autopilot and scorecard
 
+Retained-scorecard checkpoint: all 12 artifact verification tests pass, including
+full 50-run recomputation, altered source context/labels/identities/metrics,
+missing/extra/oversized artifacts, an offline subprocess and read-only API refusal
+without partial metrics. All 69 frontend tests, Ruff, ESLint and production build
+pass. The full backend regression is running (359 backend tests now in source).
+The live synthetic reference is visible in Evidence; its failed quality gate and
+four uninspectable failed drafts stay explicit. Browser acceptance and Oracle
+deployment remain pending.
+
 Tuning checkpoint: local full regression passed 337 collected backend tests,
 then 71 focused tuning/control-code/product tests passed after the replacement-
 lineage correction. The final tuning suite contains 29 cases (341 backend tests
 now in source). All 54 frontend tests and ESLint passed; the production build
 also passed after the final CSS spacing adjustment. The retained tuning PDF section was
 rendered with Poppler and visually inspected. No browser testing or Oracle
-deployment occurred. Exact pushed-commit CI remains to be checked.
+deployment occurred. Commit `b12391f` subsequently passed exact CI with 341 backend
+and 54 frontend tests, Ruff, ESLint, build and audit (run `39934536951`).
 
 Scorecard source checkpoint: ten focused evaluation tests passed, including a
 complete 50-case real-runner replay with deterministic HTTP transport, strict
@@ -162,7 +172,14 @@ before a provider request rejection stopped the fourth; no partial card was
 published. A subsequent isolated diagnostic of that case completed, so the
 failure was not reproduced. Provider error accounting was tightened to
 distinguish rejected generation from systemic configuration/access failures.
-No complete 50-case live scorecard is claimed.
+A subsequent complete 50-case live replay finished on 23 October 2026: 46 runs
+completed; four failed without a retained draft; 109/109 retained citations
+verified; known-source unsupported quotes and unknown IDs were zero; disposition
+agreement was 43/50 (86%) including failures. The preparation gate failed due to
+incomplete runs and differing provider fingerprints under an unreported revision.
+Automatic preparation remains disabled. The dataset, report and all 50 runs are
+retained and recomputed; the read-only Evidence reference is explicitly separate
+from workspace results. See `AGENT_SCORECARDS.md` and the retained result README.
 
 - [ ] Opt-in cited brief preparation on new alerts, digests and stale-evidence alerts.
 - [x] Implement deterministic tuning playbook: before/after historical simulation,
@@ -172,15 +189,15 @@ No complete 50-case live scorecard is claimed.
   issuing administrator. The objective measures supplied workload, not detection
   accuracy. Encrypted recovery and signed pack inclusion are tested. Deployment,
   performance and final browser acceptance remain pending; see `CONTROL_TUNING.md`.
-- [ ] Evaluation harness with at least 50 labeled historical/seeded cases, citation
+- [x] Evaluation harness with at least 50 labeled historical/seeded cases, citation
   validity, fabricated quotation rate and disposition agreement per pinned model.
   Isolated source replay and deterministic scoring are implemented, with a
   reviewable 50-case synthetic corpus, hidden labels, per-model/scenario metrics,
   abstention/failure denominators and an explicit gate. The 50-case automated
-  test uses a deterministic provider and cannot pass the live gate. Two live
-  cases completed after a strict-schema fix; the third was rate-limited and the
-  batch stopped without publishing a partial card. A full paced live run,
-  historical-source replay and real-label validation remain pending. See
+  test uses a deterministic provider and cannot pass the live gate. The completed
+  live synthetic scorecard and all attempts are now retained and independently
+  recomputed, including failures and disagreements. Historical-source replay,
+  real-label validation and a passing preparation gate remain pending. See
   `AGENT_SCORECARDS.md`.
 - [ ] Weak citation results prevent autopilot promotion; briefs remain drafts.
 

@@ -1,0 +1,225 @@
+{
+  "id": "d1fe2179-6738-4e12-ae16-9427519ccbbf",
+  "kind": "investigation",
+  "target_id": "cc98a5fe-9c78-4d3e-a485-2122bdfbd812",
+  "state": "completed",
+  "created_at": "2026-10-23T10:21:09.987783+00:00",
+  "updated_at": "2026-10-23T10:21:11.956515+00:00",
+  "actor": "042c237c-f2f3-4d04-9a6a-bb6f4abb59db",
+  "payload": {
+    "max_model_calls": 1,
+    "model": "openai/gpt-oss-20b",
+    "model_attempts": 1,
+    "model_revision": "provider-unreported",
+    "prompt_version": "policylens-governance-v2",
+    "pseudonymize": false,
+    "requested_by": "042c237c-f2f3-4d04-9a6a-bb6f4abb59db",
+    "result": {
+      "citations": [
+        {
+          "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+          "policy_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc",
+          "quote": "A documented duplicate alert, verified namesake, or validated invoice explaining the alert is a false positive.",
+          "source_url": "",
+          "title": "Synthetic transaction investigation policy",
+          "version": "evaluation-1"
+        },
+        {
+          "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+          "policy_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc",
+          "quote": "Investigate transaction transfers using the supplied customer and case evidence.",
+          "source_url": "",
+          "title": "Synthetic transaction investigation policy",
+          "version": "evaluation-1"
+        },
+        {
+          "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+          "policy_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc",
+          "quote": "Missing identity records, absent invoices, uncertain ownership, or conflicting unverified documents require more evidence.",
+          "source_url": "",
+          "title": "Synthetic transaction investigation policy",
+          "version": "evaluation-1"
+        }
+      ],
+      "draft_disposition": "false_positive",
+      "findings": [
+        "Alert explained by verified namesake and validated invoice.",
+        "No sanctions match found.",
+        "No evidence of identity falsification or invoice fraud.",
+        "Policy guidance indicates this scenario is a false positive."
+      ],
+      "limitations": [
+        "Policy does not cover ownership uncertainty beyond provided documents.",
+        "Limited to a single transaction; broader history not examined."
+      ],
+      "missing_evidence": [
+        "Identity verification documents (e.g., copies of ID) are not provided.",
+        "Invoice documentation not attached."
+      ],
+      "recommendation": "review_for_closure",
+      "requires_approval": true,
+      "summary": "The alert was triggered by a name match that is actually a namesake. The customer's DOB and ID documents confirm identity mismatch, and the invoice and delivery details were validated, aligning with policy guidance that such circumstances represent a false positive. No sanctions matches were found, and no evidence of fraud or falsification was present. The case can be closed after a human review confirms the resolution."
+    }
+  },
+  "steps": [
+    {
+      "step": "collect_evidence",
+      "created_at": "2026-10-23T10:21:10.060879+00:00",
+      "output": {
+        "alerts": [],
+        "case": {
+          "assignee_id": "",
+          "created_at": "2026-10-23T10:21:09.937834+00:00",
+          "created_by": "042c237c-f2f3-4d04-9a6a-bb6f4abb59db",
+          "customer_id": "33449ded-345a-4efd-a4cf-d0a57091872b",
+          "customer_name": "Synthetic Customer 030",
+          "description": "The alerted name belongs to a different person. Verified date of birth and identity documents establish the customer is a namesake; the payment invoice and delivery are validated.",
+          "disposition": "",
+          "due_at": "2026-10-25T10:21:09.937834+00:00",
+          "id": "cc98a5fe-9c78-4d3e-a485-2122bdfbd812",
+          "priority": "medium",
+          "status": "open",
+          "title": "Synthetic transaction investigation 030",
+          "updated_at": "2026-10-23T10:21:09.937834+00:00"
+        },
+        "customer": {
+          "address": "",
+          "country": "SG",
+          "created_at": "2026-10-23T10:21:09.910029+00:00",
+          "external_id": "synthetic-customer-030",
+          "id": "33449ded-345a-4efd-a4cf-d0a57091872b",
+          "kind": "individual",
+          "kyc_status": "pending",
+          "lei": "",
+          "name": "Synthetic Customer 030",
+          "notes": "",
+          "risk_tier": "medium",
+          "updated_at": "2026-10-23T10:21:09.910029+00:00"
+        },
+        "policies": [
+          {
+            "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+            "policy_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc",
+            "rank": -6.299834574028122e-06,
+            "source_url": "",
+            "text": "Synthetic training policy for transaction investigation; this is not regulatory guidance. Investigate transaction transfers using the supplied customer and case evidence. A documented identity mismatch or admitted falsified invoice is a supported policy breach. A documented duplicate alert, verified namesake, or validated invoice explaining the alert is a false positive. Missing identity records, absent invoices, uncertain ownership, or conflicting unverified documents require more evidence. Do not infer a breach solely from payment amount, country, or transaction volume. Potential sanctions name matches require human investigation and are never clearance. Only an independent human reviewer can resolve a case.",
+            "title": "Synthetic transaction investigation policy",
+            "topic": "aml",
+            "version": "evaluation-1"
+          }
+        ],
+        "task": "Prepare an evidence-grounded investigation brief. Distinguish observations from suspicion. Recommend human action, never legal approval. Consider the explicit source and sample limitations. draft_disposition is a nonbinding suggestion: confirmed means the supplied policy breach is supported, false_positive means the alert is explained by supplied evidence, insufficient_evidence means missing evidence prevents a conclusion. Use null to abstain. No suggestion changes or closes the case.",
+        "transaction_scope": "Latest 50 transactions; not necessarily the full history.",
+        "transactions": [
+          {
+            "account_reference": "",
+            "amount": "515.00",
+            "counterparty": "Synthetic Trading Company 5",
+            "counterparty_country": "GB",
+            "currency": "USD",
+            "customer_id": "33449ded-345a-4efd-a4cf-d0a57091872b",
+            "description": "Synthetic consulting payment for evaluation only.",
+            "external_id": "synthetic-payment-030",
+            "id": "c301debf-f360-4af5-adb1-7a3fd4665cd9",
+            "occurred_at": "2026-01-01T00:00:00+00:00",
+            "received_at": "2026-10-23T10:21:09.959984+00:00"
+          }
+        ]
+      }
+    },
+    {
+      "step": "sanctions_screening",
+      "created_at": "2026-10-23T10:21:10.103710+00:00",
+      "output": {
+        "matches": [],
+        "scope": "Enabled official sanctions lists, primary names and aliases; normalized name similarity >= 0.88. Potential matches require identity verification. No match is not clearance. Ownership rules, PEP coverage, and all transliterations are not included.",
+        "source": {
+          "count": 0,
+          "docs": "https://ofac.treasury.gov/sanctions-list-service",
+          "fetched_at": "2026-10-23T09:51:09.727083+00:00",
+          "id": "ofac",
+          "name": "OFAC SDN",
+          "published_at": "2026-10-23T09:51:09.727083+00:00",
+          "sha256": "13f9ee28b9fe6f1b02d0c0e79b31a8ab4dcf0d8b11fd7a8c7fd8a77372080379",
+          "status": "ready",
+          "url": "urn:policylens:synthetic-evaluation-feed"
+        },
+        "sources": [
+          {
+            "count": 0,
+            "docs": "https://ofac.treasury.gov/sanctions-list-service",
+            "fetched_at": "2026-10-23T09:51:09.727083+00:00",
+            "id": "ofac",
+            "name": "OFAC SDN",
+            "published_at": "2026-10-23T09:51:09.727083+00:00",
+            "sha256": "13f9ee28b9fe6f1b02d0c0e79b31a8ab4dcf0d8b11fd7a8c7fd8a77372080379",
+            "status": "ready",
+            "url": "urn:policylens:synthetic-evaluation-feed"
+          }
+        ]
+      }
+    },
+    {
+      "step": "model_identity",
+      "created_at": "2026-10-23T10:21:11.898429+00:00",
+      "output": {
+        "requested_model": "openai/gpt-oss-20b",
+        "returned_model": "openai/gpt-oss-20b",
+        "revision_enforced": false,
+        "system_fingerprint": "fp_8d13edce1d"
+      }
+    },
+    {
+      "step": "draft_analysis",
+      "created_at": "2026-10-23T10:21:11.914002+00:00",
+      "output": {
+        "citations": [
+          {
+            "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+            "quote": "A documented duplicate alert, verified namesake, or validated invoice explaining the alert is a false positive."
+          },
+          {
+            "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+            "quote": "Investigate transaction transfers using the supplied customer and case evidence."
+          },
+          {
+            "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+            "quote": "Missing identity records, absent invoices, uncertain ownership, or conflicting unverified documents require more evidence."
+          }
+        ],
+        "draft_disposition": "false_positive",
+        "findings": [
+          "Alert explained by verified namesake and validated invoice.",
+          "No sanctions match found.",
+          "No evidence of identity falsification or invoice fraud.",
+          "Policy guidance indicates this scenario is a false positive."
+        ],
+        "limitations": [
+          "Policy does not cover ownership uncertainty beyond provided documents.",
+          "Limited to a single transaction; broader history not examined."
+        ],
+        "missing_evidence": [
+          "Identity verification documents (e.g., copies of ID) are not provided.",
+          "Invoice documentation not attached."
+        ],
+        "recommendation": "review_for_closure",
+        "summary": "The alert was triggered by a name match that is actually a namesake. The customer's DOB and ID documents confirm identity mismatch, and the invoice and delivery details were validated, aligning with policy guidance that such circumstances represent a false positive. No sanctions matches were found, and no evidence of fraud or falsification was present. The case can be closed after a human review confirms the resolution."
+      }
+    },
+    {
+      "step": "verify_evidence",
+      "created_at": "2026-10-23T10:21:11.937645+00:00",
+      "output": {
+        "checks": [
+          "source_freshness",
+          "citation_ids",
+          "verbatim_quotations",
+          "allowed_output_schema",
+          "human_approval_boundary"
+        ],
+        "passed": true,
+        "scope": "Verifies evidence references and constraints, not every inference in the narrative."
+      }
+    }
+  ]
+}

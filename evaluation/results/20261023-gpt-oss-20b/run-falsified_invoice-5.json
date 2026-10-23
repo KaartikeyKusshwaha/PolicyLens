@@ -1,0 +1,209 @@
+{
+  "id": "7fa68a21-d120-41b5-8291-0424a6207bd2",
+  "kind": "investigation",
+  "target_id": "b4de9b5f-a9c1-4875-8f8d-0e720536737d",
+  "state": "completed",
+  "created_at": "2026-10-23T10:00:27.616250+00:00",
+  "updated_at": "2026-10-23T10:00:29.881573+00:00",
+  "actor": "042c237c-f2f3-4d04-9a6a-bb6f4abb59db",
+  "payload": {
+    "max_model_calls": 1,
+    "model": "openai/gpt-oss-20b",
+    "model_attempts": 1,
+    "model_revision": "provider-unreported",
+    "prompt_version": "policylens-governance-v2",
+    "pseudonymize": false,
+    "requested_by": "042c237c-f2f3-4d04-9a6a-bb6f4abb59db",
+    "result": {
+      "citations": [
+        {
+          "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+          "policy_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc",
+          "quote": "A documented identity mismatch or admitted falsified invoice is a supported policy breach.",
+          "source_url": "",
+          "title": "Synthetic transaction investigation policy",
+          "version": "evaluation-1"
+        },
+        {
+          "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+          "policy_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc",
+          "quote": "Missing identity records, absent invoices, uncertain ownership, or conflicting unverified documents require more evidence.",
+          "source_url": "",
+          "title": "Synthetic transaction investigation policy",
+          "version": "evaluation-1"
+        }
+      ],
+      "draft_disposition": "insufficient_evidence",
+      "findings": [
+        "Customer admits the consulting invoice was fabricated",
+        "Original issuer confirms it never issued that invoice"
+      ],
+      "limitations": [
+        "Conflicting unverified documents require additional evidence to determine authenticity",
+        "Identity mismatch not verified by external records"
+      ],
+      "missing_evidence": [
+        "Independent verification of invoice issuance",
+        "Confirmation of customer identity records and issuer records"
+      ],
+      "recommendation": "investigate",
+      "requires_approval": true,
+      "summary": "The case involves a customer who admits that a consulting invoice presented for a $515 USD payment was fabricated, while the purported issuer confirms that no such invoice was ever issued. This conflicting evidence presents an uncertainty regarding the authenticity of the transaction. The policy excerpt states that a documented identity mismatch or admitted falsified invoice is a supported policy breach; however, the presence of conflicting unverified documents requires additional evidence to resolve the dispute. Consequently, while the admission indicates potential non-compliance, the lack of independent confirmation and the conflicting issuer statement prevent a definitive breach determination. The customer’s admission is a strong indicator of fraudulent activity, but verification of identity records, invoice issuance, and issuer records is needed to conclusively confirm a breach. The evidence therefore supports further investigation rather than an automatic conclusion of compliance or non-compliance."
+    }
+  },
+  "steps": [
+    {
+      "step": "collect_evidence",
+      "created_at": "2026-10-23T10:00:27.702287+00:00",
+      "output": {
+        "alerts": [],
+        "case": {
+          "assignee_id": "",
+          "created_at": "2026-10-23T10:00:27.561717+00:00",
+          "created_by": "042c237c-f2f3-4d04-9a6a-bb6f4abb59db",
+          "customer_id": "a77c5b56-81ae-4882-9831-fcb52e6bcb11",
+          "customer_name": "Synthetic Customer 010",
+          "description": "The customer admits the supplied consulting invoice was fabricated. The original issuer confirms it never issued that invoice.",
+          "disposition": "",
+          "due_at": "2026-10-25T10:00:27.561717+00:00",
+          "id": "b4de9b5f-a9c1-4875-8f8d-0e720536737d",
+          "priority": "medium",
+          "status": "open",
+          "title": "Synthetic transaction investigation 010",
+          "updated_at": "2026-10-23T10:00:27.561717+00:00"
+        },
+        "customer": {
+          "address": "",
+          "country": "SG",
+          "created_at": "2026-10-23T10:00:27.508800+00:00",
+          "external_id": "synthetic-customer-010",
+          "id": "a77c5b56-81ae-4882-9831-fcb52e6bcb11",
+          "kind": "individual",
+          "kyc_status": "pending",
+          "lei": "",
+          "name": "Synthetic Customer 010",
+          "notes": "",
+          "risk_tier": "medium",
+          "updated_at": "2026-10-23T10:00:27.508800+00:00"
+        },
+        "policies": [
+          {
+            "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+            "policy_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc",
+            "rank": -6.299834574028122e-06,
+            "source_url": "",
+            "text": "Synthetic training policy for transaction investigation; this is not regulatory guidance. Investigate transaction transfers using the supplied customer and case evidence. A documented identity mismatch or admitted falsified invoice is a supported policy breach. A documented duplicate alert, verified namesake, or validated invoice explaining the alert is a false positive. Missing identity records, absent invoices, uncertain ownership, or conflicting unverified documents require more evidence. Do not infer a breach solely from payment amount, country, or transaction volume. Potential sanctions name matches require human investigation and are never clearance. Only an independent human reviewer can resolve a case.",
+            "title": "Synthetic transaction investigation policy",
+            "topic": "aml",
+            "version": "evaluation-1"
+          }
+        ],
+        "task": "Prepare an evidence-grounded investigation brief. Distinguish observations from suspicion. Recommend human action, never legal approval. Consider the explicit source and sample limitations. draft_disposition is a nonbinding suggestion: confirmed means the supplied policy breach is supported, false_positive means the alert is explained by supplied evidence, insufficient_evidence means missing evidence prevents a conclusion. Use null to abstain. No suggestion changes or closes the case.",
+        "transaction_scope": "Latest 50 transactions; not necessarily the full history.",
+        "transactions": [
+          {
+            "account_reference": "",
+            "amount": "515.00",
+            "counterparty": "Synthetic Trading Company 5",
+            "counterparty_country": "GB",
+            "currency": "USD",
+            "customer_id": "a77c5b56-81ae-4882-9831-fcb52e6bcb11",
+            "description": "Synthetic consulting payment for evaluation only.",
+            "external_id": "synthetic-payment-010",
+            "id": "a07f3ee0-9301-4d09-9bcf-88483b2a48ea",
+            "occurred_at": "2026-01-01T00:00:00+00:00",
+            "received_at": "2026-10-23T10:00:27.589385+00:00"
+          }
+        ]
+      }
+    },
+    {
+      "step": "sanctions_screening",
+      "created_at": "2026-10-23T10:00:27.758753+00:00",
+      "output": {
+        "matches": [],
+        "scope": "Enabled official sanctions lists, primary names and aliases; normalized name similarity >= 0.88. Potential matches require identity verification. No match is not clearance. Ownership rules, PEP coverage, and all transliterations are not included.",
+        "source": {
+          "count": 0,
+          "docs": "https://ofac.treasury.gov/sanctions-list-service",
+          "fetched_at": "2026-10-23T09:51:09.727083+00:00",
+          "id": "ofac",
+          "name": "OFAC SDN",
+          "published_at": "2026-10-23T09:51:09.727083+00:00",
+          "sha256": "13f9ee28b9fe6f1b02d0c0e79b31a8ab4dcf0d8b11fd7a8c7fd8a77372080379",
+          "status": "ready",
+          "url": "urn:policylens:synthetic-evaluation-feed"
+        },
+        "sources": [
+          {
+            "count": 0,
+            "docs": "https://ofac.treasury.gov/sanctions-list-service",
+            "fetched_at": "2026-10-23T09:51:09.727083+00:00",
+            "id": "ofac",
+            "name": "OFAC SDN",
+            "published_at": "2026-10-23T09:51:09.727083+00:00",
+            "sha256": "13f9ee28b9fe6f1b02d0c0e79b31a8ab4dcf0d8b11fd7a8c7fd8a77372080379",
+            "status": "ready",
+            "url": "urn:policylens:synthetic-evaluation-feed"
+          }
+        ]
+      }
+    },
+    {
+      "step": "model_identity",
+      "created_at": "2026-10-23T10:00:29.803504+00:00",
+      "output": {
+        "requested_model": "openai/gpt-oss-20b",
+        "returned_model": "openai/gpt-oss-20b",
+        "revision_enforced": false,
+        "system_fingerprint": "fp_8d13edce1d"
+      }
+    },
+    {
+      "step": "draft_analysis",
+      "created_at": "2026-10-23T10:00:29.830116+00:00",
+      "output": {
+        "citations": [
+          {
+            "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+            "quote": "A documented identity mismatch or admitted falsified invoice is a supported policy breach."
+          },
+          {
+            "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+            "quote": "Missing identity records, absent invoices, uncertain ownership, or conflicting unverified documents require more evidence."
+          }
+        ],
+        "draft_disposition": "insufficient_evidence",
+        "findings": [
+          "Customer admits the consulting invoice was fabricated",
+          "Original issuer confirms it never issued that invoice"
+        ],
+        "limitations": [
+          "Conflicting unverified documents require additional evidence to determine authenticity",
+          "Identity mismatch not verified by external records"
+        ],
+        "missing_evidence": [
+          "Independent verification of invoice issuance",
+          "Confirmation of customer identity records and issuer records"
+        ],
+        "recommendation": "investigate",
+        "summary": "The case involves a customer who admits that a consulting invoice presented for a $515 USD payment was fabricated, while the purported issuer confirms that no such invoice was ever issued. This conflicting evidence presents an uncertainty regarding the authenticity of the transaction. The policy excerpt states that a documented identity mismatch or admitted falsified invoice is a supported policy breach; however, the presence of conflicting unverified documents requires additional evidence to resolve the dispute. Consequently, while the admission indicates potential non-compliance, the lack of independent confirmation and the conflicting issuer statement prevent a definitive breach determination. The customer’s admission is a strong indicator of fraudulent activity, but verification of identity records, invoice issuance, and issuer records is needed to conclusively confirm a breach. The evidence therefore supports further investigation rather than an automatic conclusion of compliance or non-compliance."
+      }
+    },
+    {
+      "step": "verify_evidence",
+      "created_at": "2026-10-23T10:00:29.859906+00:00",
+      "output": {
+        "checks": [
+          "source_freshness",
+          "citation_ids",
+          "verbatim_quotations",
+          "allowed_output_schema",
+          "human_approval_boundary"
+        ],
+        "passed": true,
+        "scope": "Verifies evidence references and constraints, not every inference in the narrative."
+      }
+    }
+  ]
+}
