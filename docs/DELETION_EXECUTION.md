@@ -96,8 +96,12 @@ code/raw-database bypass remains outside these checks.
 The [encrypted complete-history backup tool](DELETION_STATE_BACKUP.md) now supports
 stopped-source export, authenticated receiver retention and recovery into a new
 directory. Actual combined database/history transfer and Windows scheduling are
-recorded in `DEPLOYED_CHECKPOINT_20261023.md`; next daily receiver invocation and
-off-machine recovery of a populated executed-deletion history remain unproved.
+recorded in `DEPLOYED_CHECKPOINT_20261023.md`; next daily receiver invocation
+remains unobserved. A separate Oracle synthetic installation with one executed
+receipt was transferred over verified SSH and recovered on Windows, including
+matching suppression state, guarded SQLCipher restore, retained receipt and
+absent customer. See `evaluation/results/20261024-oracle-deletion-recovery/`.
+This is not a live-pilot deletion or physical-erasure result.
 Automatic off-machine guard publication, complete historical-copy discovery,
 physical compaction/media erasure and deployed crash/recovery acceptance remain
 pending. Seven existing deletion/crash/recovery scenarios also passed on the

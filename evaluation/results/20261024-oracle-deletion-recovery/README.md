@@ -46,3 +46,33 @@ of an executed-deletion guard, independent security review or real-data readines
 Source tests cover logic; running them on the target host adds platform evidence
 without replacing these remaining requirements. Artifact hashes bind retained
 reports, not an independent attestation.
+
+## Actual off-machine executed-history follow-up
+
+The completed `test_executed_deletion_refuses_old_restore` synthetic installation
+was selected while stopped. Using its original protected installation key, the
+operator exported its complete authenticated deletion history, a fresh current
+guard and a two-database SQLCipher snapshot. The history contained one executed
+receipt. Source-side digests were retained separately before transfer.
+
+Those bytes crossed verified-host SSH to the Windows receiver. The dedicated
+receiver directory was restricted to the current user and SYSTEM before any
+recovery key was written. The source installation key and a newly generated,
+separate archive-encryption key remain private outside Git. The transport archive
+and complete deletion history were encrypted at the receiver; original database
+snapshot files remained SQLCipher ciphertext.
+
+The receiver checked the source history digest, authenticated and encrypted the
+history, recovered it into a new state root using the separately pinned current
+digest, then performed a guarded database restore into a new data root. Runtime
+suppression verification matched the recovered external state to the restored
+database. The synthetic customer remained absent, one execution receipt survived,
+the audit verified and sessions were revoked. `offmachine-recovery.json` records
+these observations. No restored HTTP server or new model call was involved.
+
+This follow-up establishes actual off-machine executed-history recovery for this
+one isolated synthetic installation. It does not establish complete copy discovery,
+physical erasure, live pilot deletion, a scheduled transfer of future execution
+receipts, independent custody or owner acceptance. The original test-only snapshots
+and private recovery artifacts are deliberately preserved; preservation is not an
+erasure claim.

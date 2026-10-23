@@ -1,0 +1,14 @@
+{
+  "audit_valid": true,
+  "customer_count_after_restore": 0,
+  "executed_receipts": 1,
+  "external_state_matches_database": true,
+  "guard_sha256": "6a9d28f952d2d247e3b0b39cb88263711571efaa116e9c3008f80adb8c0ce716",
+  "history_sha256": "39054849fcebfe9638966b5b5678354fc9ee49be4c647ca6513cd497f74e55d1",
+  "keys_private_outside_git": true,
+  "passed": true,
+  "receipt_count_after_restore": 1,
+  "scope": "Actual verified-SSH transfer from Oracle synthetic executed-deletion fixture to separate Windows receiver; encrypted complete history recovery and guarded SQLCipher restore. No production-data removal or physical-erasure claim.",
+  "sessions_revoked": true,
+  "snapshot_databases": 2
+}
