@@ -225,6 +225,8 @@ def persist(
         "snapshot_created_at": manifest["created_at"],
         "databases": len(manifest["files"]),
         "archive": target.name,
+        "encrypted_sha256": hashlib.sha256(target.read_bytes()).hexdigest(),
+        "encrypted_bytes": target.stat().st_size,
         "plaintext_sha256": digest,
         "database_encryption": manifest.get("database_encryption", {"scheme": "none"}),
     }

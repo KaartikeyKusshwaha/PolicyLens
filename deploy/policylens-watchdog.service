@@ -1,0 +1,18 @@
+[Unit]
+Description=PolicyLens readiness and offsite backup watchdog
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=policylens-backup
+Group=policylens-backup
+EnvironmentFile=/etc/policylens-watchdog.env
+ExecStart=/opt/policylens/.venv/bin/python /opt/policylens/deploy/watchdog.py --origin ${POLICYLENS_ORIGIN} --offsite-directory ${POLICYLENS_OFFSITE_DIRECTORY} --disk-path ${POLICYLENS_OFFSITE_DIRECTORY}
+TimeoutStartSec=60
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+

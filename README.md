@@ -48,6 +48,7 @@ Source implementation is separate from deployment and final browser acceptance.
 | Work digest | Inbox snapshot of open/overdue work, review counts, recent alerts and failed runs, with enabled-feed freshness warnings. Zero model calls; explicit refresh; [bounds and notification limits](docs/WORK_DIGEST.md). |
 | Retention and deletion | Independent policies/holds, pinned deletion-plan review and copy custody. [Offline logical execution](docs/DELETION_EXECUTION.md) requires SQLCipher, a stopped installation and durable external suppression. Physical erasure and full historical-copy reconciliation remain incomplete. |
 | Audit and operations | Real counts, corridor/disposition analytics, overdue cases, hash-linked audit events, downloadable checkpoints, workspace SQLite backup and integrity verification. |
+| Operational watchdog | Read-only readiness, receiver disk floor, latest off-machine backup attempt/age and encrypted archive hash checks. Nonzero failure status and optional systemd timer; [setup and limits](docs/OPERATIONAL_WATCHDOG.md). Operator installation and notification delivery remain pending. |
 | Sponsor evidence | Workspace-wide PDF and JSON, policy/control/approval records, case notes, source freshness, agent logs, signed audit snapshot and offline archive verifier. |
 
 React supplies the interactive interface, with responsive layouts, light/dark themes, loading/error/empty states, accessible form labels and source provenance.

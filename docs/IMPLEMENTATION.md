@@ -4,6 +4,17 @@ The full user-provided master plan is retained in `MASTER_PLAN.md`. This ledger
 tracks implementation separately from deployment, browser acceptance, external
 review and market validation. None of those gates can be inferred from a green CI run.
 
+## Operational watchdog checkpoint
+
+Source now includes the read-only readiness/backup/disk watchdog, exit-code JSON
+reports and optional hardened systemd units. Receiver success receipts now bind
+the actual encrypted bytes and SHA-256. Fifty-seven watchdog/offsite tests pass
+locally; three symlink tests are skipped because this Windows account cannot create
+symlinks and remain enabled for Linux CI. Ruff passes. This does not establish
+installed monitoring, off-machine custody or delivered notifications; see
+`OPERATIONAL_WATCHDOG.md`. Exact preceding `d6b7367` CI passed 419 backend and
+73 frontend tests (run `39953501764`).
+
 ## Deletion review checkpoint
 
 Execution hardening: aborted external artifacts must now identify exactly one
@@ -303,6 +314,14 @@ deployment occurred.
 ## Phase 7: hardening and pilot
 
 - [ ] Design-partner-scale load/concurrency tests; operational alerting.
+  A read-only operator watchdog now checks public readiness, the receiver disk
+  floor, latest backup attempt/snapshot age and exact encrypted archive size/hash.
+  Any failure yields nonzero status and a bounded report without raw exception,
+  URL or private-path output. The backup receiver records encrypted integrity
+  metadata; optional hardened systemd timer/service templates are supplied.
+  Local watchdog/offsite tests pass; actual installation, failure notification
+  integration, deployed measurements and load tests remain pending. See
+  `OPERATIONAL_WATCHDOG.md`.
 - [ ] Independent security review and documented remediation.
 - [ ] Synthetic/non-production pilot; signed agreement and review before real data.
 - [ ] Reassess positioning if evidence pain or partner adoption gates fail.
