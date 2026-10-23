@@ -143,22 +143,35 @@ Browser testing and Oracle deployment remain pending.
 
 ## Phase 5: autopilot and scorecard
 
+Tuning checkpoint: local full regression passed 337 collected backend tests,
+then 71 focused tuning/control-code/product tests passed after the replacement-
+lineage correction. The final tuning suite contains 29 cases (341 backend tests
+now in source). All 54 frontend tests and ESLint passed; the production build
+also passed after the final CSS spacing adjustment. The retained tuning PDF section was
+rendered with Poppler and visually inspected. No browser testing or Oracle
+deployment occurred. Exact pushed-commit CI remains to be checked.
+
 Scorecard source checkpoint: ten focused evaluation tests passed, including a
 complete 50-case real-runner replay with deterministic HTTP transport, strict
 schema handling, hidden labels, SQLCipher isolation and stop-on-provider-failure.
 All 48 existing toolkit/product regression tests also passed after the v2 change.
 Exact commit `6c2a03b` passed CI with 311 backend and 51 frontend tests, Ruff,
 ESLint, production build and npm audit (run `39855723808`). A separate local
-backend regression is still running. A paced live replay completed three cases
+backend regression subsequently passed all 310 collected tests. A paced live replay completed three cases
 before a provider request rejection stopped the fourth; no partial card was
 published. A subsequent isolated diagnostic of that case completed, so the
-failure was not reproduced. Provider error accounting is being tightened to
+failure was not reproduced. Provider error accounting was tightened to
 distinguish rejected generation from systemic configuration/access failures.
 No complete 50-case live scorecard is claimed.
 
 - [ ] Opt-in cited brief preparation on new alerts, digests and stale-evidence alerts.
-- [ ] Tuning agent: before/after historical simulation, proposed threshold draft,
-  independent approval; no automatic activation.
+- [x] Implement deterministic tuning playbook: before/after historical simulation,
+  proposed threshold draft and independent approval; no automatic activation.
+  Human control UI, scoped MCP/SDK/CLI tools, pinned evidence and atomic receipt
+  are implemented. Approval revalidates changed evidence and excludes an agent's
+  issuing administrator. The objective measures supplied workload, not detection
+  accuracy. Encrypted recovery and signed pack inclusion are tested. Deployment,
+  performance and final browser acceptance remain pending; see `CONTROL_TUNING.md`.
 - [ ] Evaluation harness with at least 50 labeled historical/seeded cases, citation
   validity, fabricated quotation rate and disposition agreement per pinned model.
   Isolated source replay and deterministic scoring are implemented, with a

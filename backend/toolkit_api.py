@@ -15,6 +15,7 @@ from providers import problem, verify_citations
 from security import SecretBox
 from store import now
 from tool_contracts import TOOLS, catalog
+import control_tuning
 
 router = APIRouter(prefix="/api")
 
@@ -143,6 +144,10 @@ def invoke(name: str, arguments: dict, request: Request):
 def execute(name, data, request, user):
     ops, store = request.state.ops, request.state.store
     engine = request.app.state.engine
+    if name == "simulate_control_tuning":
+        return control_tuning.preview(store, data)
+    if name == "draft_control_tuning":
+        return control_tuning.draft(store, data, user)
     if name == "search_policy":
         return {"excerpts": store.search(data.query, data.topic)}
     if name == "get_control":
@@ -155,7 +160,13 @@ def execute(name, data, request, user):
                     (data.control_id,),
                 )
             ]
-        return {"control": control, "approval_history": history}
+        return {
+            "control": control,
+            "approval_history": history,
+            "tuning_receipt": ops.get("control_tuning", control["tuning_receipt_id"])
+            if control.get("tuning_receipt_id")
+            else None,
+        }
     if name == "simulate_control":
         result = ops.backtest(data.control_id)
         saved = ops.save("backtest", result, user["id"])

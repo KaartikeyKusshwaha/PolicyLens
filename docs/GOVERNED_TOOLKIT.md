@@ -32,6 +32,8 @@ ordinary account, approval, case-action or other application API endpoints.
 | search_policy | read | Bounded lexical policy retrieval with references |
 | get_control | read | Control definition and recorded approval history |
 | simulate_control | draft | Historical simulation; no activation or live alerts |
+| simulate_control_tuning | draft | Compare supplied thresholds against an explicit historical workload target |
+| draft_control_tuning | request-approval | Create a pinned tuning draft; a different human from the author/key issuer must approve |
 | list_alerts | read | Paginated recorded alerts, optionally filtered by case |
 | get_case_context | read | Case/customer evidence and recorded work |
 | draft_investigation_brief | draft | Queues the existing investigation runner |

@@ -33,6 +33,7 @@ RECORD_KINDS = (
     "traceability_link",
     "backtest",
     "control_code_import",
+    "control_tuning",
     "adapter_object",
     "adapter_import",
     "retention_policy",

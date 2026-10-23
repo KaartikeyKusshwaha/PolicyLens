@@ -159,3 +159,8 @@ The [agent evaluation harness](docs/AGENT_SCORECARDS.md) replays a reviewable
 budgets and human decision boundaries. Scorecards include citation validity,
 unsupported quotation rates, disposition agreement, failures and abstentions;
 test-provider measurements are explicitly distinguished from live model results.
+
+[Control tuning](docs/CONTROL_TUNING.md) compares supplied numeric thresholds
+against a historical match-count target and drafts a separate version with pinned
+before/after evidence. A different human must approve; match volume is workload,
+not detection accuracy or a regulatory threshold recommendation.

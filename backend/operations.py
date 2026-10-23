@@ -562,6 +562,39 @@ class Operations:
         if rule_id and not prior:
             raise problem(404, "not_found", "Control not found.")
         old = json.loads(prior[0]) if prior else None
+        replacement = old
+        visited = set()
+        # Editing a pending replacement must still retire its active ancestor,
+        # rather than merely superseding another draft and leaving two actives.
+        while (
+            replacement
+            and replacement["status"] == "draft"
+            and replacement.get("replaces_id")
+        ):
+            if replacement["id"] in visited or len(visited) >= 32:
+                raise problem(
+                    409,
+                    "control_lineage",
+                    "The replacement chain is cyclic or exceeds the pilot bound.",
+                )
+            visited.add(replacement["id"])
+            ancestor = db.execute(
+                "SELECT payload FROM records WHERE kind='rule' AND id=?",
+                (replacement["replaces_id"],),
+            ).fetchone()
+            if not ancestor:
+                raise problem(
+                    409,
+                    "control_lineage",
+                    "The replacement ancestor is missing; review the control history.",
+                )
+            replacement = json.loads(ancestor[0])
+        if replacement and replacement["status"] == "superseded":
+            raise problem(
+                409,
+                "control_superseded",
+                "Start a new draft from the active control version.",
+            )
         stamp = now()
         record = {
             "id": uid(),
@@ -573,14 +606,27 @@ class Operations:
             "created_by": user["id"],
             "policy_version": policy["version"],
             "policy_title": policy["title"],
-            "replaces_id": old["id"] if old else None,
+            "replaces_id": replacement["id"] if replacement else None,
         }
+        if old and replacement and old["id"] != replacement["id"]:
+            record["edited_draft_id"] = old["id"]
         db.execute(
             "INSERT INTO records VALUES (?,?,?,?,?)",
             ("rule", record["id"], stamp, stamp, canonical(record)),
         )
         audit(
-            db, user["id"], "rule_saved", {"id": record["id"], "title": record["title"]}
+            db,
+            user["id"],
+            "rule_saved",
+            {
+                "id": record["id"],
+                "title": record["title"],
+                **(
+                    {"edited_draft_id": record["edited_draft_id"]}
+                    if record.get("edited_draft_id")
+                    else {}
+                ),
+            },
         )
         return record
 
@@ -594,6 +640,10 @@ class Operations:
                 raise problem(404, "not_found", "Control not found.")
             rule = json.loads(row[0])
             if data.action == "approve":
+                if rule.get("tuning_receipt_id"):
+                    from control_tuning import validate_approval
+
+                    validate_approval(db, self.store, rule, user)
                 if rule["created_by"] == user["id"]:
                     raise problem(
                         403,

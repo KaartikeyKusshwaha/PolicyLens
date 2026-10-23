@@ -188,6 +188,7 @@ class AgentKeys:
             )
         return {
             "id": "agent:" + record["id"],
+            "key_issuer_id": record["created_by"],
             "org_id": record["org_id"],
             "role": "agent",
             "agent_key": record["id"],

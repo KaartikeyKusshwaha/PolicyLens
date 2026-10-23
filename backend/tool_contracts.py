@@ -5,6 +5,7 @@ from typing import Literal
 from pydantic import Field
 
 from models import Citation, Input
+from control_tuning import DraftInput, TuningInput
 
 
 class SearchPolicy(Input):
@@ -51,6 +52,16 @@ class RunControl(RunRef):
 
 
 TOOLS = {
+    "simulate_control_tuning": (
+        "draft",
+        TuningInput,
+        "Compare supplied numeric thresholds against a caller-specified historical match-count target. This measures workload, not detection accuracy.",
+    ),
+    "draft_control_tuning": (
+        "request-approval",
+        DraftInput,
+        "Pin a tuning simulation and create a threshold-change draft. Independent human review is required; no activation occurs.",
+    ),
     "search_policy": (
         "read",
         SearchPolicy,

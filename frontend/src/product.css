@@ -614,6 +614,18 @@
   border: 1px solid var(--line);
   border-radius: 8px;
 }
+.tuning-inputs {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+  display: grid;
+  gap: 16px;
+}
+.tuning-references {
+  overflow-wrap: anywhere;
+  margin: 16px 0;
+}
 .entity-graph svg {
   width: 100%;
   min-width: 450px;

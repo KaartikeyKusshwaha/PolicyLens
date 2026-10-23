@@ -1,4 +1,5 @@
 import { useState } from "react";
+import ControlTuning, { TuningEvidence } from "./ControlTuning";
 import {
   Link,
   useNavigate,
@@ -372,6 +373,8 @@ export function ControlDetail() {
         {kinds[c.kind]} · {c.policy_title} v{c.policy_version}
       </PageHeading>
       <p><Link className="button secondary" to={`/rules/code?control_id=${encodeURIComponent(id)}`}>Export this control as YAML</Link></p>
+      {c.tuning_receipt_id && <TuningEvidence receiptId={c.tuning_receipt_id} />}
+      {c.status === "active" && ["amount", "velocity", "aggregate"].includes(c.kind) && ["admin", "analyst"].includes(user.role) && <ControlTuning key={c.id + c.updated_at} control={c} />}
       <ErrorNotice message={error} />
       <div className="control-detail-grid">
         <section className="panel section-padding">
@@ -410,13 +413,13 @@ export function ControlDetail() {
             authorized person must approve a draft tied to the current policy
             version.
           </p>
-          {c.created_by === user.id && c.status === "draft" && (
+          {[c.created_by, c.tuning_maker_id].includes(user.id) && c.status === "draft" && (
             <div className="notice warning">
-              You authored this version. Invite a reviewer from Workspace
-              settings to approve it.
+              You authored this version or issued the agent key that submitted it. A different reviewer must approve it.
             </div>
           )}
           {["admin", "reviewer"].includes(user.role) &&
+            (c.status !== "draft" || ![c.created_by, c.tuning_maker_id].includes(user.id)) &&
             ["draft", "active"].includes(c.status) && (
               <form onSubmit={action}>
                 <input
