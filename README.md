@@ -156,6 +156,10 @@ See the [dated validation record](docs/VALIDATION.md) for the generated live wor
 
 ## Deployment scope
 
+The [24 October project-state report](docs/PROJECT_STATE_20261024.md) explains
+the implemented workflows, actual Oracle rollout and retained acceptance results,
+with the remaining human, operational and market gates listed separately.
+
 This is a working single-process product pilot, not a certification of regulatory compliance. Scheduled screening supports at most 2,000 customers per run. Historical control simulations support 10,000 transactions, and one late event can recheck at most 1,000 subsequent windows. CSV imports allow 500 rows / 1 MB; policy uploads allow 5 MB / 300,000 characters / 300 PDF pages. Lists and graphs state their sample bounds. These are operational limits, not claims of enterprise scale.
 
 Run one Python worker on one machine with persistent disk. Horizontal replicas and multiple Uvicorn workers are unsupported because scheduling and local SQLite ownership assume one process. Netlify can preview the React build, but it cannot host this persistent Python/SQLite backend. Free hosts that erase local files are unsuitable.

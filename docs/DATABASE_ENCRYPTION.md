@@ -3,10 +3,12 @@
 `DATABASE_ENCRYPTION=sqlcipher4` explicitly selects SQLCipher 4 for identity and
 all tenant databases. The default remains `none` for existing installations.
 Selecting encryption never rewrites an existing plaintext database or falls back
-to plaintext if opening an encrypted database fails. Do not enable it on the
-existing Oracle installation: an operator migration and off-machine recovery
-drill there are still required. No deployed encryption claim
-is made here.
+to plaintext if opening an encrypted database fails. The actual Oracle pilot was
+migrated offline into a new encrypted installation on 23 October 2026; a separate
+off-machine recovery drill passed. Originals were preserved. See
+`DEPLOYED_CHECKPOINT_20261023.md` for exact rollout evidence and limits.
+For another plaintext installation, complete migration and recovery acceptance
+before selecting SQLCipher; changing the setting alone does not migrate data.
 
 ## Key and file protection
 

@@ -1,6 +1,11 @@
 # Governed agent toolkit
 
-Implemented on the governance branch; not yet deployed to Oracle or browser-tested.
+Implemented and deployed to Oracle. Actual HTTPS CLI/MCP context, review-task,
+denial, audit and revocation checks passed on the isolated synthetic installation.
+A separate local MCP subprocess produced and reverified a live four-citation
+draft; see `evaluation/results/20261024-live-mcp-recovery/`. Configured Claude/
+Cursor host acceptance, deployed live-model drafting and remaining browser
+scenarios are still unverified.
 The MCP implementation uses the official [Python SDK v2](https://py.sdk.modelcontextprotocol.io/)
 and its stdio transport. This is a local stdio bridge to PolicyLens's authenticated
 HTTPS API, not an unauthenticated public MCP port or an OAuth service.
