@@ -7,8 +7,9 @@ import tarfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from recovery import verify_snapshot  # noqa: E402
-from config import Settings  # noqa: E402
+from deploy.server_settings import load_server_settings  # noqa: E402
 
 MAX_ARCHIVE_BYTES = 128 * 1024 * 1024
 
@@ -52,7 +53,7 @@ def export_snapshot(root=Path("/var/backups/policylens"), settings=None):
 
 if __name__ == "__main__":
     try:
-        sys.stdout.buffer.write(export_snapshot(settings=Settings()))
+        sys.stdout.buffer.write(export_snapshot(settings=load_server_settings()))
     except Exception:
         # No database contents, secret paths or raw exception details in remote logs.
         print(

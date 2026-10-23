@@ -2,8 +2,10 @@
 
 This is a release audit against `MASTER_PLAN.md`, not a completion certificate.
 Source implementation, automated synthetic checks and current deployed behavior
-are different evidence classes. PR #2 remains draft on `codex/policylens-governance`;
-the governance changes have not been merged into main or deployed to Oracle.
+are different evidence classes. PR #2 merged as `210ffd2d` and the governance
+release is deployed to Oracle with SQLCipher. A deployed SSH-export environment
+hotfix is being retained in a follow-up branch. See the dated evidence and limits
+in `DEPLOYED_CHECKPOINT_20261023.md`; final browser acceptance remains pending.
 
 | Master-plan requirement | Current evidence | Remaining requirement |
 | --- | --- | --- |
@@ -15,10 +17,10 @@ the governance changes have not been merged into main or deployed to Oracle.
 | Autopilot prep | Automatic briefs disabled; deterministic digest/freshness warnings implemented | Failed preparation gate must be resolved before enabling; do not bypass master-plan stop gate |
 | Marble plus partner-selected transaction source | Marble export adapter and source interface, native CSV/webhook ingestion | Actual Marble comparison and partner-named transaction source; no partner selection exists |
 | MFA | TOTP encrypted seeds/replay protection/recovery tests | Operator key procedure, deployed acceptance and independent review |
-| Encryption | SQLCipher migration, snapshots, compaction, guarded restore and key-failure tests | Actual pilot migration/storage/key recovery proof |
+| Encryption | SQLCipher migration, snapshots, compaction, guarded restore and key-failure tests; actual pilot migration/key recovery/off-machine restore passed | Authenticated encrypted deployment acceptance and independent review |
 | Retention/deletion policy and holds | Reviewed policies/holds, exact approved offline logical execution, external suppression, custody and compaction | Complete historical/offline discovery, audit-PII handling policy, physical-copy evidence and deployed drills; no complete-erasure claim |
-| Outside-DB checkpoints | Signed capture, anti-truncation, complete signed-history encrypted receiver/recovery and trusted-key verification | Actual configuration, scheduled off-machine transfer and operator acceptance |
-| Off-machine backups | Encrypted verified DB/history receiver, fixed SSH exporter and task integration | Restore OCI/SSH access, inspect timer/logs, install schedules and prove fresh transfers/recovery |
+| Outside-DB checkpoints | Signed capture, anti-truncation, complete signed-history encrypted receiver/recovery; actual configured first transfer and recovery passed | Populated deployed audit verification, next scheduled transfer and operator acceptance |
+| Off-machine backups | Actual SSH/log verification, daily server backup, combined encrypted transfer, separate restore drill and Windows task installed | Observe next daily receiver trigger; populated recovery/ongoing custody and notification handling |
 | Operational alerting | Readiness for registered storage/worker/checkpoints; backup/disk watchdog and service templates | Install monitor and prove authorized notification path; no messages sent |
 | Four-area web control room | Four canonical areas, advanced routing, populated component tests and keyboard checks | One final populated desktop/mobile browser pass after implementation |
 | Load/concurrency at partner scale | Retained single-worker local synthetic 100-customer/1,000-transaction/four-client results and failures | Partner-agreed profile and measurement on actual 1 GB pilot hardware; provider/agent/full-feed load unproven |
@@ -28,11 +30,12 @@ the governance changes have not been merged into main or deployed to Oracle.
 | License | User retained current license | No license change requested |
 | Parked scope | HA/multiworker, SSO, Postgres, PEP/adverse media, SAR filing/payment blocking remain parked | Do not add these to satisfy pilot requirements |
 
-Latest infrastructure access check: TCP 22 to the recorded Oracle host failed and
-the saved OCI CLI security-token session reported expired. Browser authentication
-has not been started under the user's implementation-before-browser constraint.
-No production log, current timer result, new deployed binary or live encrypted
-storage claim can be inferred from local/CI success.
+Latest infrastructure evidence: Oracle CLI/verified SSH access restored, live
+service and backup logs inspected, separate SQLCipher migration/restore passed,
+and combined off-machine database/history verification plus a separate Windows
+restore drill passed. HTTPS served assets match the reviewed build. The daily
+Windows pull task is installed; its next daily trigger remains unobserved.
+See `DEPLOYED_CHECKPOINT_20261023.md` for scope and remaining gates.
 
 Explicit-root local copy discovery now supports private inventory evidence;
 complete cross-system/customer ownership reconciliation remains incomplete. Checkpoint
