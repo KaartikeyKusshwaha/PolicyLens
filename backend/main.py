@@ -1,9 +1,9 @@
 import asyncio
 import hmac
 import logging
-import sqlite3
 import time
 import uuid
+from contextlib import closing
 from contextlib import asynccontextmanager, suppress
 from pathlib import Path
 from urllib.parse import urlparse
@@ -32,7 +32,14 @@ from operations import Operations, audit
 from product_models import NamedWorkspace
 from providers import extract_document, problem, verify_citations
 from store import Store, now
+from database import (
+    INTEGRITY_ERRORS,
+    STORAGE_ERRORS,
+    connect_database,
+    encryption_status,
+)
 from runtime import InstallationLock
+from retention_api import router as retention_router
 
 logger = logging.getLogger("policylens")
 
@@ -59,8 +66,11 @@ def create_app(settings=None, transport=None, *, start_worker=True):
             raise RuntimeError(
                 "A registered workspace database is missing. Restore the installation before starting; no replacement workspace database was created."
             )
-        app.state.store = Store(settings.database_path)
+        app.state.store = Store(settings.database_path, settings)
         Operations(app.state.store)
+        from deletion_execution import verify_runtime
+
+        verify_runtime(app.state.hub, settings)
         if app.state.hub.needs_setup():
             logger.warning(
                 "First workspace setup required. Bootstrap key file: %s",
@@ -74,6 +84,7 @@ def create_app(settings=None, transport=None, *, start_worker=True):
             app.state.client = client
             app.state.providers = Intelligence(settings, app.state.store, client)
             app.state.engine = AgentEngine(app.state.hub, settings, client)
+            app.state.checkpoints = app.state.engine.checkpoints
             app.state.sync_locks = {}
             worker = (
                 asyncio.create_task(app.state.engine.loop()) if start_worker else None
@@ -121,6 +132,13 @@ def create_app(settings=None, transport=None, *, start_worker=True):
         path = request.url.path
         writing = request.method not in ("GET", "HEAD", "OPTIONS")
         try:
+            if path == "/api/ready" and (
+                not app.state.hub.path.is_file() or app.state.hub.path.is_symlink()
+            ):
+                # Session lookup uses normal writable application handles. Do
+                # not let a probe recreate identity storage before its read-only
+                # readiness checks get a chance to report the missing file.
+                raise RuntimeError("Identity storage is unavailable")
             if (
                 public_deployment
                 and request.url.scheme != "https"
@@ -166,18 +184,44 @@ def create_app(settings=None, transport=None, *, start_worker=True):
                     raise problem(
                         403, "origin_denied", "Cross-site mutations are not allowed."
                     )
-                user = app.state.hub.authenticate(
-                    request.cookies.get("policylens_session")
-                )
+                authorization = request.headers.get("authorization", "")
+                if path.startswith("/api/toolkit/") or authorization.startswith(
+                    "Bearer "
+                ):
+                    token = (
+                        authorization[7:] if authorization.startswith("Bearer ") else ""
+                    )
+                    user = app.state.hub.agent_keys.authenticate(token)
+                    if not path.startswith("/api/toolkit/"):
+                        with app.state.hub.store(user["org_id"]).connect() as db:
+                            audit(
+                                db,
+                                user["id"],
+                                "agent_route_denied",
+                                {"path": path[:160], "method": request.method},
+                            )
+                        raise problem(
+                            403,
+                            "agent_route_denied",
+                            "Agent keys can use only the governed toolkit endpoints.",
+                        )
+                else:
+                    user = app.state.hub.authenticate(
+                        request.cookies.get("policylens_session")
+                    )
                 request.state.user = user
                 if path not in public:
                     if not user:
                         raise problem(
                             401, "authentication_required", "Sign in to your workspace."
                         )
-                    if writing and not hmac.compare_digest(
-                        request.headers.get("x-csrf-token", "").encode(),
-                        user["csrf"].encode(),
+                    if (
+                        writing
+                        and not user.get("agent_key")
+                        and not hmac.compare_digest(
+                            request.headers.get("x-csrf-token", "").encode(),
+                            user["csrf"].encode(),
+                        )
                     ):
                         raise problem(
                             403,
@@ -198,11 +242,41 @@ def create_app(settings=None, transport=None, *, start_worker=True):
                     request.state.providers = Intelligence(
                         settings, request.state.store, app.state.client
                     )
+                    if user.get("agent_key"):
+                        with request.state.store.connect() as db:
+                            audit(
+                                db,
+                                user["id"],
+                                "tool_request_received",
+                                {
+                                    "path": path[:160],
+                                    "method": request.method,
+                                    "key_id": user["agent_key"],
+                                },
+                            )
             response = await call_next(request)
         except HTTPException as exc:
             response = JSONResponse(
                 status_code=exc.status_code, content={"detail": exc.detail}
             )
+        except STORAGE_ERRORS:
+            if path != "/api/ready":
+                raise
+            response = JSONResponse({"status": "not_ready"}, status_code=503)
+        agent_user = getattr(request.state, "user", None)
+        if (
+            agent_user
+            and agent_user.get("agent_key")
+            and response.status_code >= 400
+            and getattr(request.state, "store", None) is not None
+        ):
+            with request.state.store.connect() as db:
+                audit(
+                    db,
+                    agent_user["id"],
+                    "tool_http_rejected",
+                    {"path": path[:160], "status": response.status_code},
+                )
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
@@ -247,6 +321,8 @@ def create_app(settings=None, transport=None, *, start_worker=True):
             path="/",
         )
         return user
+
+    app.state.set_session = set_session
 
     @app.get("/api/auth/status")
     def auth_status():
@@ -361,6 +437,10 @@ def create_app(settings=None, transport=None, *, start_worker=True):
             },
             "sanctions": provider.sanctions_status(),
             "api_docs_enabled": not public_deployment,
+            "database_encryption": encryption_status(settings),
+            "external_checkpoints": app.state.checkpoints.status(
+                request.state.user["org_id"]
+            ),
             "agent_worker": "disabled"
             if app.state.worker is None
             else "failed"
@@ -372,11 +452,35 @@ def create_app(settings=None, transport=None, *, start_worker=True):
     def readiness():
         worker = app.state.worker
         try:
-            with app.state.hub.connect() as db:
-                db.execute("SELECT 1 FROM organizations LIMIT 1").fetchone()
+            with closing(
+                connect_database(app.state.hub.path, settings, readonly=True)
+            ) as db:
+                for row in db.execute("SELECT db_path FROM organizations"):
+                    path = Path(row[0])
+                    # A readiness probe must never initialize/recreate storage.
+                    # Probe every registered tenant, including uncached ones.
+                    if not path.is_file() or path.is_symlink():
+                        return JSONResponse({"status": "not_ready"}, status_code=503)
+                    with closing(
+                        connect_database(path, settings, readonly=True)
+                    ) as tenant:
+                        for table in (
+                            "records",
+                            "policies",
+                            "transactions",
+                            "alerts",
+                            "jobs",
+                            "audit_chain",
+                        ):
+                            tenant.execute(f"SELECT 1 FROM {table} LIMIT 1").fetchone()
             if worker is not None and worker.done():
                 return JSONResponse({"status": "not_ready"}, status_code=503)
-        except sqlite3.Error:
+            if (
+                settings.checkpoint_directory is not None
+                and app.state.checkpoints.errors
+            ):
+                return JSONResponse({"status": "not_ready"}, status_code=503)
+        except STORAGE_ERRORS:
             return JSONResponse({"status": "not_ready"}, status_code=503)
         return {"status": "ready"}
 
@@ -573,7 +677,7 @@ def create_app(settings=None, transport=None, *, start_worker=True):
         }
         try:
             store.save_decision(result)
-        except sqlite3.IntegrityError as exc:
+        except INTEGRITY_ERRORS as exc:
             raise problem(
                 409,
                 "duplicate_transaction",
@@ -627,9 +731,26 @@ def create_app(settings=None, transport=None, *, start_worker=True):
 
     from product_api import router
     from access_api import router as access_router
+    from mfa_api import router as mfa_router
+    from toolkit_api import router as toolkit_router
+    from checkpoint_api import router as checkpoint_router
+    from evidence_api import router as evidence_router
+    from traceability_api import router as traceability_router
+    from control_code_api import router as control_code_router
+    from adapter_api import router as adapter_router
+    from control_tuning_api import router as control_tuning_router
 
     app.include_router(router)
     app.include_router(access_router)
+    app.include_router(mfa_router)
+    app.include_router(toolkit_router)
+    app.include_router(checkpoint_router)
+    app.include_router(evidence_router)
+    app.include_router(traceability_router)
+    app.include_router(control_code_router)
+    app.include_router(adapter_router)
+    app.include_router(retention_router)
+    app.include_router(control_tuning_router)
     dist = ROOT.parent / "frontend" / "dist"
     if (dist / "assets").is_dir():
         app.mount("/assets", StaticFiles(directory=dist / "assets"), name="assets")

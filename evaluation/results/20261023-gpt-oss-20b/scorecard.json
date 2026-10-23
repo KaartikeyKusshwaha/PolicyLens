@@ -1,0 +1,3162 @@
+{
+  "schema": "policylens.agent-scorecard.v1",
+  "generated_at": "2026-10-23T10:41:52.514499+00:00",
+  "dataset_sha256": "b1ddc272a2b33e2771c5aece1c14ff566ec8da93aed33dbf4177bf5331c83072",
+  "dataset_title": "Fifty synthetic investigation cases, ten scenario families",
+  "data_origin": "synthetic",
+  "label_author": "PolicyLens synthetic scenario authors",
+  "execution_mode": "live_provider",
+  "metrics": {
+    "labeled_cases": 50,
+    "completed_runs": 46,
+    "fully_cited_completions": 46,
+    "abstentions": 4,
+    "runs_without_retained_draft": 4,
+    "citation_count": 109,
+    "valid_citations": 109,
+    "unsupported_quotes": 0,
+    "unknown_citation_ids": 0,
+    "citation_validity": 1.0,
+    "fabricated_quote_rate": 0.0,
+    "disposition_agreement": 0.86,
+    "confusion_matrix": {
+      "confirmed": {
+        "confirmed": 13,
+        "false_positive": 0,
+        "insufficient_evidence": 1,
+        "abstained_or_failed": 1
+      },
+      "false_positive": {
+        "confirmed": 0,
+        "false_positive": 13,
+        "insufficient_evidence": 1,
+        "abstained_or_failed": 1
+      },
+      "insufficient_evidence": {
+        "confirmed": 1,
+        "false_positive": 0,
+        "insufficient_evidence": 17,
+        "abstained_or_failed": 2
+      }
+    }
+  },
+  "models": [
+    {
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_228717f27c"
+        }
+      },
+      "metrics": {
+        "labeled_cases": 2,
+        "completed_runs": 2,
+        "fully_cited_completions": 2,
+        "abstentions": 0,
+        "runs_without_retained_draft": 0,
+        "citation_count": 3,
+        "valid_citations": 3,
+        "unsupported_quotes": 0,
+        "unknown_citation_ids": 0,
+        "citation_validity": 1.0,
+        "fabricated_quote_rate": 0.0,
+        "disposition_agreement": 1.0,
+        "confusion_matrix": {
+          "confirmed": {
+            "confirmed": 2,
+            "false_positive": 0,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          },
+          "false_positive": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          },
+          "insufficient_evidence": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          }
+        }
+      }
+    },
+    {
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_ef00694abe"
+        }
+      },
+      "metrics": {
+        "labeled_cases": 4,
+        "completed_runs": 4,
+        "fully_cited_completions": 4,
+        "abstentions": 0,
+        "runs_without_retained_draft": 0,
+        "citation_count": 8,
+        "valid_citations": 8,
+        "unsupported_quotes": 0,
+        "unknown_citation_ids": 0,
+        "citation_validity": 1.0,
+        "fabricated_quote_rate": 0.0,
+        "disposition_agreement": 0.75,
+        "confusion_matrix": {
+          "confirmed": {
+            "confirmed": 2,
+            "false_positive": 0,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          },
+          "false_positive": {
+            "confirmed": 0,
+            "false_positive": 1,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          },
+          "insufficient_evidence": {
+            "confirmed": 1,
+            "false_positive": 0,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          }
+        }
+      }
+    },
+    {
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": null
+      },
+      "metrics": {
+        "labeled_cases": 4,
+        "completed_runs": 0,
+        "fully_cited_completions": 0,
+        "abstentions": 4,
+        "runs_without_retained_draft": 4,
+        "citation_count": 0,
+        "valid_citations": 0,
+        "unsupported_quotes": 0,
+        "unknown_citation_ids": 0,
+        "citation_validity": null,
+        "fabricated_quote_rate": null,
+        "disposition_agreement": 0.0,
+        "confusion_matrix": {
+          "confirmed": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 1
+          },
+          "false_positive": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 1
+          },
+          "insufficient_evidence": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 2
+          }
+        }
+      }
+    },
+    {
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_bb6a356524"
+        }
+      },
+      "metrics": {
+        "labeled_cases": 1,
+        "completed_runs": 1,
+        "fully_cited_completions": 1,
+        "abstentions": 0,
+        "runs_without_retained_draft": 0,
+        "citation_count": 1,
+        "valid_citations": 1,
+        "unsupported_quotes": 0,
+        "unknown_citation_ids": 0,
+        "citation_validity": 1.0,
+        "fabricated_quote_rate": 0.0,
+        "disposition_agreement": 1.0,
+        "confusion_matrix": {
+          "confirmed": {
+            "confirmed": 1,
+            "false_positive": 0,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          },
+          "false_positive": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          },
+          "insufficient_evidence": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          }
+        }
+      }
+    },
+    {
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_9b8528b477"
+        }
+      },
+      "metrics": {
+        "labeled_cases": 3,
+        "completed_runs": 3,
+        "fully_cited_completions": 3,
+        "abstentions": 0,
+        "runs_without_retained_draft": 0,
+        "citation_count": 6,
+        "valid_citations": 6,
+        "unsupported_quotes": 0,
+        "unknown_citation_ids": 0,
+        "citation_validity": 1.0,
+        "fabricated_quote_rate": 0.0,
+        "disposition_agreement": 1.0,
+        "confusion_matrix": {
+          "confirmed": {
+            "confirmed": 1,
+            "false_positive": 0,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          },
+          "false_positive": {
+            "confirmed": 0,
+            "false_positive": 2,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          },
+          "insufficient_evidence": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          }
+        }
+      }
+    },
+    {
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_d23c14756c"
+        }
+      },
+      "metrics": {
+        "labeled_cases": 1,
+        "completed_runs": 1,
+        "fully_cited_completions": 1,
+        "abstentions": 0,
+        "runs_without_retained_draft": 0,
+        "citation_count": 1,
+        "valid_citations": 1,
+        "unsupported_quotes": 0,
+        "unknown_citation_ids": 0,
+        "citation_validity": 1.0,
+        "fabricated_quote_rate": 0.0,
+        "disposition_agreement": 1.0,
+        "confusion_matrix": {
+          "confirmed": {
+            "confirmed": 1,
+            "false_positive": 0,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          },
+          "false_positive": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          },
+          "insufficient_evidence": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          }
+        }
+      }
+    },
+    {
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_f102a3179c"
+        }
+      },
+      "metrics": {
+        "labeled_cases": 1,
+        "completed_runs": 1,
+        "fully_cited_completions": 1,
+        "abstentions": 0,
+        "runs_without_retained_draft": 0,
+        "citation_count": 3,
+        "valid_citations": 3,
+        "unsupported_quotes": 0,
+        "unknown_citation_ids": 0,
+        "citation_validity": 1.0,
+        "fabricated_quote_rate": 0.0,
+        "disposition_agreement": 1.0,
+        "confusion_matrix": {
+          "confirmed": {
+            "confirmed": 1,
+            "false_positive": 0,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          },
+          "false_positive": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          },
+          "insufficient_evidence": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          }
+        }
+      }
+    },
+    {
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_80501ff3a1"
+        }
+      },
+      "metrics": {
+        "labeled_cases": 5,
+        "completed_runs": 5,
+        "fully_cited_completions": 5,
+        "abstentions": 0,
+        "runs_without_retained_draft": 0,
+        "citation_count": 9,
+        "valid_citations": 9,
+        "unsupported_quotes": 0,
+        "unknown_citation_ids": 0,
+        "citation_validity": 1.0,
+        "fabricated_quote_rate": 0.0,
+        "disposition_agreement": 1.0,
+        "confusion_matrix": {
+          "confirmed": {
+            "confirmed": 2,
+            "false_positive": 0,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          },
+          "false_positive": {
+            "confirmed": 0,
+            "false_positive": 2,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          },
+          "insufficient_evidence": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 1,
+            "abstained_or_failed": 0
+          }
+        }
+      }
+    },
+    {
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_8d13edce1d"
+        }
+      },
+      "metrics": {
+        "labeled_cases": 4,
+        "completed_runs": 4,
+        "fully_cited_completions": 4,
+        "abstentions": 0,
+        "runs_without_retained_draft": 0,
+        "citation_count": 8,
+        "valid_citations": 8,
+        "unsupported_quotes": 0,
+        "unknown_citation_ids": 0,
+        "citation_validity": 1.0,
+        "fabricated_quote_rate": 0.0,
+        "disposition_agreement": 0.75,
+        "confusion_matrix": {
+          "confirmed": {
+            "confirmed": 1,
+            "false_positive": 0,
+            "insufficient_evidence": 1,
+            "abstained_or_failed": 0
+          },
+          "false_positive": {
+            "confirmed": 0,
+            "false_positive": 1,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          },
+          "insufficient_evidence": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 1,
+            "abstained_or_failed": 0
+          }
+        }
+      }
+    },
+    {
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_334cc21c60"
+        }
+      },
+      "metrics": {
+        "labeled_cases": 2,
+        "completed_runs": 2,
+        "fully_cited_completions": 2,
+        "abstentions": 0,
+        "runs_without_retained_draft": 0,
+        "citation_count": 5,
+        "valid_citations": 5,
+        "unsupported_quotes": 0,
+        "unknown_citation_ids": 0,
+        "citation_validity": 1.0,
+        "fabricated_quote_rate": 0.0,
+        "disposition_agreement": 1.0,
+        "confusion_matrix": {
+          "confirmed": {
+            "confirmed": 1,
+            "false_positive": 0,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          },
+          "false_positive": {
+            "confirmed": 0,
+            "false_positive": 1,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          },
+          "insufficient_evidence": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          }
+        }
+      }
+    },
+    {
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_75c733514d"
+        }
+      },
+      "metrics": {
+        "labeled_cases": 2,
+        "completed_runs": 2,
+        "fully_cited_completions": 2,
+        "abstentions": 0,
+        "runs_without_retained_draft": 0,
+        "citation_count": 6,
+        "valid_citations": 6,
+        "unsupported_quotes": 0,
+        "unknown_citation_ids": 0,
+        "citation_validity": 1.0,
+        "fabricated_quote_rate": 0.0,
+        "disposition_agreement": 1.0,
+        "confusion_matrix": {
+          "confirmed": {
+            "confirmed": 1,
+            "false_positive": 0,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          },
+          "false_positive": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          },
+          "insufficient_evidence": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 1,
+            "abstained_or_failed": 0
+          }
+        }
+      }
+    },
+    {
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_a4315eb300"
+        }
+      },
+      "metrics": {
+        "labeled_cases": 2,
+        "completed_runs": 2,
+        "fully_cited_completions": 2,
+        "abstentions": 0,
+        "runs_without_retained_draft": 0,
+        "citation_count": 4,
+        "valid_citations": 4,
+        "unsupported_quotes": 0,
+        "unknown_citation_ids": 0,
+        "citation_validity": 1.0,
+        "fabricated_quote_rate": 0.0,
+        "disposition_agreement": 1.0,
+        "confusion_matrix": {
+          "confirmed": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          },
+          "false_positive": {
+            "confirmed": 0,
+            "false_positive": 1,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          },
+          "insufficient_evidence": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 1,
+            "abstained_or_failed": 0
+          }
+        }
+      }
+    },
+    {
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_84bb35977d"
+        }
+      },
+      "metrics": {
+        "labeled_cases": 1,
+        "completed_runs": 1,
+        "fully_cited_completions": 1,
+        "abstentions": 0,
+        "runs_without_retained_draft": 0,
+        "citation_count": 3,
+        "valid_citations": 3,
+        "unsupported_quotes": 0,
+        "unknown_citation_ids": 0,
+        "citation_validity": 1.0,
+        "fabricated_quote_rate": 0.0,
+        "disposition_agreement": 1.0,
+        "confusion_matrix": {
+          "confirmed": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          },
+          "false_positive": {
+            "confirmed": 0,
+            "false_positive": 1,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          },
+          "insufficient_evidence": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          }
+        }
+      }
+    },
+    {
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_e23fc997ca"
+        }
+      },
+      "metrics": {
+        "labeled_cases": 1,
+        "completed_runs": 1,
+        "fully_cited_completions": 1,
+        "abstentions": 0,
+        "runs_without_retained_draft": 0,
+        "citation_count": 1,
+        "valid_citations": 1,
+        "unsupported_quotes": 0,
+        "unknown_citation_ids": 0,
+        "citation_validity": 1.0,
+        "fabricated_quote_rate": 0.0,
+        "disposition_agreement": 1.0,
+        "confusion_matrix": {
+          "confirmed": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          },
+          "false_positive": {
+            "confirmed": 0,
+            "false_positive": 1,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          },
+          "insufficient_evidence": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          }
+        }
+      }
+    },
+    {
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_e2cb7a84ec"
+        }
+      },
+      "metrics": {
+        "labeled_cases": 2,
+        "completed_runs": 2,
+        "fully_cited_completions": 2,
+        "abstentions": 0,
+        "runs_without_retained_draft": 0,
+        "citation_count": 5,
+        "valid_citations": 5,
+        "unsupported_quotes": 0,
+        "unknown_citation_ids": 0,
+        "citation_validity": 1.0,
+        "fabricated_quote_rate": 0.0,
+        "disposition_agreement": 1.0,
+        "confusion_matrix": {
+          "confirmed": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          },
+          "false_positive": {
+            "confirmed": 0,
+            "false_positive": 2,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          },
+          "insufficient_evidence": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          }
+        }
+      }
+    },
+    {
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_63473661d7"
+        }
+      },
+      "metrics": {
+        "labeled_cases": 1,
+        "completed_runs": 1,
+        "fully_cited_completions": 1,
+        "abstentions": 0,
+        "runs_without_retained_draft": 0,
+        "citation_count": 2,
+        "valid_citations": 2,
+        "unsupported_quotes": 0,
+        "unknown_citation_ids": 0,
+        "citation_validity": 1.0,
+        "fabricated_quote_rate": 0.0,
+        "disposition_agreement": 0.0,
+        "confusion_matrix": {
+          "confirmed": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          },
+          "false_positive": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 1,
+            "abstained_or_failed": 0
+          },
+          "insufficient_evidence": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          }
+        }
+      }
+    },
+    {
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_e99e93f2ac"
+        }
+      },
+      "metrics": {
+        "labeled_cases": 1,
+        "completed_runs": 1,
+        "fully_cited_completions": 1,
+        "abstentions": 0,
+        "runs_without_retained_draft": 0,
+        "citation_count": 2,
+        "valid_citations": 2,
+        "unsupported_quotes": 0,
+        "unknown_citation_ids": 0,
+        "citation_validity": 1.0,
+        "fabricated_quote_rate": 0.0,
+        "disposition_agreement": 1.0,
+        "confusion_matrix": {
+          "confirmed": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          },
+          "false_positive": {
+            "confirmed": 0,
+            "false_positive": 1,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          },
+          "insufficient_evidence": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          }
+        }
+      }
+    },
+    {
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_c5a89987dc"
+        }
+      },
+      "metrics": {
+        "labeled_cases": 2,
+        "completed_runs": 2,
+        "fully_cited_completions": 2,
+        "abstentions": 0,
+        "runs_without_retained_draft": 0,
+        "citation_count": 6,
+        "valid_citations": 6,
+        "unsupported_quotes": 0,
+        "unknown_citation_ids": 0,
+        "citation_validity": 1.0,
+        "fabricated_quote_rate": 0.0,
+        "disposition_agreement": 1.0,
+        "confusion_matrix": {
+          "confirmed": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          },
+          "false_positive": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          },
+          "insufficient_evidence": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 2,
+            "abstained_or_failed": 0
+          }
+        }
+      }
+    },
+    {
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_9340e7d14d"
+        }
+      },
+      "metrics": {
+        "labeled_cases": 2,
+        "completed_runs": 2,
+        "fully_cited_completions": 2,
+        "abstentions": 0,
+        "runs_without_retained_draft": 0,
+        "citation_count": 8,
+        "valid_citations": 8,
+        "unsupported_quotes": 0,
+        "unknown_citation_ids": 0,
+        "citation_validity": 1.0,
+        "fabricated_quote_rate": 0.0,
+        "disposition_agreement": 1.0,
+        "confusion_matrix": {
+          "confirmed": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          },
+          "false_positive": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          },
+          "insufficient_evidence": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 2,
+            "abstained_or_failed": 0
+          }
+        }
+      }
+    },
+    {
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_ed70b23331"
+        }
+      },
+      "metrics": {
+        "labeled_cases": 2,
+        "completed_runs": 2,
+        "fully_cited_completions": 2,
+        "abstentions": 0,
+        "runs_without_retained_draft": 0,
+        "citation_count": 7,
+        "valid_citations": 7,
+        "unsupported_quotes": 0,
+        "unknown_citation_ids": 0,
+        "citation_validity": 1.0,
+        "fabricated_quote_rate": 0.0,
+        "disposition_agreement": 1.0,
+        "confusion_matrix": {
+          "confirmed": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          },
+          "false_positive": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          },
+          "insufficient_evidence": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 2,
+            "abstained_or_failed": 0
+          }
+        }
+      }
+    },
+    {
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_a8c584dda7"
+        }
+      },
+      "metrics": {
+        "labeled_cases": 2,
+        "completed_runs": 2,
+        "fully_cited_completions": 2,
+        "abstentions": 0,
+        "runs_without_retained_draft": 0,
+        "citation_count": 5,
+        "valid_citations": 5,
+        "unsupported_quotes": 0,
+        "unknown_citation_ids": 0,
+        "citation_validity": 1.0,
+        "fabricated_quote_rate": 0.0,
+        "disposition_agreement": 1.0,
+        "confusion_matrix": {
+          "confirmed": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          },
+          "false_positive": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          },
+          "insufficient_evidence": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 2,
+            "abstained_or_failed": 0
+          }
+        }
+      }
+    },
+    {
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_e11c8bbf69"
+        }
+      },
+      "metrics": {
+        "labeled_cases": 1,
+        "completed_runs": 1,
+        "fully_cited_completions": 1,
+        "abstentions": 0,
+        "runs_without_retained_draft": 0,
+        "citation_count": 4,
+        "valid_citations": 4,
+        "unsupported_quotes": 0,
+        "unknown_citation_ids": 0,
+        "citation_validity": 1.0,
+        "fabricated_quote_rate": 0.0,
+        "disposition_agreement": 1.0,
+        "confusion_matrix": {
+          "confirmed": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          },
+          "false_positive": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          },
+          "insufficient_evidence": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 1,
+            "abstained_or_failed": 0
+          }
+        }
+      }
+    },
+    {
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_feb9b278f1"
+        }
+      },
+      "metrics": {
+        "labeled_cases": 1,
+        "completed_runs": 1,
+        "fully_cited_completions": 1,
+        "abstentions": 0,
+        "runs_without_retained_draft": 0,
+        "citation_count": 3,
+        "valid_citations": 3,
+        "unsupported_quotes": 0,
+        "unknown_citation_ids": 0,
+        "citation_validity": 1.0,
+        "fabricated_quote_rate": 0.0,
+        "disposition_agreement": 1.0,
+        "confusion_matrix": {
+          "confirmed": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          },
+          "false_positive": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          },
+          "insufficient_evidence": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 1,
+            "abstained_or_failed": 0
+          }
+        }
+      }
+    },
+    {
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_816fc87d18"
+        }
+      },
+      "metrics": {
+        "labeled_cases": 1,
+        "completed_runs": 1,
+        "fully_cited_completions": 1,
+        "abstentions": 0,
+        "runs_without_retained_draft": 0,
+        "citation_count": 3,
+        "valid_citations": 3,
+        "unsupported_quotes": 0,
+        "unknown_citation_ids": 0,
+        "citation_validity": 1.0,
+        "fabricated_quote_rate": 0.0,
+        "disposition_agreement": 1.0,
+        "confusion_matrix": {
+          "confirmed": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          },
+          "false_positive": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          },
+          "insufficient_evidence": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 1,
+            "abstained_or_failed": 0
+          }
+        }
+      }
+    },
+    {
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_8b41efc9a3"
+        }
+      },
+      "metrics": {
+        "labeled_cases": 1,
+        "completed_runs": 1,
+        "fully_cited_completions": 1,
+        "abstentions": 0,
+        "runs_without_retained_draft": 0,
+        "citation_count": 4,
+        "valid_citations": 4,
+        "unsupported_quotes": 0,
+        "unknown_citation_ids": 0,
+        "citation_validity": 1.0,
+        "fabricated_quote_rate": 0.0,
+        "disposition_agreement": 1.0,
+        "confusion_matrix": {
+          "confirmed": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          },
+          "false_positive": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          },
+          "insufficient_evidence": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 1,
+            "abstained_or_failed": 0
+          }
+        }
+      }
+    },
+    {
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_ce54c53bd5"
+        }
+      },
+      "metrics": {
+        "labeled_cases": 1,
+        "completed_runs": 1,
+        "fully_cited_completions": 1,
+        "abstentions": 0,
+        "runs_without_retained_draft": 0,
+        "citation_count": 2,
+        "valid_citations": 2,
+        "unsupported_quotes": 0,
+        "unknown_citation_ids": 0,
+        "citation_validity": 1.0,
+        "fabricated_quote_rate": 0.0,
+        "disposition_agreement": 1.0,
+        "confusion_matrix": {
+          "confirmed": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          },
+          "false_positive": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 0,
+            "abstained_or_failed": 0
+          },
+          "insufficient_evidence": {
+            "confirmed": 0,
+            "false_positive": 0,
+            "insufficient_evidence": 1,
+            "abstained_or_failed": 0
+          }
+        }
+      }
+    }
+  ],
+  "categories": {
+    "conflicting_documents": {
+      "labeled_cases": 5,
+      "completed_runs": 4,
+      "fully_cited_completions": 4,
+      "abstentions": 1,
+      "runs_without_retained_draft": 1,
+      "citation_count": 11,
+      "valid_citations": 11,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "citation_validity": 1.0,
+      "fabricated_quote_rate": 0.0,
+      "disposition_agreement": 0.6,
+      "confusion_matrix": {
+        "confirmed": {
+          "confirmed": 0,
+          "false_positive": 0,
+          "insufficient_evidence": 0,
+          "abstained_or_failed": 0
+        },
+        "false_positive": {
+          "confirmed": 0,
+          "false_positive": 0,
+          "insufficient_evidence": 0,
+          "abstained_or_failed": 0
+        },
+        "insufficient_evidence": {
+          "confirmed": 1,
+          "false_positive": 0,
+          "insufficient_evidence": 3,
+          "abstained_or_failed": 1
+        }
+      }
+    },
+    "duplicate_alert": {
+      "labeled_cases": 5,
+      "completed_runs": 5,
+      "fully_cited_completions": 5,
+      "abstentions": 0,
+      "runs_without_retained_draft": 0,
+      "citation_count": 10,
+      "valid_citations": 10,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "citation_validity": 1.0,
+      "fabricated_quote_rate": 0.0,
+      "disposition_agreement": 1.0,
+      "confusion_matrix": {
+        "confirmed": {
+          "confirmed": 0,
+          "false_positive": 0,
+          "insufficient_evidence": 0,
+          "abstained_or_failed": 0
+        },
+        "false_positive": {
+          "confirmed": 0,
+          "false_positive": 5,
+          "insufficient_evidence": 0,
+          "abstained_or_failed": 0
+        },
+        "insufficient_evidence": {
+          "confirmed": 0,
+          "false_positive": 0,
+          "insufficient_evidence": 0,
+          "abstained_or_failed": 0
+        }
+      }
+    },
+    "falsified_invoice": {
+      "labeled_cases": 5,
+      "completed_runs": 5,
+      "fully_cited_completions": 5,
+      "abstentions": 0,
+      "runs_without_retained_draft": 0,
+      "citation_count": 12,
+      "valid_citations": 12,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "citation_validity": 1.0,
+      "fabricated_quote_rate": 0.0,
+      "disposition_agreement": 0.8,
+      "confusion_matrix": {
+        "confirmed": {
+          "confirmed": 4,
+          "false_positive": 0,
+          "insufficient_evidence": 1,
+          "abstained_or_failed": 0
+        },
+        "false_positive": {
+          "confirmed": 0,
+          "false_positive": 0,
+          "insufficient_evidence": 0,
+          "abstained_or_failed": 0
+        },
+        "insufficient_evidence": {
+          "confirmed": 0,
+          "false_positive": 0,
+          "insufficient_evidence": 0,
+          "abstained_or_failed": 0
+        }
+      }
+    },
+    "identity_and_invoice": {
+      "labeled_cases": 5,
+      "completed_runs": 5,
+      "fully_cited_completions": 5,
+      "abstentions": 0,
+      "runs_without_retained_draft": 0,
+      "citation_count": 9,
+      "valid_citations": 9,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "citation_validity": 1.0,
+      "fabricated_quote_rate": 0.0,
+      "disposition_agreement": 1.0,
+      "confusion_matrix": {
+        "confirmed": {
+          "confirmed": 5,
+          "false_positive": 0,
+          "insufficient_evidence": 0,
+          "abstained_or_failed": 0
+        },
+        "false_positive": {
+          "confirmed": 0,
+          "false_positive": 0,
+          "insufficient_evidence": 0,
+          "abstained_or_failed": 0
+        },
+        "insufficient_evidence": {
+          "confirmed": 0,
+          "false_positive": 0,
+          "insufficient_evidence": 0,
+          "abstained_or_failed": 0
+        }
+      }
+    },
+    "identity_mismatch": {
+      "labeled_cases": 5,
+      "completed_runs": 4,
+      "fully_cited_completions": 4,
+      "abstentions": 1,
+      "runs_without_retained_draft": 1,
+      "citation_count": 5,
+      "valid_citations": 5,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "citation_validity": 1.0,
+      "fabricated_quote_rate": 0.0,
+      "disposition_agreement": 0.8,
+      "confusion_matrix": {
+        "confirmed": {
+          "confirmed": 4,
+          "false_positive": 0,
+          "insufficient_evidence": 0,
+          "abstained_or_failed": 1
+        },
+        "false_positive": {
+          "confirmed": 0,
+          "false_positive": 0,
+          "insufficient_evidence": 0,
+          "abstained_or_failed": 0
+        },
+        "insufficient_evidence": {
+          "confirmed": 0,
+          "false_positive": 0,
+          "insufficient_evidence": 0,
+          "abstained_or_failed": 0
+        }
+      }
+    },
+    "missing_identity": {
+      "labeled_cases": 5,
+      "completed_runs": 4,
+      "fully_cited_completions": 4,
+      "abstentions": 1,
+      "runs_without_retained_draft": 1,
+      "citation_count": 14,
+      "valid_citations": 14,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "citation_validity": 1.0,
+      "fabricated_quote_rate": 0.0,
+      "disposition_agreement": 0.8,
+      "confusion_matrix": {
+        "confirmed": {
+          "confirmed": 0,
+          "false_positive": 0,
+          "insufficient_evidence": 0,
+          "abstained_or_failed": 0
+        },
+        "false_positive": {
+          "confirmed": 0,
+          "false_positive": 0,
+          "insufficient_evidence": 0,
+          "abstained_or_failed": 0
+        },
+        "insufficient_evidence": {
+          "confirmed": 0,
+          "false_positive": 0,
+          "insufficient_evidence": 4,
+          "abstained_or_failed": 1
+        }
+      }
+    },
+    "missing_invoice": {
+      "labeled_cases": 5,
+      "completed_runs": 5,
+      "fully_cited_completions": 5,
+      "abstentions": 0,
+      "runs_without_retained_draft": 0,
+      "citation_count": 16,
+      "valid_citations": 16,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "citation_validity": 1.0,
+      "fabricated_quote_rate": 0.0,
+      "disposition_agreement": 1.0,
+      "confusion_matrix": {
+        "confirmed": {
+          "confirmed": 0,
+          "false_positive": 0,
+          "insufficient_evidence": 0,
+          "abstained_or_failed": 0
+        },
+        "false_positive": {
+          "confirmed": 0,
+          "false_positive": 0,
+          "insufficient_evidence": 0,
+          "abstained_or_failed": 0
+        },
+        "insufficient_evidence": {
+          "confirmed": 0,
+          "false_positive": 0,
+          "insufficient_evidence": 5,
+          "abstained_or_failed": 0
+        }
+      }
+    },
+    "uncertain_ownership": {
+      "labeled_cases": 5,
+      "completed_runs": 5,
+      "fully_cited_completions": 5,
+      "abstentions": 0,
+      "runs_without_retained_draft": 0,
+      "citation_count": 15,
+      "valid_citations": 15,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "citation_validity": 1.0,
+      "fabricated_quote_rate": 0.0,
+      "disposition_agreement": 1.0,
+      "confusion_matrix": {
+        "confirmed": {
+          "confirmed": 0,
+          "false_positive": 0,
+          "insufficient_evidence": 0,
+          "abstained_or_failed": 0
+        },
+        "false_positive": {
+          "confirmed": 0,
+          "false_positive": 0,
+          "insufficient_evidence": 0,
+          "abstained_or_failed": 0
+        },
+        "insufficient_evidence": {
+          "confirmed": 0,
+          "false_positive": 0,
+          "insufficient_evidence": 5,
+          "abstained_or_failed": 0
+        }
+      }
+    },
+    "validated_invoice": {
+      "labeled_cases": 5,
+      "completed_runs": 5,
+      "fully_cited_completions": 5,
+      "abstentions": 0,
+      "runs_without_retained_draft": 0,
+      "citation_count": 7,
+      "valid_citations": 7,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "citation_validity": 1.0,
+      "fabricated_quote_rate": 0.0,
+      "disposition_agreement": 0.8,
+      "confusion_matrix": {
+        "confirmed": {
+          "confirmed": 0,
+          "false_positive": 0,
+          "insufficient_evidence": 0,
+          "abstained_or_failed": 0
+        },
+        "false_positive": {
+          "confirmed": 0,
+          "false_positive": 4,
+          "insufficient_evidence": 1,
+          "abstained_or_failed": 0
+        },
+        "insufficient_evidence": {
+          "confirmed": 0,
+          "false_positive": 0,
+          "insufficient_evidence": 0,
+          "abstained_or_failed": 0
+        }
+      }
+    },
+    "verified_namesake": {
+      "labeled_cases": 5,
+      "completed_runs": 4,
+      "fully_cited_completions": 4,
+      "abstentions": 1,
+      "runs_without_retained_draft": 1,
+      "citation_count": 10,
+      "valid_citations": 10,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "citation_validity": 1.0,
+      "fabricated_quote_rate": 0.0,
+      "disposition_agreement": 0.8,
+      "confusion_matrix": {
+        "confirmed": {
+          "confirmed": 0,
+          "false_positive": 0,
+          "insufficient_evidence": 0,
+          "abstained_or_failed": 0
+        },
+        "false_positive": {
+          "confirmed": 0,
+          "false_positive": 4,
+          "insufficient_evidence": 0,
+          "abstained_or_failed": 1
+        },
+        "insufficient_evidence": {
+          "confirmed": 0,
+          "false_positive": 0,
+          "insufficient_evidence": 0,
+          "abstained_or_failed": 0
+        }
+      }
+    }
+  },
+  "cases": [
+    {
+      "case_id": "identity_mismatch-1",
+      "category": "identity_mismatch",
+      "job_id": "6e8b304f-5846-47fa-8641-b6aae06d6f60",
+      "state": "completed",
+      "error_code": null,
+      "provider_error_code": null,
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_228717f27c"
+        }
+      },
+      "job_sha256": "300f234dfaea06493771654216f973b109cab55388b65af2248641a34fdfb746",
+      "context_sha256": "dc9de4a6558f91643373c74a1f45b9c2ab78d13964321ffab17add1ae8fcb1f5",
+      "expected_disposition": "confirmed",
+      "draft_disposition": "confirmed",
+      "abstained": false,
+      "retained_draft": true,
+      "agreement": true,
+      "citation_count": 2,
+      "valid_citations": 2,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "fully_cited_completion": true
+    },
+    {
+      "case_id": "identity_mismatch-2",
+      "category": "identity_mismatch",
+      "job_id": "fad1c63e-2973-4a92-9750-c1a51756c505",
+      "state": "completed",
+      "error_code": null,
+      "provider_error_code": null,
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_ef00694abe"
+        }
+      },
+      "job_sha256": "2860cb85f7d0b0ac014f500b894c0b92327476fa4f0cbb1922d25cdc71722ed1",
+      "context_sha256": "fdc94ca5d6d010a6855aa74b26d08d42f1315fccf8386934adc155106dfb5590",
+      "expected_disposition": "confirmed",
+      "draft_disposition": "confirmed",
+      "abstained": false,
+      "retained_draft": true,
+      "agreement": true,
+      "citation_count": 1,
+      "valid_citations": 1,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "fully_cited_completion": true
+    },
+    {
+      "case_id": "identity_mismatch-3",
+      "category": "identity_mismatch",
+      "job_id": "6ec7c0b2-e59e-4558-a7f4-0a528ffcb9b1",
+      "state": "failed",
+      "error_code": "invalid_ai_response",
+      "provider_error_code": null,
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": null
+      },
+      "job_sha256": "abd3962c1340e46abac575b909fa1d0ba34c2c18fa67e3a68930df1c6ea56f5d",
+      "context_sha256": "f33f39aec53d9e2445dba9d4dda9cfda50f03d493354fbcd17de06f9b03e6736",
+      "expected_disposition": "confirmed",
+      "draft_disposition": null,
+      "abstained": true,
+      "retained_draft": false,
+      "agreement": false,
+      "citation_count": 0,
+      "valid_citations": 0,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "fully_cited_completion": false
+    },
+    {
+      "case_id": "identity_mismatch-4",
+      "category": "identity_mismatch",
+      "job_id": "8e92b1f7-a482-45cd-9274-bce9cb8c9f94",
+      "state": "completed",
+      "error_code": null,
+      "provider_error_code": null,
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_bb6a356524"
+        }
+      },
+      "job_sha256": "d9181b9c83257408cc98f918ea9437b387559cecf19dd7913593b2693982dc6c",
+      "context_sha256": "59e1332d34e7a9ce8d84165b07f3b28c0518db29044febb175d2b9fe1c222d27",
+      "expected_disposition": "confirmed",
+      "draft_disposition": "confirmed",
+      "abstained": false,
+      "retained_draft": true,
+      "agreement": true,
+      "citation_count": 1,
+      "valid_citations": 1,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "fully_cited_completion": true
+    },
+    {
+      "case_id": "identity_mismatch-5",
+      "category": "identity_mismatch",
+      "job_id": "7be41968-2f4a-4a63-b073-282f0beb2ded",
+      "state": "completed",
+      "error_code": null,
+      "provider_error_code": null,
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_9b8528b477"
+        }
+      },
+      "job_sha256": "5c3d72980ffde9ed3939cd3026f3c814d2317012e2f6ea387f9a98adda99de7c",
+      "context_sha256": "391d118c7e802fedc7a88869ecb608551b2779e8ece941db291001b8696ba1a8",
+      "expected_disposition": "confirmed",
+      "draft_disposition": "confirmed",
+      "abstained": false,
+      "retained_draft": true,
+      "agreement": true,
+      "citation_count": 1,
+      "valid_citations": 1,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "fully_cited_completion": true
+    },
+    {
+      "case_id": "falsified_invoice-1",
+      "category": "falsified_invoice",
+      "job_id": "29e6016f-1a1a-4277-8d87-a3fe308e4efd",
+      "state": "completed",
+      "error_code": null,
+      "provider_error_code": null,
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_ef00694abe"
+        }
+      },
+      "job_sha256": "63e98bc296cf03985d18ef9a70bdecfa7a554854620f1df6f6b2dff61daa77f0",
+      "context_sha256": "33594a8c1e9b213e87dcb4d8982d5cdefc3d2ccc6eebddf2112ae55c3d987da9",
+      "expected_disposition": "confirmed",
+      "draft_disposition": "confirmed",
+      "abstained": false,
+      "retained_draft": true,
+      "agreement": true,
+      "citation_count": 3,
+      "valid_citations": 3,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "fully_cited_completion": true
+    },
+    {
+      "case_id": "falsified_invoice-2",
+      "category": "falsified_invoice",
+      "job_id": "726433db-aab3-4d9c-b2f6-792adf1b38bb",
+      "state": "completed",
+      "error_code": null,
+      "provider_error_code": null,
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_d23c14756c"
+        }
+      },
+      "job_sha256": "9e3e59606ca8f16e8cc1421ac4c3f1b884ecfbffd4233a18c502312548cebb61",
+      "context_sha256": "e7a56a9e7e347fbdc06d84dc5d858a8cf5dbddcd3a14824b50c8a99f0d148bde",
+      "expected_disposition": "confirmed",
+      "draft_disposition": "confirmed",
+      "abstained": false,
+      "retained_draft": true,
+      "agreement": true,
+      "citation_count": 1,
+      "valid_citations": 1,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "fully_cited_completion": true
+    },
+    {
+      "case_id": "falsified_invoice-3",
+      "category": "falsified_invoice",
+      "job_id": "b899c77b-a689-4430-8e9c-0a3a3dc538c7",
+      "state": "completed",
+      "error_code": null,
+      "provider_error_code": null,
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_f102a3179c"
+        }
+      },
+      "job_sha256": "f1ac210ab3eb82fd1c25dcf160e8bab230b16da2076b6ce9d076abee6d831dfb",
+      "context_sha256": "737f1d140c63043878b2956070225238e3036d798fd712a0631b35606d12a0bf",
+      "expected_disposition": "confirmed",
+      "draft_disposition": "confirmed",
+      "abstained": false,
+      "retained_draft": true,
+      "agreement": true,
+      "citation_count": 3,
+      "valid_citations": 3,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "fully_cited_completion": true
+    },
+    {
+      "case_id": "falsified_invoice-4",
+      "category": "falsified_invoice",
+      "job_id": "f092022e-b076-46da-afe1-eecba1bab5a3",
+      "state": "completed",
+      "error_code": null,
+      "provider_error_code": null,
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_80501ff3a1"
+        }
+      },
+      "job_sha256": "d05c01935d5c2f2b5a96a1c071b1ad6c8c2ac0d718e3e2f4a1e56ada050a2ffd",
+      "context_sha256": "f47fb492f8a926e0b926bcce987078269e24649a686f1d387ee542835f40c1e5",
+      "expected_disposition": "confirmed",
+      "draft_disposition": "confirmed",
+      "abstained": false,
+      "retained_draft": true,
+      "agreement": true,
+      "citation_count": 3,
+      "valid_citations": 3,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "fully_cited_completion": true
+    },
+    {
+      "case_id": "falsified_invoice-5",
+      "category": "falsified_invoice",
+      "job_id": "7fa68a21-d120-41b5-8291-0424a6207bd2",
+      "state": "completed",
+      "error_code": null,
+      "provider_error_code": null,
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_8d13edce1d"
+        }
+      },
+      "job_sha256": "0b363d60bb12c514e4089fda1974731c6c2dd6f8dcdff3eab5775b749981676e",
+      "context_sha256": "07b356218a6c74be14c738b2f963eab7d5db9140d22c6ee0cb607ea6576bf789",
+      "expected_disposition": "confirmed",
+      "draft_disposition": "insufficient_evidence",
+      "abstained": false,
+      "retained_draft": true,
+      "agreement": false,
+      "citation_count": 2,
+      "valid_citations": 2,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "fully_cited_completion": true
+    },
+    {
+      "case_id": "identity_and_invoice-1",
+      "category": "identity_and_invoice",
+      "job_id": "27ad97c5-31ba-4d75-a4de-92938231db8d",
+      "state": "completed",
+      "error_code": null,
+      "provider_error_code": null,
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_334cc21c60"
+        }
+      },
+      "job_sha256": "10966f26b7fbbce57e8c46c658dd490ee0711e8102dc35ada7d8aababb03ea7d",
+      "context_sha256": "1e1dc3cf07be0524d7e2a3e90a6c474a8565d35aeb237c99b6da1d1f8046a02d",
+      "expected_disposition": "confirmed",
+      "draft_disposition": "confirmed",
+      "abstained": false,
+      "retained_draft": true,
+      "agreement": true,
+      "citation_count": 4,
+      "valid_citations": 4,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "fully_cited_completion": true
+    },
+    {
+      "case_id": "identity_and_invoice-2",
+      "category": "identity_and_invoice",
+      "job_id": "3a27e98b-b3cb-4318-bada-805dda51a85c",
+      "state": "completed",
+      "error_code": null,
+      "provider_error_code": null,
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_80501ff3a1"
+        }
+      },
+      "job_sha256": "405df461b4f1aec3212df400324b14bbfcc61a8c17d00c82c7ec428599be23d5",
+      "context_sha256": "b7ea9c78e9a3e54ffe7f2623dd274a508eb91f65fe3aab84793d66fdaa7844fb",
+      "expected_disposition": "confirmed",
+      "draft_disposition": "confirmed",
+      "abstained": false,
+      "retained_draft": true,
+      "agreement": true,
+      "citation_count": 1,
+      "valid_citations": 1,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "fully_cited_completion": true
+    },
+    {
+      "case_id": "identity_and_invoice-3",
+      "category": "identity_and_invoice",
+      "job_id": "0b9bc946-0f1e-4b83-9fa8-5d80c09fec7e",
+      "state": "completed",
+      "error_code": null,
+      "provider_error_code": null,
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_75c733514d"
+        }
+      },
+      "job_sha256": "4608b691a9dc7a15a77afd1bd5ca14be29dead061e070d41e215e535115ce2ce",
+      "context_sha256": "994da28ccdd3eecc06367ee45d94050e6ce6d885ad65cc95866b07fc3e129b6c",
+      "expected_disposition": "confirmed",
+      "draft_disposition": "confirmed",
+      "abstained": false,
+      "retained_draft": true,
+      "agreement": true,
+      "citation_count": 2,
+      "valid_citations": 2,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "fully_cited_completion": true
+    },
+    {
+      "case_id": "identity_and_invoice-4",
+      "category": "identity_and_invoice",
+      "job_id": "d4b761e0-2332-436d-b48a-d749c98f2ba1",
+      "state": "completed",
+      "error_code": null,
+      "provider_error_code": null,
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_228717f27c"
+        }
+      },
+      "job_sha256": "211f321284618593d13f430363c3e867bacbc5a2043089a52384248fb428bb98",
+      "context_sha256": "2cb8569fcdb6b91f9ab16c807a986f53a0c46631cb650c33a0c64377d89b2534",
+      "expected_disposition": "confirmed",
+      "draft_disposition": "confirmed",
+      "abstained": false,
+      "retained_draft": true,
+      "agreement": true,
+      "citation_count": 1,
+      "valid_citations": 1,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "fully_cited_completion": true
+    },
+    {
+      "case_id": "identity_and_invoice-5",
+      "category": "identity_and_invoice",
+      "job_id": "8aeaf80b-8ee4-473b-a53a-4c1af6808b21",
+      "state": "completed",
+      "error_code": null,
+      "provider_error_code": null,
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_8d13edce1d"
+        }
+      },
+      "job_sha256": "ef7350920998504381de92bdf2e9825b4acafc9d13c8d1d5105dc8cd419a558d",
+      "context_sha256": "d25c0444208901173559ecfb032eb50f95d8d8c3022addd5409964b6b025de3b",
+      "expected_disposition": "confirmed",
+      "draft_disposition": "confirmed",
+      "abstained": false,
+      "retained_draft": true,
+      "agreement": true,
+      "citation_count": 1,
+      "valid_citations": 1,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "fully_cited_completion": true
+    },
+    {
+      "case_id": "duplicate_alert-1",
+      "category": "duplicate_alert",
+      "job_id": "955cdd24-4fa4-4b9d-8c12-3a0f60fc6f74",
+      "state": "completed",
+      "error_code": null,
+      "provider_error_code": null,
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_a4315eb300"
+        }
+      },
+      "job_sha256": "d69b68cdef64eb6bd006904f4cce177b48ee54629abe11f6636f2e833c503683",
+      "context_sha256": "88b2d3d3d165ecd6394ac90aa92707f2f9e8b71e8837799a33f76c043fa0cb1f",
+      "expected_disposition": "false_positive",
+      "draft_disposition": "false_positive",
+      "abstained": false,
+      "retained_draft": true,
+      "agreement": true,
+      "citation_count": 1,
+      "valid_citations": 1,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "fully_cited_completion": true
+    },
+    {
+      "case_id": "duplicate_alert-2",
+      "category": "duplicate_alert",
+      "job_id": "528c814f-b5fe-47f6-bae1-c1a7a0160516",
+      "state": "completed",
+      "error_code": null,
+      "provider_error_code": null,
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_9b8528b477"
+        }
+      },
+      "job_sha256": "2dd5dd051d4381a80f18ce5621d9a639958fb7ef80e44c769c072e4aa0cea8b2",
+      "context_sha256": "1d75662127cfe63f842152843691c2a2c2b2cef6f107f63e5aa46abdd7444cd2",
+      "expected_disposition": "false_positive",
+      "draft_disposition": "false_positive",
+      "abstained": false,
+      "retained_draft": true,
+      "agreement": true,
+      "citation_count": 4,
+      "valid_citations": 4,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "fully_cited_completion": true
+    },
+    {
+      "case_id": "duplicate_alert-3",
+      "category": "duplicate_alert",
+      "job_id": "030cb039-ebda-459c-911c-d639490fc25a",
+      "state": "completed",
+      "error_code": null,
+      "provider_error_code": null,
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_80501ff3a1"
+        }
+      },
+      "job_sha256": "4b0d53662de9f5de540ad310ce6c2cea1e6d01e1894770f435caa9d8700c36bf",
+      "context_sha256": "75f2e8ed162a695a6c864660e86b22fa1a10465c00994887192e857016361022",
+      "expected_disposition": "false_positive",
+      "draft_disposition": "false_positive",
+      "abstained": false,
+      "retained_draft": true,
+      "agreement": true,
+      "citation_count": 1,
+      "valid_citations": 1,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "fully_cited_completion": true
+    },
+    {
+      "case_id": "duplicate_alert-4",
+      "category": "duplicate_alert",
+      "job_id": "1c438b3f-2e91-4122-bc57-17aee4bbe24c",
+      "state": "completed",
+      "error_code": null,
+      "provider_error_code": null,
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_84bb35977d"
+        }
+      },
+      "job_sha256": "97a02f79d3493939f61837979fd05af6600aec620e36c54265715a307b0844b9",
+      "context_sha256": "c0c45ea8381160a8162637f6072c9e8e46fa0d595a93462f2697ce5b7c65ca26",
+      "expected_disposition": "false_positive",
+      "draft_disposition": "false_positive",
+      "abstained": false,
+      "retained_draft": true,
+      "agreement": true,
+      "citation_count": 3,
+      "valid_citations": 3,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "fully_cited_completion": true
+    },
+    {
+      "case_id": "duplicate_alert-5",
+      "category": "duplicate_alert",
+      "job_id": "ab13e9ea-eba6-4cdf-ad89-e10cd7809d17",
+      "state": "completed",
+      "error_code": null,
+      "provider_error_code": null,
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_e23fc997ca"
+        }
+      },
+      "job_sha256": "e2b2f2a0d41e1776cd8c8f8da4c045ce608d08e3479a7877bf94778620dd5465",
+      "context_sha256": "27568267329755760e1770e9e4979bdfbb7f02a03d117cc44856f39589f9e5c0",
+      "expected_disposition": "false_positive",
+      "draft_disposition": "false_positive",
+      "abstained": false,
+      "retained_draft": true,
+      "agreement": true,
+      "citation_count": 1,
+      "valid_citations": 1,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "fully_cited_completion": true
+    },
+    {
+      "case_id": "validated_invoice-1",
+      "category": "validated_invoice",
+      "job_id": "9e911336-d337-43e3-a984-6f25a4ee8b0c",
+      "state": "completed",
+      "error_code": null,
+      "provider_error_code": null,
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_e2cb7a84ec"
+        }
+      },
+      "job_sha256": "d235e8cbdd3e2b311df27b11c9c1e874f48b5a740ce8a54ff48d10448f04c4a6",
+      "context_sha256": "b9bc44b7a096809145288799114a1e4aa48e6d1ca6b0716ad2718491b6b87822",
+      "expected_disposition": "false_positive",
+      "draft_disposition": "false_positive",
+      "abstained": false,
+      "retained_draft": true,
+      "agreement": true,
+      "citation_count": 1,
+      "valid_citations": 1,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "fully_cited_completion": true
+    },
+    {
+      "case_id": "validated_invoice-2",
+      "category": "validated_invoice",
+      "job_id": "0ed1f8d3-fa59-4cf3-a60d-9b23fd54f6d7",
+      "state": "completed",
+      "error_code": null,
+      "provider_error_code": null,
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_63473661d7"
+        }
+      },
+      "job_sha256": "538d5525652167d3549dfd4e9a0348e1d49c8dc4e2fdf3c715a8bfd34890c5c9",
+      "context_sha256": "cd4938da05c35f96232f30accac7f7bb16f3aecc8e2497eac618dd33d9045ac3",
+      "expected_disposition": "false_positive",
+      "draft_disposition": "insufficient_evidence",
+      "abstained": false,
+      "retained_draft": true,
+      "agreement": false,
+      "citation_count": 2,
+      "valid_citations": 2,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "fully_cited_completion": true
+    },
+    {
+      "case_id": "validated_invoice-3",
+      "category": "validated_invoice",
+      "job_id": "c4beb68c-7545-469b-b311-ff704a31c055",
+      "state": "completed",
+      "error_code": null,
+      "provider_error_code": null,
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_e99e93f2ac"
+        }
+      },
+      "job_sha256": "ce65936651639fc46b7282fe8e79183b3330e4db0dca5749150517e06b5780d9",
+      "context_sha256": "bab8658fd231446db9f0cd7f5c2eeb4b7906aa2b8d27c36077c0b4a198c0f703",
+      "expected_disposition": "false_positive",
+      "draft_disposition": "false_positive",
+      "abstained": false,
+      "retained_draft": true,
+      "agreement": true,
+      "citation_count": 2,
+      "valid_citations": 2,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "fully_cited_completion": true
+    },
+    {
+      "case_id": "validated_invoice-4",
+      "category": "validated_invoice",
+      "job_id": "1110330e-d994-4d72-9c31-b974a96a6278",
+      "state": "completed",
+      "error_code": null,
+      "provider_error_code": null,
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_9b8528b477"
+        }
+      },
+      "job_sha256": "23ffc351d884e749db45ee5c5bf2433e6742da45c1db65127fea3b676c6692e2",
+      "context_sha256": "0f58a6ab53b7fee0de2d4a8c59ce1a03f871a04acf74e637f3b9aa873a666aad",
+      "expected_disposition": "false_positive",
+      "draft_disposition": "false_positive",
+      "abstained": false,
+      "retained_draft": true,
+      "agreement": true,
+      "citation_count": 1,
+      "valid_citations": 1,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "fully_cited_completion": true
+    },
+    {
+      "case_id": "validated_invoice-5",
+      "category": "validated_invoice",
+      "job_id": "c2e4be6c-2bb9-4239-8032-4fb1d43e8c8c",
+      "state": "completed",
+      "error_code": null,
+      "provider_error_code": null,
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_334cc21c60"
+        }
+      },
+      "job_sha256": "12fc9c0872f29e2cd1dc67f89097a359c008bb4a6cd5bfe3f2d4870b4e962fae",
+      "context_sha256": "bccf1f2395deeda1b7dbde66524cb668c6aca3fb8741ccba714b5ea44dccf366",
+      "expected_disposition": "false_positive",
+      "draft_disposition": "false_positive",
+      "abstained": false,
+      "retained_draft": true,
+      "agreement": true,
+      "citation_count": 1,
+      "valid_citations": 1,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "fully_cited_completion": true
+    },
+    {
+      "case_id": "verified_namesake-1",
+      "category": "verified_namesake",
+      "job_id": "1f88823a-4397-4e43-965e-92ea00af42a9",
+      "state": "completed",
+      "error_code": null,
+      "provider_error_code": null,
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_ef00694abe"
+        }
+      },
+      "job_sha256": "fa34a62b818815d642c0e2053131a592ca19ce8a747b49fea1d40ba631121af2",
+      "context_sha256": "e3d5762926a8f73b38dc0b350cfe021587ddc8a5bf1813305a968501db0f32a3",
+      "expected_disposition": "false_positive",
+      "draft_disposition": "false_positive",
+      "abstained": false,
+      "retained_draft": true,
+      "agreement": true,
+      "citation_count": 1,
+      "valid_citations": 1,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "fully_cited_completion": true
+    },
+    {
+      "case_id": "verified_namesake-2",
+      "category": "verified_namesake",
+      "job_id": "28b8c4b9-3c63-4ae0-b679-a34b024dc776",
+      "state": "failed",
+      "error_code": "invalid_ai_response",
+      "provider_error_code": null,
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": null
+      },
+      "job_sha256": "2b608adf558406fd602a151a8446e61c592cb479b69a9797c3719c0494a4a6b8",
+      "context_sha256": "36c9f3a88e653be49b6805d6999bcbf382005b649e1f70269e5c64f278faa733",
+      "expected_disposition": "false_positive",
+      "draft_disposition": null,
+      "abstained": true,
+      "retained_draft": false,
+      "agreement": false,
+      "citation_count": 0,
+      "valid_citations": 0,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "fully_cited_completion": false
+    },
+    {
+      "case_id": "verified_namesake-3",
+      "category": "verified_namesake",
+      "job_id": "75071116-7d18-4997-837b-5f1525403dd0",
+      "state": "completed",
+      "error_code": null,
+      "provider_error_code": null,
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_e2cb7a84ec"
+        }
+      },
+      "job_sha256": "2403a875ba2706052691af74e0369df9a2b64a60b8ee0729ef159293ba62bcf3",
+      "context_sha256": "a57f9bf524417efc1978aedee0f005418b6fc4eaab4b2a9a51e4349231d7beff",
+      "expected_disposition": "false_positive",
+      "draft_disposition": "false_positive",
+      "abstained": false,
+      "retained_draft": true,
+      "agreement": true,
+      "citation_count": 4,
+      "valid_citations": 4,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "fully_cited_completion": true
+    },
+    {
+      "case_id": "verified_namesake-4",
+      "category": "verified_namesake",
+      "job_id": "17130012-98a4-4ffb-a25b-bb2c00f46c17",
+      "state": "completed",
+      "error_code": null,
+      "provider_error_code": null,
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_80501ff3a1"
+        }
+      },
+      "job_sha256": "5f82c423c73e653c1d872160ff4506e67daf1c981638d8a0625bde7479501a02",
+      "context_sha256": "0bf688ef5ff43699a38cebe216aa31f74959ec16c9f5857b31a8f45ccb4b5af5",
+      "expected_disposition": "false_positive",
+      "draft_disposition": "false_positive",
+      "abstained": false,
+      "retained_draft": true,
+      "agreement": true,
+      "citation_count": 2,
+      "valid_citations": 2,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "fully_cited_completion": true
+    },
+    {
+      "case_id": "verified_namesake-5",
+      "category": "verified_namesake",
+      "job_id": "d1fe2179-6738-4e12-ae16-9427519ccbbf",
+      "state": "completed",
+      "error_code": null,
+      "provider_error_code": null,
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_8d13edce1d"
+        }
+      },
+      "job_sha256": "53e06ebfc42ea71f272f407a6c591be6a8c525fce5e2435ad351ed4d59cff70d",
+      "context_sha256": "d9646a825b01ab1a80dca3153b43c89ebb17caeadcd111106852dd6bbaf5688b",
+      "expected_disposition": "false_positive",
+      "draft_disposition": "false_positive",
+      "abstained": false,
+      "retained_draft": true,
+      "agreement": true,
+      "citation_count": 3,
+      "valid_citations": 3,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "fully_cited_completion": true
+    },
+    {
+      "case_id": "missing_identity-1",
+      "category": "missing_identity",
+      "job_id": "41146761-f610-4c33-8520-e8b76f7c06f0",
+      "state": "failed",
+      "error_code": "invalid_ai_response",
+      "provider_error_code": null,
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": null
+      },
+      "job_sha256": "f115a511714d898597028a23435decdc2cd90b63af9b9dfcbe85d19fa0a87d43",
+      "context_sha256": "39c0c3567d208228f44727c618bd5c153457286f67ddd6b798ce3f7e38d26ded",
+      "expected_disposition": "insufficient_evidence",
+      "draft_disposition": null,
+      "abstained": true,
+      "retained_draft": false,
+      "agreement": false,
+      "citation_count": 0,
+      "valid_citations": 0,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "fully_cited_completion": false
+    },
+    {
+      "case_id": "missing_identity-2",
+      "category": "missing_identity",
+      "job_id": "afe13e19-5972-411e-b1d5-2c3ce08ca137",
+      "state": "completed",
+      "error_code": null,
+      "provider_error_code": null,
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_c5a89987dc"
+        }
+      },
+      "job_sha256": "31bde65de44ffd8836a9e2559dffbe42a5e0c5e5fd0c7958cdbe4dbd2398b85f",
+      "context_sha256": "979522ce0a8b69d790e18617a54d53252d5893c587c45e34deb2fdefa3112357",
+      "expected_disposition": "insufficient_evidence",
+      "draft_disposition": "insufficient_evidence",
+      "abstained": false,
+      "retained_draft": true,
+      "agreement": true,
+      "citation_count": 4,
+      "valid_citations": 4,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "fully_cited_completion": true
+    },
+    {
+      "case_id": "missing_identity-3",
+      "category": "missing_identity",
+      "job_id": "03b0a657-e48a-47b6-91ff-b5433e79e4c9",
+      "state": "completed",
+      "error_code": null,
+      "provider_error_code": null,
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_9340e7d14d"
+        }
+      },
+      "job_sha256": "dc8d6f7c17293ff385c4f3bf2a40d0cb8dec4fdf16de325eeb60f28a70be49a0",
+      "context_sha256": "eaf3550b756c444815772daf599bbfc0eb70b5c6ad65c54343740e9e429c1b12",
+      "expected_disposition": "insufficient_evidence",
+      "draft_disposition": "insufficient_evidence",
+      "abstained": false,
+      "retained_draft": true,
+      "agreement": true,
+      "citation_count": 4,
+      "valid_citations": 4,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "fully_cited_completion": true
+    },
+    {
+      "case_id": "missing_identity-4",
+      "category": "missing_identity",
+      "job_id": "a62e2f63-2d61-450f-aba6-667fcf11e000",
+      "state": "completed",
+      "error_code": null,
+      "provider_error_code": null,
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_9340e7d14d"
+        }
+      },
+      "job_sha256": "8373799db934b7d2ba866fdbb2c2377249b2cbe09986324495d160015aa5f6fb",
+      "context_sha256": "aae7fd429c081709ad3f1022647d16d41e7b68e40e757d375bdde2f29a266f7b",
+      "expected_disposition": "insufficient_evidence",
+      "draft_disposition": "insufficient_evidence",
+      "abstained": false,
+      "retained_draft": true,
+      "agreement": true,
+      "citation_count": 4,
+      "valid_citations": 4,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "fully_cited_completion": true
+    },
+    {
+      "case_id": "missing_identity-5",
+      "category": "missing_identity",
+      "job_id": "3c93af53-e3f0-42cb-933f-99db10724077",
+      "state": "completed",
+      "error_code": null,
+      "provider_error_code": null,
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_8d13edce1d"
+        }
+      },
+      "job_sha256": "03d53d47b9571f8398e35d91f93cd56fbd111491370427851ec8b05e15a92650",
+      "context_sha256": "54eea2a50ae71d3af1407760992d0a88d15c58318d8034a1d49f8fefc8e8d82b",
+      "expected_disposition": "insufficient_evidence",
+      "draft_disposition": "insufficient_evidence",
+      "abstained": false,
+      "retained_draft": true,
+      "agreement": true,
+      "citation_count": 2,
+      "valid_citations": 2,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "fully_cited_completion": true
+    },
+    {
+      "case_id": "missing_invoice-1",
+      "category": "missing_invoice",
+      "job_id": "15ef5697-d02f-45ea-b2ad-9da08d87f42b",
+      "state": "completed",
+      "error_code": null,
+      "provider_error_code": null,
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_ed70b23331"
+        }
+      },
+      "job_sha256": "81d9f7620c7beb57094a2ce8801b46a7c1713cd3b9d0a754bc8b4e4c2fcaa750",
+      "context_sha256": "61c0e48bffa774b2fa4b7062eb4eb093aa25a706f61336e8c9b8d3d83ded6654",
+      "expected_disposition": "insufficient_evidence",
+      "draft_disposition": "insufficient_evidence",
+      "abstained": false,
+      "retained_draft": true,
+      "agreement": true,
+      "citation_count": 4,
+      "valid_citations": 4,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "fully_cited_completion": true
+    },
+    {
+      "case_id": "missing_invoice-2",
+      "category": "missing_invoice",
+      "job_id": "0f58dd61-9fdc-4b5c-970c-099a24c28e29",
+      "state": "completed",
+      "error_code": null,
+      "provider_error_code": null,
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_a8c584dda7"
+        }
+      },
+      "job_sha256": "1b7b0646d50467ab8ba9e07bc0399061522b10d24ca64c7c69be0dc7faadda72",
+      "context_sha256": "5701fd4be95e39e7320d06cd373b5984ce688c78cd26928e08b426aefa7bd4eb",
+      "expected_disposition": "insufficient_evidence",
+      "draft_disposition": "insufficient_evidence",
+      "abstained": false,
+      "retained_draft": true,
+      "agreement": true,
+      "citation_count": 2,
+      "valid_citations": 2,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "fully_cited_completion": true
+    },
+    {
+      "case_id": "missing_invoice-3",
+      "category": "missing_invoice",
+      "job_id": "c3350400-4ef9-4481-a3d8-fa7b27ebdee7",
+      "state": "completed",
+      "error_code": null,
+      "provider_error_code": null,
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_a8c584dda7"
+        }
+      },
+      "job_sha256": "e737b174ee8efa4cacb37a0cf7d464a2ac94fa6886a2b1089ec383af56a2b48b",
+      "context_sha256": "7eb5121e3cc59e65b7730e525a89c599114f2405c7cec6dd1f61f0a4a6fc6f97",
+      "expected_disposition": "insufficient_evidence",
+      "draft_disposition": "insufficient_evidence",
+      "abstained": false,
+      "retained_draft": true,
+      "agreement": true,
+      "citation_count": 3,
+      "valid_citations": 3,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "fully_cited_completion": true
+    },
+    {
+      "case_id": "missing_invoice-4",
+      "category": "missing_invoice",
+      "job_id": "1c1cf60d-bd69-4bf6-8b22-ae9c638c47bb",
+      "state": "completed",
+      "error_code": null,
+      "provider_error_code": null,
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_e11c8bbf69"
+        }
+      },
+      "job_sha256": "3e15882f5cfad81c3141c28d1412e93de9c5edab92b01da11b6a05b3808ed791",
+      "context_sha256": "0923174028fba1e5e8d6b612f1dc763fce63fdf9f33ad39a03337d465ad9faa9",
+      "expected_disposition": "insufficient_evidence",
+      "draft_disposition": "insufficient_evidence",
+      "abstained": false,
+      "retained_draft": true,
+      "agreement": true,
+      "citation_count": 4,
+      "valid_citations": 4,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "fully_cited_completion": true
+    },
+    {
+      "case_id": "missing_invoice-5",
+      "category": "missing_invoice",
+      "job_id": "ceedf2d8-dc3f-49b5-b791-05a0e9e23fa6",
+      "state": "completed",
+      "error_code": null,
+      "provider_error_code": null,
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_ed70b23331"
+        }
+      },
+      "job_sha256": "5b0ff39b74aca5cbd85b2d2c783c2f3f97ebf62151c043b06b4b119d35de53d7",
+      "context_sha256": "a0d26e2b2c979b2e764b86d431ff7ab3f5f1cd735471de9691a25491d6434116",
+      "expected_disposition": "insufficient_evidence",
+      "draft_disposition": "insufficient_evidence",
+      "abstained": false,
+      "retained_draft": true,
+      "agreement": true,
+      "citation_count": 3,
+      "valid_citations": 3,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "fully_cited_completion": true
+    },
+    {
+      "case_id": "uncertain_ownership-1",
+      "category": "uncertain_ownership",
+      "job_id": "1ba8b08c-5535-48d6-aeda-9b92a3a4e239",
+      "state": "completed",
+      "error_code": null,
+      "provider_error_code": null,
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_80501ff3a1"
+        }
+      },
+      "job_sha256": "78e7f32d5b90ae15963e295d3e02dd1f9d394a30d9e1d764bcff32447a28a650",
+      "context_sha256": "213c4b037b9edb22d9af840a95feb9853d0f0ea2c5ebf96fab47e49f923a4b13",
+      "expected_disposition": "insufficient_evidence",
+      "draft_disposition": "insufficient_evidence",
+      "abstained": false,
+      "retained_draft": true,
+      "agreement": true,
+      "citation_count": 2,
+      "valid_citations": 2,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "fully_cited_completion": true
+    },
+    {
+      "case_id": "uncertain_ownership-2",
+      "category": "uncertain_ownership",
+      "job_id": "7dc65eff-152d-4e72-8800-0fba22a4cdac",
+      "state": "completed",
+      "error_code": null,
+      "provider_error_code": null,
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_feb9b278f1"
+        }
+      },
+      "job_sha256": "396f15f098d145e2402c63fcddcfee1399180d27c22b1652b2c4cf2fcc7ce5d4",
+      "context_sha256": "2ea0020e56af077cc51856cfa13a334b546c61cc783309a863cca78928ea8c5c",
+      "expected_disposition": "insufficient_evidence",
+      "draft_disposition": "insufficient_evidence",
+      "abstained": false,
+      "retained_draft": true,
+      "agreement": true,
+      "citation_count": 3,
+      "valid_citations": 3,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "fully_cited_completion": true
+    },
+    {
+      "case_id": "uncertain_ownership-3",
+      "category": "uncertain_ownership",
+      "job_id": "95f9ffda-2c04-4327-99a3-43df69f65661",
+      "state": "completed",
+      "error_code": null,
+      "provider_error_code": null,
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_816fc87d18"
+        }
+      },
+      "job_sha256": "e9eecc0b6fb06b7c98a009e3bcbdc53cbc6651e3bab81482c0d201d1baf925a1",
+      "context_sha256": "00912740dcd2f9d3d0a57d5829322a8906b5063700143af6200db84a74c9507a",
+      "expected_disposition": "insufficient_evidence",
+      "draft_disposition": "insufficient_evidence",
+      "abstained": false,
+      "retained_draft": true,
+      "agreement": true,
+      "citation_count": 3,
+      "valid_citations": 3,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "fully_cited_completion": true
+    },
+    {
+      "case_id": "uncertain_ownership-4",
+      "category": "uncertain_ownership",
+      "job_id": "cc795620-25eb-4db3-98f4-88796fb5c711",
+      "state": "completed",
+      "error_code": null,
+      "provider_error_code": null,
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_a4315eb300"
+        }
+      },
+      "job_sha256": "2e731b0546e403b7ec598932ed3cdacbb7ed87c1f1f89d23326284ba3f0d6d47",
+      "context_sha256": "0c4df6f2970f07c1770ad9f6e623d38ce69059a692c03b71afccc00ed84e1d51",
+      "expected_disposition": "insufficient_evidence",
+      "draft_disposition": "insufficient_evidence",
+      "abstained": false,
+      "retained_draft": true,
+      "agreement": true,
+      "citation_count": 3,
+      "valid_citations": 3,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "fully_cited_completion": true
+    },
+    {
+      "case_id": "uncertain_ownership-5",
+      "category": "uncertain_ownership",
+      "job_id": "14a69c81-4aa4-47d2-97e2-ca3ad409210a",
+      "state": "completed",
+      "error_code": null,
+      "provider_error_code": null,
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_8b41efc9a3"
+        }
+      },
+      "job_sha256": "2eea6cc87a5619389954117c35022bf0a7e37f7b9fe33c1c9eac06abc0c236b1",
+      "context_sha256": "31baa7631f2d8dbb4b5731370b4d87cc1f07fab4c7c88609f98566d0419dea8f",
+      "expected_disposition": "insufficient_evidence",
+      "draft_disposition": "insufficient_evidence",
+      "abstained": false,
+      "retained_draft": true,
+      "agreement": true,
+      "citation_count": 4,
+      "valid_citations": 4,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "fully_cited_completion": true
+    },
+    {
+      "case_id": "conflicting_documents-1",
+      "category": "conflicting_documents",
+      "job_id": "d715a1dd-70e0-4100-a1dd-eaacd7f10d5f",
+      "state": "completed",
+      "error_code": null,
+      "provider_error_code": null,
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_75c733514d"
+        }
+      },
+      "job_sha256": "2c93c569adbb33a944166a0babe90ba6152cec7d200f076aec9345e7be9d16e8",
+      "context_sha256": "b8a12fb3b9318eb9d6352c163ae39680e6d27794d3983c8c5dd21e6a5414ac72",
+      "expected_disposition": "insufficient_evidence",
+      "draft_disposition": "insufficient_evidence",
+      "abstained": false,
+      "retained_draft": true,
+      "agreement": true,
+      "citation_count": 4,
+      "valid_citations": 4,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "fully_cited_completion": true
+    },
+    {
+      "case_id": "conflicting_documents-2",
+      "category": "conflicting_documents",
+      "job_id": "bfabeeba-7ede-438a-9190-a8f73d9aaf3a",
+      "state": "completed",
+      "error_code": null,
+      "provider_error_code": null,
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_c5a89987dc"
+        }
+      },
+      "job_sha256": "0b4f309a2c7459a6ce81a22d5442b3542727b02b3dfc0d85b8d8f2124ed59dd2",
+      "context_sha256": "8c40b918b59f6e9f426e3c25e097ceb78d32ac70377790fc35dca816bc19a1b7",
+      "expected_disposition": "insufficient_evidence",
+      "draft_disposition": "insufficient_evidence",
+      "abstained": false,
+      "retained_draft": true,
+      "agreement": true,
+      "citation_count": 2,
+      "valid_citations": 2,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "fully_cited_completion": true
+    },
+    {
+      "case_id": "conflicting_documents-3",
+      "category": "conflicting_documents",
+      "job_id": "a7241345-d23a-4403-a63c-8619338df363",
+      "state": "failed",
+      "error_code": "invalid_ai_response",
+      "provider_error_code": null,
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": null
+      },
+      "job_sha256": "10f6be05d2dd2fe7b61d26cb09f8787696226b8231e8ef97a863798e186afe6e",
+      "context_sha256": "cdda806e2f8234cf179e1972bb877164718831ceb55ef87aa23725b181f614c2",
+      "expected_disposition": "insufficient_evidence",
+      "draft_disposition": null,
+      "abstained": true,
+      "retained_draft": false,
+      "agreement": false,
+      "citation_count": 0,
+      "valid_citations": 0,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "fully_cited_completion": false
+    },
+    {
+      "case_id": "conflicting_documents-4",
+      "category": "conflicting_documents",
+      "job_id": "4fceb58e-d295-4950-80ed-8ce7655e86e6",
+      "state": "completed",
+      "error_code": null,
+      "provider_error_code": null,
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_ce54c53bd5"
+        }
+      },
+      "job_sha256": "b20fc4e18e2469097243ef178ed394cd1bee46c72db225dd975f7f0c02988709",
+      "context_sha256": "16b870ec7cc573102c146935161e957d5b21180e213977399377528d7877f554",
+      "expected_disposition": "insufficient_evidence",
+      "draft_disposition": "insufficient_evidence",
+      "abstained": false,
+      "retained_draft": true,
+      "agreement": true,
+      "citation_count": 2,
+      "valid_citations": 2,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "fully_cited_completion": true
+    },
+    {
+      "case_id": "conflicting_documents-5",
+      "category": "conflicting_documents",
+      "job_id": "41b478b0-f335-4a06-a161-ffdc742ed072",
+      "state": "completed",
+      "error_code": null,
+      "provider_error_code": null,
+      "identity": {
+        "model": "openai/gpt-oss-20b",
+        "model_revision": "provider-unreported",
+        "prompt_version": "policylens-governance-v2",
+        "provider_identity": {
+          "requested_model": "openai/gpt-oss-20b",
+          "returned_model": "openai/gpt-oss-20b",
+          "revision_enforced": false,
+          "system_fingerprint": "fp_ef00694abe"
+        }
+      },
+      "job_sha256": "e032ba03cfcd39c9ecc64c2a2d8e35cf401307e2928dc79afba70931350dcbc0",
+      "context_sha256": "e5a30c3f1a51c814563433d40ec93d6c03539dfd93dbca1f84b6956a335352d7",
+      "expected_disposition": "insufficient_evidence",
+      "draft_disposition": "confirmed",
+      "abstained": false,
+      "retained_draft": true,
+      "agreement": false,
+      "citation_count": 3,
+      "valid_citations": 3,
+      "unsupported_quotes": 0,
+      "unknown_citation_ids": 0,
+      "fully_cited_completion": true
+    }
+  ],
+  "gate": {
+    "checks": {
+      "at_least_50_labeled_cases": true,
+      "single_model_and_prompt": false,
+      "current_prompt": true,
+      "all_runs_completed_and_cited": false,
+      "zero_unsupported_or_unknown_quotes": true,
+      "agreement_at_least_80_percent": true,
+      "live_provider_measurement": true
+    },
+    "draft_preparation_quality_passed": false,
+    "autopilot_enabled": false
+  },
+  "limitations": [
+    "Fifty labeled cases comprise ten scenario families with five amount/country/customer variations each. They are correlated examples, not fifty independent real-world investigations.",
+    "Labels are explicit scenario-author judgments against a synthetic policy. No compliance lead or independent analyst validation is claimed.",
+    "The local screening snapshot is empty synthetic data. This corpus does not measure real sanctions matching accuracy or freshness.",
+    "Case descriptions summarize supplied evidence. The corpus does not test document forensics, full transaction histories, or adversarial narrative reliability.",
+    "Agreement counts failures and abstentions in the full labeled-case denominator. Labels are supplied judgments, not regulatory truth.",
+    "Citation validity checks exact whitespace-normalized source excerpts and IDs, not whether quotations support every narrative inference.",
+    "Fabricated-quote rate means known-source quotations absent from that source. Unknown IDs are reported separately. Provider rejections before a draft is retained have no observable quotation denominator; they remain failed runs.",
+    "Scores concern post-schema, resolved-quotation drafts, not raw model token hallucination rates. Quote-ID constrained generation changes that measurement.",
+    "The 80% gate is an engineering threshold, not a validated legal or model-risk standard. Passing does not enable autopilot or authorize decisions.",
+    "Provider-unreported revisions do not establish immutable model weights. Synthetic labels are scenario-author labels, not real analyst dispositions."
+  ],
+  "scorecard_sha256": "8f1b3b85e5a3da3cbcf808036db190f9d3368dc4f1fa8b5b0e75097ff6ad84fc"
+}

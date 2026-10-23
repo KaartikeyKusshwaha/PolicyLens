@@ -1,34 +1,67 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "../navigation";
 import {
-  Activity,
   ArrowUpRight,
-  Bot,
-  Check,
   Clock3,
   Download,
   Fingerprint,
-  Workflow,
 } from "lucide-react";
 import { api } from "../services/api";
 import {
   Empty,
   ErrorNotice,
   formatDate,
-  Loading,
   PageHeading,
   useResource,
 } from "../components";
-import { label, Metric, Status } from "../product-components";
+import { label, Status } from "../product-components";
 import { useSession } from "../session";
 
 export default function AuditAnalytics() {
-  const r = useResource("/analytics");
   const audit = useResource("/audit");
+  const checkpoints = useResource("/audit/checkpoints");
   const team = useResource("/team");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const { user } = useSession();
+  async function exportSponsorPack() {
+    setBusy(true);
+    setError("");
+    let url;
+    try {
+      const archive = await api("/evidence/sponsor-pack", { responseType: "blob" });
+      url = URL.createObjectURL(archive);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "policylens-sponsor-evidence.zip";
+      link.click();
+      checkpoints.reload();
+    } catch (failure) {
+      setError(failure.message);
+    } finally {
+      if (url) URL.revokeObjectURL(url);
+      setBusy(false);
+    }
+  }
+  async function exportSigned() {
+    setBusy(true);
+    setError("");
+    let url;
+    try {
+      const bundle = await api("/audit/checkpoints/export");
+      url = URL.createObjectURL(new Blob([JSON.stringify(bundle, null, 2)], { type: "application/json" }));
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "policylens-signed-audit.json";
+      link.click();
+      checkpoints.reload();
+    } catch (failure) {
+      setError(failure.message);
+    } finally {
+      if (url) URL.revokeObjectURL(url);
+      setBusy(false);
+    }
+  }
   async function backup() {
     setBusy(true);
     setError("");
@@ -41,96 +74,38 @@ export default function AuditAnalytics() {
       setBusy(false);
     }
   }
-  if (r.loading) return <Loading />;
-  if (r.error) return <ErrorNotice message={r.error} />;
-  const stats = r.data;
   return (
     <>
       <PageHeading
         eyebrow="OPERATIONS YOU CAN ACCOUNT FOR"
-        title="A clear view of the work—and its record."
+        title="Evidence packs and audit trail"
         action={
-          <a className="button secondary" href="/api/audit/export" download>
-            <Download size={15} /> Export audit checkpoint
-          </a>
+          checkpoints.data?.configured && checkpoints.data.status !== "failed" ? <button className="button secondary" disabled={busy} onClick={exportSigned}>
+            <Download size={15} /> Export signed audit bundle
+          </button> : undefined
         }
       >
-        Measured activity, documented human outcomes, and a verifiable chain of
+        Policy, control and investigation evidence with a verifiable chain of
         recorded events.
       </PageHeading>
-      <ErrorNotice message={error || audit.error} />
-      <div className="product-metrics">
-        <Metric
-          label="Transactions received"
-          value={stats.transactions}
-          icon={Activity}
-          detail="Across monitored corridors"
-        />
-        <Metric
-          label="Open investigations"
-          value={stats.open_cases}
-          icon={Workflow}
-          detail={`${stats.escalated} escalated · ${stats.overdue} overdue`}
-        />
-        <Metric
-          label="Human-reviewed cases"
-          value={stats.resolved}
-          icon={Check}
-          detail="Recorded case dispositions"
-        />
-        <Metric
-          label="Completed agent runs"
-          value={stats.jobs.completed || 0}
-          icon={Bot}
-          detail={`${stats.jobs.failed || 0} failed · ${stats.jobs.queued || 0} queued`}
-        />
-      </div>
-      <div className="analytics-grid">
-        <section className="panel section-padding">
-          <h2>Observed destination corridors</h2>
-          <p className="section-copy">
-            Transaction counts by supplied destination country. This does not
-            measure country risk.
-          </p>
-          {stats.corridors.length ? (
-            <div className="corridor-bars">
-              {stats.corridors.map((c) => (
-                <div key={c.country}>
-                  <strong>{c.country}</strong>
-                  <span>
-                    <i
-                      style={{
-                        width: `${(c.transactions / Math.max(...stats.corridors.map((v) => v.transactions))) * 100}%`,
-                      }}
-                    />
-                  </span>
-                  <b>{c.transactions}</b>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <Empty title="Activity will bring this view to life.">
-              Corridor counts appear after monitoring receives transactions.
-            </Empty>
-          )}
-        </section>
-        <section className="panel section-padding">
-          <h2>Recorded case outcomes</h2>
-          <p className="section-copy">
-            Human dispositions for resolved cases. These labels alone do not
-            establish detection accuracy or recall.
-          </p>
-          {Object.entries(stats.dispositions).map(([key, count]) => (
-            <div className="outcome-row" key={key}>
-              <span>{label(key)}</span>
-              <strong>{count}</strong>
-            </div>
-          ))}
-          <Link className="text-link" to="/cases">
-            Review investigations <ArrowUpRight size={14} />
-          </Link>
-        </section>
-      </div>
+      <ErrorNotice message={error || audit.error || checkpoints.error} />
+      <section className="panel section-padding">
+        <h2>Sponsor evidence pack</h2>
+        <p>Download policy versions, controls and approval history, cases and notes, source freshness, agent runs and the signed audit snapshot as PDF and JSON with an offline verifier.</p>
+        <p className="privacy-note">Contains private records for this entire workspace. Human review is required. Obtain the signing fingerprint separately before verification.</p>
+        <button className="button secondary" disabled={busy || !checkpoints.data?.configured || checkpoints.data.status === "failed"} onClick={exportSponsorPack}><Download size={15} /> Download sponsor evidence pack</button>
+        {checkpoints.data?.configured === false && <p>Configure external checkpoint storage before generating a signed pack.</p>}
+      </section>
+      <section className="panel section-padding">
+        <h2>External audit checkpoints</h2>
+        {checkpoints.loading ? <p>Checking external checkpoint storage…</p> : checkpoints.error ? <p>External checkpoint status is unavailable.</p> : checkpoints.data?.configured ? <>
+          <p>Status: {checkpoints.data.status}. {checkpoints.data.unanchored_events ?? "Unknown"} events since the last retained anchor.</p>
+          {checkpoints.data.checkpoint && <><p>Last anchor: event #{checkpoints.data.checkpoint.payload.sequence} · {formatDate(checkpoints.data.checkpoint.payload.created_at)}</p><code style={{ overflowWrap: "anywhere" }}>{checkpoints.data.checkpoint.payload.head_hash}</code></>}
+          {checkpoints.data.fingerprint && <><p>Trust this signing fingerprint through a separate channel before verifying an exported bundle:</p><code style={{ overflowWrap: "anywhere" }}>{checkpoints.data.fingerprint}</code></>}
+          <p className="privacy-note">Signed anchors are retained outside database storage. This does not establish off-machine retention or protection from a compromised host and signing key.</p>
+        </> : checkpoints.data?.configured === false ? <p>External checkpoint storage is not configured. A valid local hash chain alone cannot detect a complete database rewrite.</p> : <p>External checkpoint status is unavailable.</p>}
+        <button className="button secondary" onClick={checkpoints.reload}>Refresh checkpoint status</button>
+      </section>
       <section className="panel detail-section">
         <div className="panel-heading">
           <div>

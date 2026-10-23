@@ -5,9 +5,9 @@ import hmac
 import io
 import json
 import secrets
-import sqlite3
 import time
 from datetime import datetime, timedelta, timezone
+from contextlib import closing
 
 from fastapi import APIRouter, File, HTTPException, Query, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, Response
@@ -32,6 +32,14 @@ from product_models import (
 )
 from providers import problem
 from store import now
+from database import INTEGRITY_ERRORS, connect_database, descriptor
+from retained_copies import (
+    register_generated,
+    reserve_generated,
+    finish_generated,
+    fail_generated,
+)
+from recovery import checksum, integrity as verify_database_integrity
 
 router = APIRouter(prefix="/api")
 
@@ -68,7 +76,7 @@ def customers(request: Request):
 def add_customer(data: CustomerInput, request: Request):
     try:
         return request.state.ops.save_customer(data, request.state.user["id"])
-    except sqlite3.IntegrityError as exc:
+    except INTEGRITY_ERRORS as exc:
         raise problem(
             409, "duplicate_customer", "That customer reference already exists."
         ) from exc
@@ -99,7 +107,7 @@ def update_customer(customer_id: str, data: CustomerInput, request: Request):
         return request.state.ops.save_customer(
             data, request.state.user["id"], customer_id
         )
-    except sqlite3.IntegrityError as exc:
+    except INTEGRITY_ERRORS as exc:
         raise problem(
             409, "duplicate_customer", "That customer reference already exists."
         ) from exc
@@ -312,6 +320,25 @@ async def import_csv(request: Request, file: UploadFile = File(...)):
         await file.close()
 
 
+@router.get("/alerts")
+def alerts(
+    request: Request,
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0, le=100000),
+):
+    with request.state.store.connect() as db:
+        rows = db.execute(
+            "SELECT payload FROM alerts ORDER BY created_at DESC,id LIMIT ? OFFSET ?",
+            (limit + 1, offset),
+        ).fetchall()
+    return {
+        "alerts": [json.loads(row[0]) for row in rows[:limit]],
+        "has_more": len(rows) > limit,
+        "offset": offset,
+        "limit": limit,
+    }
+
+
 @router.get("/cases")
 def cases(request: Request):
     ops = request.state.ops
@@ -362,12 +389,23 @@ def case_action(case_id: str, data: CaseAction, request: Request):
 @router.get("/cases/{case_id}/export")
 def case_export(case_id: str, request: Request):
     report = case_pack(case_id, request)
-    return JSONResponse(
+    response = JSONResponse(
         report,
         headers={
             "Content-Disposition": f'attachment; filename="policylens-case-{report["id"]}.json"'
         },
     )
+    custody = register_generated(
+        request.state.store,
+        request.state.user,
+        response.body,
+        category="evidence_export",
+        scope="customer",
+        target_id=report["customer_id"],
+        location_reference="case-pack-download:" + case_id,
+    )
+    response.headers["X-PolicyLens-Custody-ID"] = custody["id"]
+    return response
 
 
 @router.get("/tasks")
@@ -585,12 +623,21 @@ def audit_log(request: Request):
 
 @router.get("/audit/export")
 def audit_export(request: Request):
-    return JSONResponse(
+    response = JSONResponse(
         audit_log(request),
         headers={
             "Content-Disposition": 'attachment; filename="policylens-audit-checkpoint.json"'
         },
     )
+    custody = register_generated(
+        request.state.store,
+        request.state.user,
+        response.body,
+        category="audit_checkpoint",
+        location_reference="legacy-audit-download",
+    )
+    response.headers["X-PolicyLens-Custody-ID"] = custody["id"]
+    return response
 
 
 @router.post("/backups", status_code=201)
@@ -600,19 +647,35 @@ def backup(request: Request):
     directory.mkdir(exist_ok=True)
     backup_id = uid()
     path = directory / (backup_id + ".db")
-    with (
-        sqlite3.connect(request.state.store.path) as source,
-        sqlite3.connect(path) as target,
-    ):
-        source.backup(target)
-    check = sqlite3.connect(path)
+    custody = reserve_generated(
+        request.state.store,
+        request.state.user,
+        category="backup",
+        location_reference="workspace-backup:" + backup_id,
+        storage_root=str(request.state.store.path.parent.resolve()),
+    )
     try:
-        integrity = check.execute("PRAGMA integrity_check").fetchone()[0]
-    finally:
-        check.close()
-    if integrity != "ok":
-        path.unlink(missing_ok=True)
-        raise problem(500, "backup_failed", "Backup integrity check failed.")
+        with (
+            closing(
+                connect_database(
+                    request.state.store.path, request.app.state.settings, readonly=True
+                )
+            ) as source,
+            closing(connect_database(path, request.app.state.settings)) as target,
+        ):
+            source.backup(target)
+        verify_database_integrity(path, request.app.state.settings)
+        integrity = "ok"
+        custody = finish_generated(
+            request.state.store,
+            custody["id"],
+            request.state.user,
+            checksum(path),
+            path.stat().st_size,
+        )
+    except Exception:
+        fail_generated(request.state.store, custody["id"], request.state.user)
+        raise
     saved = request.state.ops.save(
         "backup",
         {
@@ -620,6 +683,8 @@ def backup(request: Request):
             "file": path.name,
             "created_by": request.state.user["id"],
             "integrity": integrity,
+            "database_encryption": descriptor(request.app.state.settings),
+            "custody_id": custody["id"],
         },
         request.state.user["id"],
         backup_id,
@@ -632,10 +697,44 @@ def download_backup(backup_id: str, request: Request):
     roles(request, "admin")
     backup = request.state.ops.get("backup", backup_id)
     path = request.state.store.path.parent / "backups" / backup["file"]
+    custody = reserve_generated(
+        request.state.store,
+        request.state.user,
+        category="backup",
+        location_reference="workspace-backup-download:" + backup_id,
+        storage_root=str(request.state.store.path.parent.resolve()),
+    )
+    # File artifacts are hashed as a stream, avoiding an additional database-sized
+    # in-memory copy. This fresh custody entry represents the requested download.
+    try:
+        content_hash = checksum(path)
+        if backup.get("custody_id"):
+            original = request.state.ops.get("retained_copy", backup["custody_id"])
+            if (
+                original.get("generation_status")
+                not in ("complete", "reconciled_present")
+                or original["content_sha256"] != content_hash
+            ):
+                raise problem(
+                    409,
+                    "backup_changed",
+                    "The backup no longer matches its generated custody record.",
+                )
+        custody = finish_generated(
+            request.state.store,
+            custody["id"],
+            request.state.user,
+            content_hash,
+            path.stat().st_size,
+        )
+    except Exception:
+        fail_generated(request.state.store, custody["id"], request.state.user)
+        raise
     return FileResponse(
         path,
         media_type="application/vnd.sqlite3",
         filename="policylens-workspace-" + backup_id + ".db",
+        headers={"X-PolicyLens-Custody-ID": custody["id"]},
     )
 
 

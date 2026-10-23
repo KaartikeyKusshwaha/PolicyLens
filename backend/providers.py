@@ -17,6 +17,10 @@ from fastapi import HTTPException
 from pydantic import ValidationError
 
 from store import now
+from privacy import pseudonymize
+from security import SecretBox
+
+PROMPT_VERSION = "policylens-governance-v2"
 
 OFAC_URL = (
     "https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN.XML"
@@ -262,6 +266,11 @@ class Providers:
 
         def constrain_citations(node):
             if isinstance(node, dict):
+                # The provider's strict schema requires every property, including
+                # nullable fields whose local model has a compatibility default.
+                if "properties" in node:
+                    node["required"] = list(node["properties"])
+                node.pop("default", None)
                 if "chunk_id" in node.get("properties", {}) and allowed_chunks:
                     node["properties"]["chunk_id"]["enum"] = allowed_chunks
                     if "quote" in node["properties"] and quotes:
@@ -285,6 +294,16 @@ class Providers:
             ],
             "citation_quotes": quote_catalog,
         }
+        if self.settings.pseudonymize_model_calls:
+            wire_context = pseudonymize(
+                wire_context,
+                SecretBox(self.settings).key(create=True),
+                self.settings.pseudonymization_scope,
+            )
+            wire_context["privacy_scope"] = (
+                "Structured names, external identifiers, addresses and account references are masked; private notes are omitted. "
+                "Opaque internal record references and evidence references remain usable. Free text may contain unidentified personal data."
+            )
         body = {
             "model": self.settings.groq_model,
             "messages": [
@@ -350,8 +369,48 @@ class Providers:
                     "groq_access_denied",
                     "Groq rejected the API key or model access. Check backend/.env and your Groq account.",
                 )
+            if response.status_code == 400:
+                if provider_error_code in (
+                    "json_validate_failed",
+                    "structured_generation_failed",
+                ):
+                    raise problem(
+                        502,
+                        "invalid_ai_response",
+                        "The provider could not generate a schema-valid draft. No decision was recorded and this run will not retry.",
+                    )
+                rejected = problem(
+                    503,
+                    "ai_request_rejected",
+                    "The provider rejected the analysis request. Review model/schema compatibility before retrying; no decision was recorded.",
+                )
+                rejected.detail["provider_error_code"] = provider_error_code
+                raise rejected
             response.raise_for_status()
-            choice = response.json()["choices"][0]
+            envelope = response.json()
+            if envelope.get("model") and envelope["model"] != self.settings.groq_model:
+                raise problem(
+                    502,
+                    "model_identity_mismatch",
+                    "The provider returned a different model than the run requested.",
+                )
+            revision = self.settings.groq_model_revision
+            if (
+                revision != "provider-unreported"
+                and envelope.get("system_fingerprint") != revision
+            ):
+                raise problem(
+                    502,
+                    "model_revision_mismatch",
+                    "The provider revision did not match this run's pinned revision.",
+                )
+            self.last_model_identity = {
+                "requested_model": self.settings.groq_model,
+                "returned_model": envelope.get("model"),
+                "system_fingerprint": envelope.get("system_fingerprint"),
+                "revision_enforced": revision != "provider-unreported",
+            }
+            choice = envelope["choices"][0]
             finish_reason = choice.get("finish_reason")
             if choice["finish_reason"] != "stop":
                 raise ValueError("Incomplete AI response")

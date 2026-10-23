@@ -85,6 +85,24 @@ Treat the cloud installation as the authoritative pilot after signing in there. 
 
 ## Back up and recover
 
+Database snapshots require separately retained current deletion state. The
+[complete deletion-history backup tool](DELETION_STATE_BACKUP.md) supports
+stopped-source export, authenticated encrypted receiver retention and new-directory
+reconstruction. It is not yet installed or scheduled on the pilot/receiver.
+The [scheduling integration](SCHEDULED_DELETION_BACKUP.md) is now available in the
+daily backup, fixed SSH exporter and optional receiver/task arguments. Combined
+success requires both copies to verify. Operator rollout remains pending.
+Optional [checkpoint-history scheduling](SCHEDULED_CHECKPOINT_BACKUP.md) also
+stages while stopped and requires an independently trusted public fingerprint
+at the receiver. Combined success includes every configured artifact family.
+
+The read-only [operational watchdog](OPERATIONAL_WATCHDOG.md) checks readiness,
+receiver disk space and fresh matching backup receipts/encrypted bytes. It emits
+JSON and exits nonzero on failure. Optional service/timer templates are supplied;
+installation, notification integration and actual receiver/Oracle checks remain
+pending. New successful transfers record encrypted archive size/hash for the
+watchdog; older receipts must be refreshed by a successful verified transfer.
+
 The operator CLI now supports a complete, verified snapshot and restore drill. It shares an OS-level installation lock with the server and refuses to snapshot while that installation is running. It includes identity and all workspace databases, checks SHA-256 hashes and SQLite integrity, rebases workspace paths when restored, and revokes sessions in the restored copy. It never overwrites an existing destination.
 
 Stop the Python server, then run these commands from the repository root (use `.venv/bin/python` on Linux/macOS):
@@ -92,7 +110,8 @@ Stop the Python server, then run these commands from the repository root (use `.
 ```sh
 .venv\Scripts\python manage.py backup --output /private/backups/policylens-snapshot-UNIQUE
 .venv\Scripts\python manage.py verify /private/backups/policylens-snapshot-UNIQUE
-.venv\Scripts\python manage.py restore /private/backups/policylens-snapshot-UNIQUE --destination /private/restore-drills/policylens-UNIQUE
+.venv\Scripts\python manage.py deletion-guard --output /private/recovery/deletion-guard-UNIQUE.json
+.venv\Scripts\python manage.py restore /private/backups/policylens-snapshot-UNIQUE --destination /private/restore-drills/policylens-UNIQUE --deletion-guard /private/recovery/deletion-guard-UNIQUE.json --deletion-guard-sha256 CURRENT_INDEPENDENTLY_RETAINED_SHA256
 ```
 
 Restart the live server after taking the snapshot. A restore drill can run while the live server is back online because it creates a separate destination. The private environment/API-key file is intentionally excluded; preserve it separately. Backups contain confidential records and integration secrets: protect directory permissions and encrypt them before sending to an off-machine destination. Checksums detect corruption but do not authenticate a backup against a malicious administrator who can replace both the files and manifest.
@@ -106,6 +125,12 @@ Use the CLI for whole-installation recovery: it updates absolute workspace paths
 Test restoration with fictional data before depending on a backup. The automated suite covers both workspace backups and a complete multi-workspace restore, including SQLite integrity, customer records, session/reset-link revocation and checksum tampering. Full-host operational recovery and ongoing off-machine encrypted storage remain the operator's responsibility.
 
 The Oracle pilot installs `deploy/backup.sh` and its systemd service/timer. At 02:30 UTC daily (with up to five minutes of jitter), it briefly stops the app, creates a verified snapshot in root-only `/var/backups/policylens`, restarts the app even if snapshotting fails, and removes only its own snapshot directories older than thirteen full days. This pauses availability and background work briefly. A manual service run and separate cloud restore drill passed. A cloud snapshot was downloaded over verified SSH, encrypted with Fernet and verified by decryption on the owner's computer. Archive and decryption key are stored separately. This is one off-machine copy, not an automatic remote-backup schedule; losing the key makes the encrypted copy unrecoverable.
+
+The backup paragraph above records the original deployment checkpoint, not a fresh
+server verification. Current source `deploy/backup.sh` no longer removes snapshots
+by age alone: approved preservation periods, holds and copy-custody reconciliation
+must govern removal. This change is not deployed yet. Monitor available space and
+arrange explicit reviewed archival/removal; there is no automatic pruning substitute.
 
 ## Private account recovery
 

@@ -1,0 +1,233 @@
+{
+  "id": "95f9ffda-2c04-4327-99a3-43df69f65661",
+  "kind": "investigation",
+  "target_id": "d6ae5379-b789-4cbb-85b2-ce0e5348fcd4",
+  "state": "completed",
+  "created_at": "2026-10-23T10:34:37.107862+00:00",
+  "updated_at": "2026-10-23T10:34:39.023811+00:00",
+  "actor": "042c237c-f2f3-4d04-9a6a-bb6f4abb59db",
+  "payload": {
+    "max_model_calls": 1,
+    "model": "openai/gpt-oss-20b",
+    "model_attempts": 1,
+    "model_revision": "provider-unreported",
+    "prompt_version": "policylens-governance-v2",
+    "pseudonymize": false,
+    "requested_by": "042c237c-f2f3-4d04-9a6a-bb6f4abb59db",
+    "result": {
+      "citations": [
+        {
+          "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+          "policy_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc",
+          "quote": "Missing identity records, absent invoices, uncertain ownership, or conflicting unverified documents require more evidence.",
+          "source_url": "",
+          "title": "Synthetic transaction investigation policy",
+          "version": "evaluation-1"
+        },
+        {
+          "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+          "policy_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc",
+          "quote": "Do not infer a breach solely from payment amount, country, or transaction volume.",
+          "source_url": "",
+          "title": "Synthetic transaction investigation policy",
+          "version": "evaluation-1"
+        },
+        {
+          "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+          "policy_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc",
+          "quote": "Potential sanctions name matches require human investigation and are never clearance.",
+          "source_url": "",
+          "title": "Synthetic transaction investigation policy",
+          "version": "evaluation-1"
+        }
+      ],
+      "draft_disposition": "insufficient_evidence",
+      "findings": [
+        "Ownership documentation missing for Synthetic Trading Company 3.",
+        "No invoice provided for the $315 payment.",
+        "No sanctions match identified from OFAC SDN.",
+        "Transaction amount $315 USD is not indicative of risk by itself.",
+        "Country UK does not trigger high‑risk flags in this context."
+      ],
+      "limitations": [
+        "Single transaction examined; broader history unavailable.",
+        "Policy is synthetic training material, not regulatory guidance.",
+        "No sanctions match from OFAC SDN, but potential matches require human review.",
+        "PEP coverage and other watchlists not evaluated."
+      ],
+      "missing_evidence": [
+        "Ownership records for Synthetic Trading Company 3.",
+        "Invoice for the $315 payment.",
+        "Identity verification documents for the counterparty."
+      ],
+      "recommendation": "investigate",
+      "requires_approval": true,
+      "summary": "The counterparty Synthetic Trading Company 3 lacks ownership documentation and an invoice for the $315 USD payment. No sanctions match was found in the OFAC SDN list, and the transaction amount and UK origin do not alone signal a breach. Policy guidance requires further evidence on identity and ownership before confirming a violation."
+    }
+  },
+  "steps": [
+    {
+      "step": "collect_evidence",
+      "created_at": "2026-10-23T10:34:37.181621+00:00",
+      "output": {
+        "alerts": [],
+        "case": {
+          "assignee_id": "",
+          "created_at": "2026-10-23T10:34:37.063598+00:00",
+          "created_by": "042c237c-f2f3-4d04-9a6a-bb6f4abb59db",
+          "customer_id": "8023349e-b7c8-47a7-ad1f-2668229de745",
+          "customer_name": "Synthetic Customer 043",
+          "description": "The counterparty company ownership is uncertain and the requested ownership evidence is absent. Payment amount and country alone do not establish a breach.",
+          "disposition": "",
+          "due_at": "2026-10-25T10:34:37.063598+00:00",
+          "id": "d6ae5379-b789-4cbb-85b2-ce0e5348fcd4",
+          "priority": "medium",
+          "status": "open",
+          "title": "Synthetic transaction investigation 043",
+          "updated_at": "2026-10-23T10:34:37.063598+00:00"
+        },
+        "customer": {
+          "address": "",
+          "country": "US",
+          "created_at": "2026-10-23T10:34:37.034582+00:00",
+          "external_id": "synthetic-customer-043",
+          "id": "8023349e-b7c8-47a7-ad1f-2668229de745",
+          "kind": "individual",
+          "kyc_status": "pending",
+          "lei": "",
+          "name": "Synthetic Customer 043",
+          "notes": "",
+          "risk_tier": "medium",
+          "updated_at": "2026-10-23T10:34:37.034582+00:00"
+        },
+        "policies": [
+          {
+            "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+            "policy_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc",
+            "rank": -6.299834574028122e-06,
+            "source_url": "",
+            "text": "Synthetic training policy for transaction investigation; this is not regulatory guidance. Investigate transaction transfers using the supplied customer and case evidence. A documented identity mismatch or admitted falsified invoice is a supported policy breach. A documented duplicate alert, verified namesake, or validated invoice explaining the alert is a false positive. Missing identity records, absent invoices, uncertain ownership, or conflicting unverified documents require more evidence. Do not infer a breach solely from payment amount, country, or transaction volume. Potential sanctions name matches require human investigation and are never clearance. Only an independent human reviewer can resolve a case.",
+            "title": "Synthetic transaction investigation policy",
+            "topic": "aml",
+            "version": "evaluation-1"
+          }
+        ],
+        "task": "Prepare an evidence-grounded investigation brief. Distinguish observations from suspicion. Recommend human action, never legal approval. Consider the explicit source and sample limitations. draft_disposition is a nonbinding suggestion: confirmed means the supplied policy breach is supported, false_positive means the alert is explained by supplied evidence, insufficient_evidence means missing evidence prevents a conclusion. Use null to abstain. No suggestion changes or closes the case.",
+        "transaction_scope": "Latest 50 transactions; not necessarily the full history.",
+        "transactions": [
+          {
+            "account_reference": "",
+            "amount": "315.00",
+            "counterparty": "Synthetic Trading Company 3",
+            "counterparty_country": "GB",
+            "currency": "USD",
+            "customer_id": "8023349e-b7c8-47a7-ad1f-2668229de745",
+            "description": "Synthetic consulting payment for evaluation only.",
+            "external_id": "synthetic-payment-043",
+            "id": "f0e17506-3642-48e6-82c6-9608cef11482",
+            "occurred_at": "2026-01-01T00:00:00+00:00",
+            "received_at": "2026-10-23T10:34:37.085917+00:00"
+          }
+        ]
+      }
+    },
+    {
+      "step": "sanctions_screening",
+      "created_at": "2026-10-23T10:34:37.229710+00:00",
+      "output": {
+        "matches": [],
+        "scope": "Enabled official sanctions lists, primary names and aliases; normalized name similarity >= 0.88. Potential matches require identity verification. No match is not clearance. Ownership rules, PEP coverage, and all transliterations are not included.",
+        "source": {
+          "count": 0,
+          "docs": "https://ofac.treasury.gov/sanctions-list-service",
+          "fetched_at": "2026-10-23T09:51:09.727083+00:00",
+          "id": "ofac",
+          "name": "OFAC SDN",
+          "published_at": "2026-10-23T09:51:09.727083+00:00",
+          "sha256": "13f9ee28b9fe6f1b02d0c0e79b31a8ab4dcf0d8b11fd7a8c7fd8a77372080379",
+          "status": "ready",
+          "url": "urn:policylens:synthetic-evaluation-feed"
+        },
+        "sources": [
+          {
+            "count": 0,
+            "docs": "https://ofac.treasury.gov/sanctions-list-service",
+            "fetched_at": "2026-10-23T09:51:09.727083+00:00",
+            "id": "ofac",
+            "name": "OFAC SDN",
+            "published_at": "2026-10-23T09:51:09.727083+00:00",
+            "sha256": "13f9ee28b9fe6f1b02d0c0e79b31a8ab4dcf0d8b11fd7a8c7fd8a77372080379",
+            "status": "ready",
+            "url": "urn:policylens:synthetic-evaluation-feed"
+          }
+        ]
+      }
+    },
+    {
+      "step": "model_identity",
+      "created_at": "2026-10-23T10:34:38.963340+00:00",
+      "output": {
+        "requested_model": "openai/gpt-oss-20b",
+        "returned_model": "openai/gpt-oss-20b",
+        "revision_enforced": false,
+        "system_fingerprint": "fp_816fc87d18"
+      }
+    },
+    {
+      "step": "draft_analysis",
+      "created_at": "2026-10-23T10:34:38.980858+00:00",
+      "output": {
+        "citations": [
+          {
+            "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+            "quote": "Missing identity records, absent invoices, uncertain ownership, or conflicting unverified documents require more evidence."
+          },
+          {
+            "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+            "quote": "Do not infer a breach solely from payment amount, country, or transaction volume."
+          },
+          {
+            "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+            "quote": "Potential sanctions name matches require human investigation and are never clearance."
+          }
+        ],
+        "draft_disposition": "insufficient_evidence",
+        "findings": [
+          "Ownership documentation missing for Synthetic Trading Company 3.",
+          "No invoice provided for the $315 payment.",
+          "No sanctions match identified from OFAC SDN.",
+          "Transaction amount $315 USD is not indicative of risk by itself.",
+          "Country UK does not trigger high‑risk flags in this context."
+        ],
+        "limitations": [
+          "Single transaction examined; broader history unavailable.",
+          "Policy is synthetic training material, not regulatory guidance.",
+          "No sanctions match from OFAC SDN, but potential matches require human review.",
+          "PEP coverage and other watchlists not evaluated."
+        ],
+        "missing_evidence": [
+          "Ownership records for Synthetic Trading Company 3.",
+          "Invoice for the $315 payment.",
+          "Identity verification documents for the counterparty."
+        ],
+        "recommendation": "investigate",
+        "summary": "The counterparty Synthetic Trading Company 3 lacks ownership documentation and an invoice for the $315 USD payment. No sanctions match was found in the OFAC SDN list, and the transaction amount and UK origin do not alone signal a breach. Policy guidance requires further evidence on identity and ownership before confirming a violation."
+      }
+    },
+    {
+      "step": "verify_evidence",
+      "created_at": "2026-10-23T10:34:39.001154+00:00",
+      "output": {
+        "checks": [
+          "source_freshness",
+          "citation_ids",
+          "verbatim_quotations",
+          "allowed_output_schema",
+          "human_approval_boundary"
+        ],
+        "passed": true,
+        "scope": "Verifies evidence references and constraints, not every inference in the narrative."
+      }
+    }
+  ]
+}

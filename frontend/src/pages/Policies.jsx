@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import { Link, useNavigate } from "../navigation";
 import {
   ArrowLeft,
   ArrowUpRight,
@@ -45,6 +46,7 @@ export function Policies() {
       >
         Keep the documents that guide every assessment in one searchable place.
       </PageHeading>
+      <p><Link className="button secondary" to="/policies/traceability">Open policy-to-control traceability</Link></p>
       <ErrorNotice message={error} retry={reload} />
       <section className="panel">
         <div className="library-toolbar">

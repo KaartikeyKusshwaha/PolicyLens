@@ -1,0 +1,203 @@
+{
+  "id": "0ed1f8d3-fa59-4cf3-a60d-9b23fd54f6d7",
+  "kind": "investigation",
+  "target_id": "f073a822-09cd-4160-8fcd-87ed2a6900dd",
+  "state": "completed",
+  "created_at": "2026-10-23T10:12:52.159948+00:00",
+  "updated_at": "2026-10-23T10:12:54.214998+00:00",
+  "actor": "042c237c-f2f3-4d04-9a6a-bb6f4abb59db",
+  "payload": {
+    "max_model_calls": 1,
+    "model": "openai/gpt-oss-20b",
+    "model_attempts": 1,
+    "model_revision": "provider-unreported",
+    "prompt_version": "policylens-governance-v2",
+    "pseudonymize": false,
+    "requested_by": "042c237c-f2f3-4d04-9a6a-bb6f4abb59db",
+    "result": {
+      "citations": [
+        {
+          "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+          "policy_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc",
+          "quote": "Synthetic training policy for transaction investigation; this is not regulatory guidance.",
+          "source_url": "",
+          "title": "Synthetic transaction investigation policy",
+          "version": "evaluation-1"
+        },
+        {
+          "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+          "policy_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc",
+          "quote": "Missing identity records, absent invoices, uncertain ownership, or conflicting unverified documents require more evidence.",
+          "source_url": "",
+          "title": "Synthetic transaction investigation policy",
+          "version": "evaluation-1"
+        }
+      ],
+      "draft_disposition": "insufficient_evidence",
+      "findings": [
+        "The transaction evidence indicates a legitimate payment with a valid invoice and no alerts. The supplied sanctions screen returned no matches. The policy cited is a synthetic training document that is not regulatory guidance. Therefore no regulatory breach can be identified."
+      ],
+      "limitations": [
+        "The policy applied is a synthetic training note and explicitly states it is not regulatory guidance, so it cannot be used to determine compliance. The case lacks any alerts or regulatory references that would necessitate further action."
+      ],
+      "missing_evidence": [
+        "No alerts were raised for this transaction, limiting the scope of evidence for potential violations. The policy in question does not contain regulatory requirements, so there is insufficient basis to assess compliance."
+      ],
+      "recommendation": "review_for_closure",
+      "requires_approval": true,
+      "summary": "The customer’s single transaction of USD 215 to a GB entity was fully explained by an invoice, with no alerts or sanctions matches. The only relevant policy is a synthetic training note that explicitly states it is not regulatory guidance, providing no actionable compliance assessment."
+    }
+  },
+  "steps": [
+    {
+      "step": "collect_evidence",
+      "created_at": "2026-10-23T10:12:52.246855+00:00",
+      "output": {
+        "alerts": [],
+        "case": {
+          "assignee_id": "",
+          "created_at": "2026-10-23T10:12:52.098036+00:00",
+          "created_by": "042c237c-f2f3-4d04-9a6a-bb6f4abb59db",
+          "customer_id": "fbf84a1d-7c28-4be9-846e-0266a9215559",
+          "customer_name": "Synthetic Customer 022",
+          "description": "The reviewed issuer records validate the invoice and delivery. Verified sender identity matches the account holder. The supplied invoice fully explains the alerted transfer.",
+          "disposition": "",
+          "due_at": "2026-10-25T10:12:52.098036+00:00",
+          "id": "f073a822-09cd-4160-8fcd-87ed2a6900dd",
+          "priority": "medium",
+          "status": "open",
+          "title": "Synthetic transaction investigation 022",
+          "updated_at": "2026-10-23T10:12:52.098036+00:00"
+        },
+        "customer": {
+          "address": "",
+          "country": "GB",
+          "created_at": "2026-10-23T10:12:52.040242+00:00",
+          "external_id": "synthetic-customer-022",
+          "id": "fbf84a1d-7c28-4be9-846e-0266a9215559",
+          "kind": "individual",
+          "kyc_status": "pending",
+          "lei": "",
+          "name": "Synthetic Customer 022",
+          "notes": "",
+          "risk_tier": "medium",
+          "updated_at": "2026-10-23T10:12:52.040242+00:00"
+        },
+        "policies": [
+          {
+            "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+            "policy_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc",
+            "rank": -6.299834574028122e-06,
+            "source_url": "",
+            "text": "Synthetic training policy for transaction investigation; this is not regulatory guidance. Investigate transaction transfers using the supplied customer and case evidence. A documented identity mismatch or admitted falsified invoice is a supported policy breach. A documented duplicate alert, verified namesake, or validated invoice explaining the alert is a false positive. Missing identity records, absent invoices, uncertain ownership, or conflicting unverified documents require more evidence. Do not infer a breach solely from payment amount, country, or transaction volume. Potential sanctions name matches require human investigation and are never clearance. Only an independent human reviewer can resolve a case.",
+            "title": "Synthetic transaction investigation policy",
+            "topic": "aml",
+            "version": "evaluation-1"
+          }
+        ],
+        "task": "Prepare an evidence-grounded investigation brief. Distinguish observations from suspicion. Recommend human action, never legal approval. Consider the explicit source and sample limitations. draft_disposition is a nonbinding suggestion: confirmed means the supplied policy breach is supported, false_positive means the alert is explained by supplied evidence, insufficient_evidence means missing evidence prevents a conclusion. Use null to abstain. No suggestion changes or closes the case.",
+        "transaction_scope": "Latest 50 transactions; not necessarily the full history.",
+        "transactions": [
+          {
+            "account_reference": "",
+            "amount": "215.00",
+            "counterparty": "Synthetic Trading Company 2",
+            "counterparty_country": "GB",
+            "currency": "USD",
+            "customer_id": "fbf84a1d-7c28-4be9-846e-0266a9215559",
+            "description": "Synthetic consulting payment for evaluation only.",
+            "external_id": "synthetic-payment-022",
+            "id": "a1936af7-c08b-4e5e-9d00-ac25b9a8cc63",
+            "occurred_at": "2026-01-01T00:00:00+00:00",
+            "received_at": "2026-10-23T10:12:52.128746+00:00"
+          }
+        ]
+      }
+    },
+    {
+      "step": "sanctions_screening",
+      "created_at": "2026-10-23T10:12:52.303491+00:00",
+      "output": {
+        "matches": [],
+        "scope": "Enabled official sanctions lists, primary names and aliases; normalized name similarity >= 0.88. Potential matches require identity verification. No match is not clearance. Ownership rules, PEP coverage, and all transliterations are not included.",
+        "source": {
+          "count": 0,
+          "docs": "https://ofac.treasury.gov/sanctions-list-service",
+          "fetched_at": "2026-10-23T09:51:09.727083+00:00",
+          "id": "ofac",
+          "name": "OFAC SDN",
+          "published_at": "2026-10-23T09:51:09.727083+00:00",
+          "sha256": "13f9ee28b9fe6f1b02d0c0e79b31a8ab4dcf0d8b11fd7a8c7fd8a77372080379",
+          "status": "ready",
+          "url": "urn:policylens:synthetic-evaluation-feed"
+        },
+        "sources": [
+          {
+            "count": 0,
+            "docs": "https://ofac.treasury.gov/sanctions-list-service",
+            "fetched_at": "2026-10-23T09:51:09.727083+00:00",
+            "id": "ofac",
+            "name": "OFAC SDN",
+            "published_at": "2026-10-23T09:51:09.727083+00:00",
+            "sha256": "13f9ee28b9fe6f1b02d0c0e79b31a8ab4dcf0d8b11fd7a8c7fd8a77372080379",
+            "status": "ready",
+            "url": "urn:policylens:synthetic-evaluation-feed"
+          }
+        ]
+      }
+    },
+    {
+      "step": "model_identity",
+      "created_at": "2026-10-23T10:12:54.124662+00:00",
+      "output": {
+        "requested_model": "openai/gpt-oss-20b",
+        "returned_model": "openai/gpt-oss-20b",
+        "revision_enforced": false,
+        "system_fingerprint": "fp_63473661d7"
+      }
+    },
+    {
+      "step": "draft_analysis",
+      "created_at": "2026-10-23T10:12:54.163220+00:00",
+      "output": {
+        "citations": [
+          {
+            "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+            "quote": "Synthetic training policy for transaction investigation; this is not regulatory guidance."
+          },
+          {
+            "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+            "quote": "Missing identity records, absent invoices, uncertain ownership, or conflicting unverified documents require more evidence."
+          }
+        ],
+        "draft_disposition": "insufficient_evidence",
+        "findings": [
+          "The transaction evidence indicates a legitimate payment with a valid invoice and no alerts. The supplied sanctions screen returned no matches. The policy cited is a synthetic training document that is not regulatory guidance. Therefore no regulatory breach can be identified."
+        ],
+        "limitations": [
+          "The policy applied is a synthetic training note and explicitly states it is not regulatory guidance, so it cannot be used to determine compliance. The case lacks any alerts or regulatory references that would necessitate further action."
+        ],
+        "missing_evidence": [
+          "No alerts were raised for this transaction, limiting the scope of evidence for potential violations. The policy in question does not contain regulatory requirements, so there is insufficient basis to assess compliance."
+        ],
+        "recommendation": "review_for_closure",
+        "summary": "The customer’s single transaction of USD 215 to a GB entity was fully explained by an invoice, with no alerts or sanctions matches. The only relevant policy is a synthetic training note that explicitly states it is not regulatory guidance, providing no actionable compliance assessment."
+      }
+    },
+    {
+      "step": "verify_evidence",
+      "created_at": "2026-10-23T10:12:54.192384+00:00",
+      "output": {
+        "checks": [
+          "source_freshness",
+          "citation_ids",
+          "verbatim_quotations",
+          "allowed_output_schema",
+          "human_approval_boundary"
+        ],
+        "passed": true,
+        "scope": "Verifies evidence references and constraints, not every inference in the narrative."
+      }
+    }
+  ]
+}

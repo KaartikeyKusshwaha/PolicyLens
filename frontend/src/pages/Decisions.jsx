@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import { Link } from "../navigation";
 import {
   ArrowLeft,
   CheckCheck,
@@ -45,7 +46,7 @@ export function Decisions() {
   return (
     <>
       <PageHeading
-        eyebrow="DECISIONS, WITH CONTEXT"
+        eyebrow="ASSESSMENT RECORDS"
         title="Every assessment. A clear trail."
         action={
           <Link className="button primary" to="/evaluate">
@@ -153,7 +154,7 @@ export function DecisionDetail() {
   return (
     <>
       <Link className="text-link back-link" to="/decisions">
-        <ArrowLeft size={15} /> Decision history
+        <ArrowLeft size={15} /> Assessment records
       </Link>
       <PageHeading
         eyebrow="ASSESSMENT DETAIL"
@@ -310,7 +311,7 @@ export function DecisionDetail() {
                 </div>
               )}
               {saved && <Success>Review recorded.</Success>}
-              <form onSubmit={review} className="review-form">
+              {["admin", "reviewer"].includes(user.role) ? <form onSubmit={review} className="review-form">
                 <div className="form-grid">
                   <Field label="Reviewer name">
                     <input name="reviewer" value={user.name} readOnly />
@@ -337,7 +338,7 @@ export function DecisionDetail() {
                 </div>
                 <ErrorNotice message={reviewError} />
                 <Submit busy={busy}>Record review</Submit>
-              </form>
+              </form> : <p>Your workspace role can inspect this record; only an authorized administrator or reviewer can append a review.</p>}
             </div>
           </section>
         </div>

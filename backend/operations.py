@@ -209,12 +209,14 @@ class Operations:
             "destinations": rule["countries"],
         }
 
-    def _open_case(self, db, customer, title, priority, description, actor):
+    def _open_case(
+        self, db, customer, title, priority, description, actor, *, group_existing=True
+    ):
         row = db.execute(
             "SELECT payload FROM records WHERE kind='case' AND json_extract(payload,'$.customer_id')=? AND json_extract(payload,'$.status')!='resolved' ORDER BY created_at LIMIT 1",
             (customer["id"],),
         ).fetchone()
-        if row:
+        if row and group_existing:
             existing = json.loads(row[0])
             order = {"low": 0, "medium": 1, "high": 2, "critical": 3}
             if order[priority] > order[existing["priority"]]:
@@ -537,22 +539,96 @@ class Operations:
         return case
 
     def save_rule(self, data, user, rule_id=None):
-        policy = self.store.policy(data.policy_id)
+        with self.store.connect() as db:
+            db.execute("BEGIN IMMEDIATE")
+            return self.draft_rule(db, data, user, rule_id)
+
+    def draft_rule(self, db, data, user, rule_id=None):
+        """Caller owns the transaction; shared by forms and atomic code imports."""
+        policy = db.execute(
+            "SELECT * FROM policies WHERE id=?", (data.policy_id,)
+        ).fetchone()
         if not policy:
             raise problem(
                 422, "policy_required", "Choose a policy from this workspace."
             )
-        old = self.get("rule", rule_id) if rule_id else None
+        prior = (
+            db.execute(
+                "SELECT payload FROM records WHERE kind='rule' AND id=?", (rule_id,)
+            ).fetchone()
+            if rule_id
+            else None
+        )
+        if rule_id and not prior:
+            raise problem(404, "not_found", "Control not found.")
+        old = json.loads(prior[0]) if prior else None
+        replacement = old
+        visited = set()
+        # Editing a pending replacement must still retire its active ancestor,
+        # rather than merely superseding another draft and leaving two actives.
+        while (
+            replacement
+            and replacement["status"] == "draft"
+            and replacement.get("replaces_id")
+        ):
+            if replacement["id"] in visited or len(visited) >= 32:
+                raise problem(
+                    409,
+                    "control_lineage",
+                    "The replacement chain is cyclic or exceeds the pilot bound.",
+                )
+            visited.add(replacement["id"])
+            ancestor = db.execute(
+                "SELECT payload FROM records WHERE kind='rule' AND id=?",
+                (replacement["replaces_id"],),
+            ).fetchone()
+            if not ancestor:
+                raise problem(
+                    409,
+                    "control_lineage",
+                    "The replacement ancestor is missing; review the control history.",
+                )
+            replacement = json.loads(ancestor[0])
+        if replacement and replacement["status"] == "superseded":
+            raise problem(
+                409,
+                "control_superseded",
+                "Start a new draft from the active control version.",
+            )
+        stamp = now()
         record = {
+            "id": uid(),
+            "created_at": stamp,
+            "updated_at": stamp,
             **data.model_dump(mode="json"),
             "version": old["version"] + 1 if old else 1,
             "status": "draft",
             "created_by": user["id"],
             "policy_version": policy["version"],
             "policy_title": policy["title"],
-            "replaces_id": old["id"] if old else None,
+            "replaces_id": replacement["id"] if replacement else None,
         }
-        return self.save("rule", record, user["id"])
+        if old and replacement and old["id"] != replacement["id"]:
+            record["edited_draft_id"] = old["id"]
+        db.execute(
+            "INSERT INTO records VALUES (?,?,?,?,?)",
+            ("rule", record["id"], stamp, stamp, canonical(record)),
+        )
+        audit(
+            db,
+            user["id"],
+            "rule_saved",
+            {
+                "id": record["id"],
+                "title": record["title"],
+                **(
+                    {"edited_draft_id": record["edited_draft_id"]}
+                    if record.get("edited_draft_id")
+                    else {}
+                ),
+            },
+        )
+        return record
 
     def rule_action(self, rule_id, data, user):
         with self.store.connect() as db:
@@ -564,6 +640,10 @@ class Operations:
                 raise problem(404, "not_found", "Control not found.")
             rule = json.loads(row[0])
             if data.action == "approve":
+                if rule.get("tuning_receipt_id"):
+                    from control_tuning import validate_approval
+
+                    validate_approval(db, self.store, rule, user)
                 if rule["created_by"] == user["id"]:
                     raise problem(
                         403,

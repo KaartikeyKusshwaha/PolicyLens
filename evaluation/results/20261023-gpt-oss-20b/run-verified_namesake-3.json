@@ -1,0 +1,233 @@
+{
+  "id": "75071116-7d18-4997-837b-5f1525403dd0",
+  "kind": "investigation",
+  "target_id": "a0608523-02db-411a-a5c6-e480acf5efed",
+  "state": "completed",
+  "created_at": "2026-10-23T10:19:05.156966+00:00",
+  "updated_at": "2026-10-23T10:19:07.806207+00:00",
+  "actor": "042c237c-f2f3-4d04-9a6a-bb6f4abb59db",
+  "payload": {
+    "max_model_calls": 1,
+    "model": "openai/gpt-oss-20b",
+    "model_attempts": 1,
+    "model_revision": "provider-unreported",
+    "prompt_version": "policylens-governance-v2",
+    "pseudonymize": false,
+    "requested_by": "042c237c-f2f3-4d04-9a6a-bb6f4abb59db",
+    "result": {
+      "citations": [
+        {
+          "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+          "policy_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc",
+          "quote": "A documented duplicate alert, verified namesake, or validated invoice explaining the alert is a false positive.",
+          "source_url": "",
+          "title": "Synthetic transaction investigation policy",
+          "version": "evaluation-1"
+        },
+        {
+          "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+          "policy_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc",
+          "quote": "Do not infer a breach solely from payment amount, country, or transaction volume.",
+          "source_url": "",
+          "title": "Synthetic transaction investigation policy",
+          "version": "evaluation-1"
+        },
+        {
+          "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+          "policy_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc",
+          "quote": "Potential sanctions name matches require human investigation and are never clearance.",
+          "source_url": "",
+          "title": "Synthetic transaction investigation policy",
+          "version": "evaluation-1"
+        },
+        {
+          "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+          "policy_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc",
+          "quote": "Only an independent human reviewer can resolve a case.",
+          "source_url": "",
+          "title": "Synthetic transaction investigation policy",
+          "version": "evaluation-1"
+        }
+      ],
+      "draft_disposition": "false_positive",
+      "findings": [
+        "Alert refers to a name that does not match the customer; identity documents confirm the customer is a namesake.",
+        "Invoice and delivery documentation have been validated, supporting the legitimacy of the transaction.",
+        "No sanctions list matches were found for the customer or counterparty.",
+        "Based on the evidence, the alert can be considered a false positive."
+      ],
+      "limitations": [
+        "The investigation is based solely on the summarized evidence provided; detailed documents were not examined."
+      ],
+      "missing_evidence": [
+        "Access to the full original identity documents and invoice details was not provided; verification was based on summarized evidence."
+      ],
+      "recommendation": "escalate",
+      "requires_approval": true,
+      "summary": "The alert indicated that the transaction involved a name that differs from the customer’s verified identity, suggesting a potential mismatch. The provided evidence confirms that the customer is a namesake, with date‑of‑birth and identity documents aligning with the account holder rather than the name on the alert. The invoice and delivery records have been validated, supporting the legitimacy of the payment. Sanctions screening returned no matches for the customer or counterparty. According to the synthetic transaction investigation policy, a documented duplicate alert, a verified namesake, or a validated invoice explaining the alert is classified as a false positive. Thus, the evidence supports the conclusion that the alert is a false positive and not indicative of regulatory or sanctions risk.\n\nThe investigation relies on the summary provided; full access to the underlying identity documents and invoices is not available, which limits the depth of verification.\n\nRecommendation: The case should be escalated to an independent human reviewer for final confirmation, as the policy explicitly states that only an independent human reviewer can resolve a case."
+    }
+  },
+  "steps": [
+    {
+      "step": "collect_evidence",
+      "created_at": "2026-10-23T10:19:05.233744+00:00",
+      "output": {
+        "alerts": [],
+        "case": {
+          "assignee_id": "",
+          "created_at": "2026-10-23T10:19:05.112777+00:00",
+          "created_by": "042c237c-f2f3-4d04-9a6a-bb6f4abb59db",
+          "customer_id": "b3ee813d-b64f-4d88-bad2-c6518ae5d340",
+          "customer_name": "Synthetic Customer 028",
+          "description": "The alerted name belongs to a different person. Verified date of birth and identity documents establish the customer is a namesake; the payment invoice and delivery are validated.",
+          "disposition": "",
+          "due_at": "2026-10-25T10:19:05.112777+00:00",
+          "id": "a0608523-02db-411a-a5c6-e480acf5efed",
+          "priority": "medium",
+          "status": "open",
+          "title": "Synthetic transaction investigation 028",
+          "updated_at": "2026-10-23T10:19:05.112777+00:00"
+        },
+        "customer": {
+          "address": "",
+          "country": "US",
+          "created_at": "2026-10-23T10:19:05.084017+00:00",
+          "external_id": "synthetic-customer-028",
+          "id": "b3ee813d-b64f-4d88-bad2-c6518ae5d340",
+          "kind": "individual",
+          "kyc_status": "pending",
+          "lei": "",
+          "name": "Synthetic Customer 028",
+          "notes": "",
+          "risk_tier": "medium",
+          "updated_at": "2026-10-23T10:19:05.084017+00:00"
+        },
+        "policies": [
+          {
+            "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+            "policy_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc",
+            "rank": -6.299834574028122e-06,
+            "source_url": "",
+            "text": "Synthetic training policy for transaction investigation; this is not regulatory guidance. Investigate transaction transfers using the supplied customer and case evidence. A documented identity mismatch or admitted falsified invoice is a supported policy breach. A documented duplicate alert, verified namesake, or validated invoice explaining the alert is a false positive. Missing identity records, absent invoices, uncertain ownership, or conflicting unverified documents require more evidence. Do not infer a breach solely from payment amount, country, or transaction volume. Potential sanctions name matches require human investigation and are never clearance. Only an independent human reviewer can resolve a case.",
+            "title": "Synthetic transaction investigation policy",
+            "topic": "aml",
+            "version": "evaluation-1"
+          }
+        ],
+        "task": "Prepare an evidence-grounded investigation brief. Distinguish observations from suspicion. Recommend human action, never legal approval. Consider the explicit source and sample limitations. draft_disposition is a nonbinding suggestion: confirmed means the supplied policy breach is supported, false_positive means the alert is explained by supplied evidence, insufficient_evidence means missing evidence prevents a conclusion. Use null to abstain. No suggestion changes or closes the case.",
+        "transaction_scope": "Latest 50 transactions; not necessarily the full history.",
+        "transactions": [
+          {
+            "account_reference": "",
+            "amount": "315.00",
+            "counterparty": "Synthetic Trading Company 3",
+            "counterparty_country": "GB",
+            "currency": "USD",
+            "customer_id": "b3ee813d-b64f-4d88-bad2-c6518ae5d340",
+            "description": "Synthetic consulting payment for evaluation only.",
+            "external_id": "synthetic-payment-028",
+            "id": "80eba17f-f763-4867-bded-d49aebf6a62c",
+            "occurred_at": "2026-01-01T00:00:00+00:00",
+            "received_at": "2026-10-23T10:19:05.134979+00:00"
+          }
+        ]
+      }
+    },
+    {
+      "step": "sanctions_screening",
+      "created_at": "2026-10-23T10:19:05.280667+00:00",
+      "output": {
+        "matches": [],
+        "scope": "Enabled official sanctions lists, primary names and aliases; normalized name similarity >= 0.88. Potential matches require identity verification. No match is not clearance. Ownership rules, PEP coverage, and all transliterations are not included.",
+        "source": {
+          "count": 0,
+          "docs": "https://ofac.treasury.gov/sanctions-list-service",
+          "fetched_at": "2026-10-23T09:51:09.727083+00:00",
+          "id": "ofac",
+          "name": "OFAC SDN",
+          "published_at": "2026-10-23T09:51:09.727083+00:00",
+          "sha256": "13f9ee28b9fe6f1b02d0c0e79b31a8ab4dcf0d8b11fd7a8c7fd8a77372080379",
+          "status": "ready",
+          "url": "urn:policylens:synthetic-evaluation-feed"
+        },
+        "sources": [
+          {
+            "count": 0,
+            "docs": "https://ofac.treasury.gov/sanctions-list-service",
+            "fetched_at": "2026-10-23T09:51:09.727083+00:00",
+            "id": "ofac",
+            "name": "OFAC SDN",
+            "published_at": "2026-10-23T09:51:09.727083+00:00",
+            "sha256": "13f9ee28b9fe6f1b02d0c0e79b31a8ab4dcf0d8b11fd7a8c7fd8a77372080379",
+            "status": "ready",
+            "url": "urn:policylens:synthetic-evaluation-feed"
+          }
+        ]
+      }
+    },
+    {
+      "step": "model_identity",
+      "created_at": "2026-10-23T10:19:07.727268+00:00",
+      "output": {
+        "requested_model": "openai/gpt-oss-20b",
+        "returned_model": "openai/gpt-oss-20b",
+        "revision_enforced": false,
+        "system_fingerprint": "fp_e2cb7a84ec"
+      }
+    },
+    {
+      "step": "draft_analysis",
+      "created_at": "2026-10-23T10:19:07.758640+00:00",
+      "output": {
+        "citations": [
+          {
+            "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+            "quote": "A documented duplicate alert, verified namesake, or validated invoice explaining the alert is a false positive."
+          },
+          {
+            "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+            "quote": "Do not infer a breach solely from payment amount, country, or transaction volume."
+          },
+          {
+            "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+            "quote": "Potential sanctions name matches require human investigation and are never clearance."
+          },
+          {
+            "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+            "quote": "Only an independent human reviewer can resolve a case."
+          }
+        ],
+        "draft_disposition": "false_positive",
+        "findings": [
+          "Alert refers to a name that does not match the customer; identity documents confirm the customer is a namesake.",
+          "Invoice and delivery documentation have been validated, supporting the legitimacy of the transaction.",
+          "No sanctions list matches were found for the customer or counterparty.",
+          "Based on the evidence, the alert can be considered a false positive."
+        ],
+        "limitations": [
+          "The investigation is based solely on the summarized evidence provided; detailed documents were not examined."
+        ],
+        "missing_evidence": [
+          "Access to the full original identity documents and invoice details was not provided; verification was based on summarized evidence."
+        ],
+        "recommendation": "escalate",
+        "summary": "The alert indicated that the transaction involved a name that differs from the customer’s verified identity, suggesting a potential mismatch. The provided evidence confirms that the customer is a namesake, with date‑of‑birth and identity documents aligning with the account holder rather than the name on the alert. The invoice and delivery records have been validated, supporting the legitimacy of the payment. Sanctions screening returned no matches for the customer or counterparty. According to the synthetic transaction investigation policy, a documented duplicate alert, a verified namesake, or a validated invoice explaining the alert is classified as a false positive. Thus, the evidence supports the conclusion that the alert is a false positive and not indicative of regulatory or sanctions risk.\n\nThe investigation relies on the summary provided; full access to the underlying identity documents and invoices is not available, which limits the depth of verification.\n\nRecommendation: The case should be escalated to an independent human reviewer for final confirmation, as the policy explicitly states that only an independent human reviewer can resolve a case."
+      }
+    },
+    {
+      "step": "verify_evidence",
+      "created_at": "2026-10-23T10:19:07.784385+00:00",
+      "output": {
+        "checks": [
+          "source_freshness",
+          "citation_ids",
+          "verbatim_quotations",
+          "allowed_output_schema",
+          "human_approval_boundary"
+        ],
+        "passed": true,
+        "scope": "Verifies evidence references and constraints, not every inference in the narrative."
+      }
+    }
+  ]
+}

@@ -1,0 +1,195 @@
+{
+  "id": "955cdd24-4fa4-4b9d-8c12-3a0f60fc6f74",
+  "kind": "investigation",
+  "target_id": "b66e42e7-0b95-4017-a63c-e15b106a8cb0",
+  "state": "completed",
+  "created_at": "2026-10-23T10:06:39.615764+00:00",
+  "updated_at": "2026-10-23T10:06:41.577335+00:00",
+  "actor": "042c237c-f2f3-4d04-9a6a-bb6f4abb59db",
+  "payload": {
+    "max_model_calls": 1,
+    "model": "openai/gpt-oss-20b",
+    "model_attempts": 1,
+    "model_revision": "provider-unreported",
+    "prompt_version": "policylens-governance-v2",
+    "pseudonymize": false,
+    "requested_by": "042c237c-f2f3-4d04-9a6a-bb6f4abb59db",
+    "result": {
+      "citations": [
+        {
+          "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+          "policy_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc",
+          "quote": "A documented duplicate alert, verified namesake, or validated invoice explaining the alert is a false positive.",
+          "source_url": "",
+          "title": "Synthetic transaction investigation policy",
+          "version": "evaluation-1"
+        }
+      ],
+      "draft_disposition": "false_positive",
+      "findings": [
+        "Duplicate alert confirmed; no new payment.",
+        "Verified that the transaction matches a prior reviewed payment.",
+        "No evidence of identity mismatch or falsified invoice."
+      ],
+      "limitations": [
+        "The analysis relies on the analyst's description; explicit documentation of the prior review is not available within the provided data."
+      ],
+      "missing_evidence": [
+        "Original review documentation is not provided, but the analyst's verification statement serves as sufficient evidence for closure."
+      ],
+      "recommendation": "review_for_closure",
+      "requires_approval": true,
+      "summary": "The analyst determined that the alert for transaction synthetic-payment-016 is a duplicate of a previously reviewed payment for the same counterparty and amount. No additional payment occurred, and the duplicate alert was verified. Based on the supplied evidence and the policy guidance that a documented duplicate alert is a false positive, the case should be closed as a false positive."
+    }
+  },
+  "steps": [
+    {
+      "step": "collect_evidence",
+      "created_at": "2026-10-23T10:06:39.674728+00:00",
+      "output": {
+        "alerts": [],
+        "case": {
+          "assignee_id": "",
+          "created_at": "2026-10-23T10:06:39.576780+00:00",
+          "created_by": "042c237c-f2f3-4d04-9a6a-bb6f4abb59db",
+          "customer_id": "5a49a9b6-8219-4ed0-9396-b44812c8c8b2",
+          "customer_name": "Synthetic Customer 016",
+          "description": "The analyst verified this alert duplicates an already reviewed payment. Both alerts reference the same bank settlement and no additional payment occurred.",
+          "disposition": "",
+          "due_at": "2026-10-25T10:06:39.576780+00:00",
+          "id": "b66e42e7-0b95-4017-a63c-e15b106a8cb0",
+          "priority": "medium",
+          "status": "open",
+          "title": "Synthetic transaction investigation 016",
+          "updated_at": "2026-10-23T10:06:39.576780+00:00"
+        },
+        "customer": {
+          "address": "",
+          "country": "IN",
+          "created_at": "2026-10-23T10:06:39.333626+00:00",
+          "external_id": "synthetic-customer-016",
+          "id": "5a49a9b6-8219-4ed0-9396-b44812c8c8b2",
+          "kind": "individual",
+          "kyc_status": "pending",
+          "lei": "",
+          "name": "Synthetic Customer 016",
+          "notes": "",
+          "risk_tier": "medium",
+          "updated_at": "2026-10-23T10:06:39.333626+00:00"
+        },
+        "policies": [
+          {
+            "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+            "policy_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc",
+            "rank": -6.299834574028122e-06,
+            "source_url": "",
+            "text": "Synthetic training policy for transaction investigation; this is not regulatory guidance. Investigate transaction transfers using the supplied customer and case evidence. A documented identity mismatch or admitted falsified invoice is a supported policy breach. A documented duplicate alert, verified namesake, or validated invoice explaining the alert is a false positive. Missing identity records, absent invoices, uncertain ownership, or conflicting unverified documents require more evidence. Do not infer a breach solely from payment amount, country, or transaction volume. Potential sanctions name matches require human investigation and are never clearance. Only an independent human reviewer can resolve a case.",
+            "title": "Synthetic transaction investigation policy",
+            "topic": "aml",
+            "version": "evaluation-1"
+          }
+        ],
+        "task": "Prepare an evidence-grounded investigation brief. Distinguish observations from suspicion. Recommend human action, never legal approval. Consider the explicit source and sample limitations. draft_disposition is a nonbinding suggestion: confirmed means the supplied policy breach is supported, false_positive means the alert is explained by supplied evidence, insufficient_evidence means missing evidence prevents a conclusion. Use null to abstain. No suggestion changes or closes the case.",
+        "transaction_scope": "Latest 50 transactions; not necessarily the full history.",
+        "transactions": [
+          {
+            "account_reference": "",
+            "amount": "115.00",
+            "counterparty": "Synthetic Trading Company 1",
+            "counterparty_country": "GB",
+            "currency": "USD",
+            "customer_id": "5a49a9b6-8219-4ed0-9396-b44812c8c8b2",
+            "description": "Synthetic consulting payment for evaluation only.",
+            "external_id": "synthetic-payment-016",
+            "id": "cbfd3a1a-e51f-42b7-a6e6-399ad3a9525c",
+            "occurred_at": "2026-01-01T00:00:00+00:00",
+            "received_at": "2026-10-23T10:06:39.598031+00:00"
+          }
+        ]
+      }
+    },
+    {
+      "step": "sanctions_screening",
+      "created_at": "2026-10-23T10:06:39.714569+00:00",
+      "output": {
+        "matches": [],
+        "scope": "Enabled official sanctions lists, primary names and aliases; normalized name similarity >= 0.88. Potential matches require identity verification. No match is not clearance. Ownership rules, PEP coverage, and all transliterations are not included.",
+        "source": {
+          "count": 0,
+          "docs": "https://ofac.treasury.gov/sanctions-list-service",
+          "fetched_at": "2026-10-23T09:51:09.727083+00:00",
+          "id": "ofac",
+          "name": "OFAC SDN",
+          "published_at": "2026-10-23T09:51:09.727083+00:00",
+          "sha256": "13f9ee28b9fe6f1b02d0c0e79b31a8ab4dcf0d8b11fd7a8c7fd8a77372080379",
+          "status": "ready",
+          "url": "urn:policylens:synthetic-evaluation-feed"
+        },
+        "sources": [
+          {
+            "count": 0,
+            "docs": "https://ofac.treasury.gov/sanctions-list-service",
+            "fetched_at": "2026-10-23T09:51:09.727083+00:00",
+            "id": "ofac",
+            "name": "OFAC SDN",
+            "published_at": "2026-10-23T09:51:09.727083+00:00",
+            "sha256": "13f9ee28b9fe6f1b02d0c0e79b31a8ab4dcf0d8b11fd7a8c7fd8a77372080379",
+            "status": "ready",
+            "url": "urn:policylens:synthetic-evaluation-feed"
+          }
+        ]
+      }
+    },
+    {
+      "step": "model_identity",
+      "created_at": "2026-10-23T10:06:41.514690+00:00",
+      "output": {
+        "requested_model": "openai/gpt-oss-20b",
+        "returned_model": "openai/gpt-oss-20b",
+        "revision_enforced": false,
+        "system_fingerprint": "fp_a4315eb300"
+      }
+    },
+    {
+      "step": "draft_analysis",
+      "created_at": "2026-10-23T10:06:41.542187+00:00",
+      "output": {
+        "citations": [
+          {
+            "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+            "quote": "A documented duplicate alert, verified namesake, or validated invoice explaining the alert is a false positive."
+          }
+        ],
+        "draft_disposition": "false_positive",
+        "findings": [
+          "Duplicate alert confirmed; no new payment.",
+          "Verified that the transaction matches a prior reviewed payment.",
+          "No evidence of identity mismatch or falsified invoice."
+        ],
+        "limitations": [
+          "The analysis relies on the analyst's description; explicit documentation of the prior review is not available within the provided data."
+        ],
+        "missing_evidence": [
+          "Original review documentation is not provided, but the analyst's verification statement serves as sufficient evidence for closure."
+        ],
+        "recommendation": "review_for_closure",
+        "summary": "The analyst determined that the alert for transaction synthetic-payment-016 is a duplicate of a previously reviewed payment for the same counterparty and amount. No additional payment occurred, and the duplicate alert was verified. Based on the supplied evidence and the policy guidance that a documented duplicate alert is a false positive, the case should be closed as a false positive."
+      }
+    },
+    {
+      "step": "verify_evidence",
+      "created_at": "2026-10-23T10:06:41.561727+00:00",
+      "output": {
+        "checks": [
+          "source_freshness",
+          "citation_ids",
+          "verbatim_quotations",
+          "allowed_output_schema",
+          "human_approval_boundary"
+        ],
+        "passed": true,
+        "scope": "Verifies evidence references and constraints, not every inference in the narrative."
+      }
+    }
+  ]
+}

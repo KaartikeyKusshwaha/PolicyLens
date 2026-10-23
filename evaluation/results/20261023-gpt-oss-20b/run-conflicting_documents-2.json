@@ -1,0 +1,213 @@
+{
+  "id": "bfabeeba-7ede-438a-9190-a8f73d9aaf3a",
+  "kind": "investigation",
+  "target_id": "08f3c350-7929-4307-b3df-a3b49d374618",
+  "state": "completed",
+  "created_at": "2026-10-23T10:38:45.288224+00:00",
+  "updated_at": "2026-10-23T10:38:46.884638+00:00",
+  "actor": "042c237c-f2f3-4d04-9a6a-bb6f4abb59db",
+  "payload": {
+    "max_model_calls": 1,
+    "model": "openai/gpt-oss-20b",
+    "model_attempts": 1,
+    "model_revision": "provider-unreported",
+    "prompt_version": "policylens-governance-v2",
+    "pseudonymize": false,
+    "requested_by": "042c237c-f2f3-4d04-9a6a-bb6f4abb59db",
+    "result": {
+      "citations": [
+        {
+          "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+          "policy_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc",
+          "quote": "Missing identity records, absent invoices, uncertain ownership, or conflicting unverified documents require more evidence.",
+          "source_url": "",
+          "title": "Synthetic transaction investigation policy",
+          "version": "evaluation-1"
+        },
+        {
+          "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+          "policy_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc",
+          "quote": "A documented identity mismatch or admitted falsified invoice is a supported policy breach.",
+          "source_url": "",
+          "title": "Synthetic transaction investigation policy",
+          "version": "evaluation-1"
+        }
+      ],
+      "draft_disposition": "insufficient_evidence",
+      "findings": [
+        "Conflicting sender identities in two unverified documents.",
+        "No authentication of documents or independent verification of sender."
+      ],
+      "limitations": [
+        "Policy does not provide guidance on how to authenticate documents.",
+        "Policy requires human review to resolve identity mismatches.",
+        "No direct evidence of a breach is present in the supplied data."
+      ],
+      "missing_evidence": [
+        "Authentication records for the documents.",
+        "Independent verification of the sender's identity.",
+        "Supporting invoice or receipt."
+      ],
+      "recommendation": "investigate",
+      "requires_approval": true,
+      "summary": "The case involves two documents that present conflicting sender identities for a $215 USD payment to Synthetic Trading Company 2. Neither document has been authenticated, and there is no customer admission or independent verification of the sender. According to the policy, a documented identity mismatch or falsified invoice is a breach, but the absence of authenticated records and independent confirmation means that the evidence is insufficient to conclude a violation. The policy also states that missing identity records, absent invoices, uncertain ownership, or conflicting unverified documents require more evidence. As such, the situation warrants a human investigation to gather authentication, customer admission, and any supporting invoices or third‑party verification. Until those steps are completed, the case cannot be cleared or closed.\n\nKey observations:\n1. Conflicting sender identities.\n2. No document authentication.\n3. No customer admission or independent verification.\n\nPotential coverage gaps:\n- Lack of authenticated documents.\n- No independent verification of sender identity.\n- No supporting invoice.\n\nThese gaps prevent a definitive determination of a policy breach. The case should be escalated for manual review to resolve the conflicting information and confirm or refute a potential identity mismatch."
+    }
+  },
+  "steps": [
+    {
+      "step": "collect_evidence",
+      "created_at": "2026-10-23T10:38:45.358073+00:00",
+      "output": {
+        "alerts": [],
+        "case": {
+          "assignee_id": "",
+          "created_at": "2026-10-23T10:38:45.238921+00:00",
+          "created_by": "042c237c-f2f3-4d04-9a6a-bb6f4abb59db",
+          "customer_id": "ba8b947d-415c-47b8-8027-2837b2aa305f",
+          "customer_name": "Synthetic Customer 047",
+          "description": "Two unverified documents give conflicting sender identities. Neither document has been authenticated and there is no customer admission or independent verification.",
+          "disposition": "",
+          "due_at": "2026-10-25T10:38:45.238921+00:00",
+          "id": "08f3c350-7929-4307-b3df-a3b49d374618",
+          "priority": "medium",
+          "status": "open",
+          "title": "Synthetic transaction investigation 047",
+          "updated_at": "2026-10-23T10:38:45.238921+00:00"
+        },
+        "customer": {
+          "address": "",
+          "country": "GB",
+          "created_at": "2026-10-23T10:38:45.195189+00:00",
+          "external_id": "synthetic-customer-047",
+          "id": "ba8b947d-415c-47b8-8027-2837b2aa305f",
+          "kind": "individual",
+          "kyc_status": "pending",
+          "lei": "",
+          "name": "Synthetic Customer 047",
+          "notes": "",
+          "risk_tier": "medium",
+          "updated_at": "2026-10-23T10:38:45.195189+00:00"
+        },
+        "policies": [
+          {
+            "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+            "policy_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc",
+            "rank": -6.299834574028122e-06,
+            "source_url": "",
+            "text": "Synthetic training policy for transaction investigation; this is not regulatory guidance. Investigate transaction transfers using the supplied customer and case evidence. A documented identity mismatch or admitted falsified invoice is a supported policy breach. A documented duplicate alert, verified namesake, or validated invoice explaining the alert is a false positive. Missing identity records, absent invoices, uncertain ownership, or conflicting unverified documents require more evidence. Do not infer a breach solely from payment amount, country, or transaction volume. Potential sanctions name matches require human investigation and are never clearance. Only an independent human reviewer can resolve a case.",
+            "title": "Synthetic transaction investigation policy",
+            "topic": "aml",
+            "version": "evaluation-1"
+          }
+        ],
+        "task": "Prepare an evidence-grounded investigation brief. Distinguish observations from suspicion. Recommend human action, never legal approval. Consider the explicit source and sample limitations. draft_disposition is a nonbinding suggestion: confirmed means the supplied policy breach is supported, false_positive means the alert is explained by supplied evidence, insufficient_evidence means missing evidence prevents a conclusion. Use null to abstain. No suggestion changes or closes the case.",
+        "transaction_scope": "Latest 50 transactions; not necessarily the full history.",
+        "transactions": [
+          {
+            "account_reference": "",
+            "amount": "215.00",
+            "counterparty": "Synthetic Trading Company 2",
+            "counterparty_country": "GB",
+            "currency": "USD",
+            "customer_id": "ba8b947d-415c-47b8-8027-2837b2aa305f",
+            "description": "Synthetic consulting payment for evaluation only.",
+            "external_id": "synthetic-payment-047",
+            "id": "355399d5-c568-401f-ba50-771a99880867",
+            "occurred_at": "2026-01-01T00:00:00+00:00",
+            "received_at": "2026-10-23T10:38:45.262764+00:00"
+          }
+        ]
+      }
+    },
+    {
+      "step": "sanctions_screening",
+      "created_at": "2026-10-23T10:38:45.407912+00:00",
+      "output": {
+        "matches": [],
+        "scope": "Enabled official sanctions lists, primary names and aliases; normalized name similarity >= 0.88. Potential matches require identity verification. No match is not clearance. Ownership rules, PEP coverage, and all transliterations are not included.",
+        "source": {
+          "count": 0,
+          "docs": "https://ofac.treasury.gov/sanctions-list-service",
+          "fetched_at": "2026-10-23T09:51:09.727083+00:00",
+          "id": "ofac",
+          "name": "OFAC SDN",
+          "published_at": "2026-10-23T09:51:09.727083+00:00",
+          "sha256": "13f9ee28b9fe6f1b02d0c0e79b31a8ab4dcf0d8b11fd7a8c7fd8a77372080379",
+          "status": "ready",
+          "url": "urn:policylens:synthetic-evaluation-feed"
+        },
+        "sources": [
+          {
+            "count": 0,
+            "docs": "https://ofac.treasury.gov/sanctions-list-service",
+            "fetched_at": "2026-10-23T09:51:09.727083+00:00",
+            "id": "ofac",
+            "name": "OFAC SDN",
+            "published_at": "2026-10-23T09:51:09.727083+00:00",
+            "sha256": "13f9ee28b9fe6f1b02d0c0e79b31a8ab4dcf0d8b11fd7a8c7fd8a77372080379",
+            "status": "ready",
+            "url": "urn:policylens:synthetic-evaluation-feed"
+          }
+        ]
+      }
+    },
+    {
+      "step": "model_identity",
+      "created_at": "2026-10-23T10:38:46.820423+00:00",
+      "output": {
+        "requested_model": "openai/gpt-oss-20b",
+        "returned_model": "openai/gpt-oss-20b",
+        "revision_enforced": false,
+        "system_fingerprint": "fp_c5a89987dc"
+      }
+    },
+    {
+      "step": "draft_analysis",
+      "created_at": "2026-10-23T10:38:46.850627+00:00",
+      "output": {
+        "citations": [
+          {
+            "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+            "quote": "Missing identity records, absent invoices, uncertain ownership, or conflicting unverified documents require more evidence."
+          },
+          {
+            "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+            "quote": "A documented identity mismatch or admitted falsified invoice is a supported policy breach."
+          }
+        ],
+        "draft_disposition": "insufficient_evidence",
+        "findings": [
+          "Conflicting sender identities in two unverified documents.",
+          "No authentication of documents or independent verification of sender."
+        ],
+        "limitations": [
+          "Policy does not provide guidance on how to authenticate documents.",
+          "Policy requires human review to resolve identity mismatches.",
+          "No direct evidence of a breach is present in the supplied data."
+        ],
+        "missing_evidence": [
+          "Authentication records for the documents.",
+          "Independent verification of the sender's identity.",
+          "Supporting invoice or receipt."
+        ],
+        "recommendation": "investigate",
+        "summary": "The case involves two documents that present conflicting sender identities for a $215 USD payment to Synthetic Trading Company 2. Neither document has been authenticated, and there is no customer admission or independent verification of the sender. According to the policy, a documented identity mismatch or falsified invoice is a breach, but the absence of authenticated records and independent confirmation means that the evidence is insufficient to conclude a violation. The policy also states that missing identity records, absent invoices, uncertain ownership, or conflicting unverified documents require more evidence. As such, the situation warrants a human investigation to gather authentication, customer admission, and any supporting invoices or third‑party verification. Until those steps are completed, the case cannot be cleared or closed.\n\nKey observations:\n1. Conflicting sender identities.\n2. No document authentication.\n3. No customer admission or independent verification.\n\nPotential coverage gaps:\n- Lack of authenticated documents.\n- No independent verification of sender identity.\n- No supporting invoice.\n\nThese gaps prevent a definitive determination of a policy breach. The case should be escalated for manual review to resolve the conflicting information and confirm or refute a potential identity mismatch."
+      }
+    },
+    {
+      "step": "verify_evidence",
+      "created_at": "2026-10-23T10:38:46.868899+00:00",
+      "output": {
+        "checks": [
+          "source_freshness",
+          "citation_ids",
+          "verbatim_quotations",
+          "allowed_output_schema",
+          "human_approval_boundary"
+        ],
+        "passed": true,
+        "scope": "Verifies evidence references and constraints, not every inference in the narrative."
+      }
+    }
+  ]
+}

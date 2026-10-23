@@ -1,6 +1,6 @@
 import React from "react";
 import { beforeEach, expect, test, vi } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import App from "./App";
 
 const health = {
@@ -50,7 +50,17 @@ const response = (data, status = 200) => ({
   json: async () => data,
 });
 const defaults = (url) =>
-  url === "/api/auth/status"
+  url === "/api/evidence/digest"
+    ? { generated_at: "2026-10-23T12:00:00Z", queues: Object.fromEntries(["open_cases", "overdue_cases", "control_drafts", "policy_changes"].map((name) => [name, { count: 0 }])), sources: [], source_warnings: 0, recent_alerts: 0, failed_runs: 0, invalid_due_dates: 0, scope: "Current workspace snapshot." }
+    : url === "/api/traceability"
+    ? { obligations: [], policies_without_current_analysis: [], available_controls: [], counts: { obligations: 0, with_gaps: 0, policies_without_current_analysis: 0 }, scope: "Explicit human mappings." }
+    : url === "/api/retention"
+    ? { active_policy: null, policies: [], holds: [], copies: [], deletion_requests: [] }
+    : url.startsWith("/api/alerts?")
+    ? { alerts: [], has_more: false, offset: 0, limit: 50 }
+    : url === "/api/audit/checkpoints"
+    ? { configured: false, status: "not_configured" }
+    : url === "/api/auth/status"
     ? { setup_required: false }
     : url === "/api/auth/me"
       ? user
@@ -101,12 +111,195 @@ beforeEach(() => {
   );
 });
 
-test("empty dashboard displays truthful zeroes and actionable onboarding", async () => {
+test("signed audit download failures are visible to a read-only auditor", async () => {
+  window.history.replaceState({}, "", "/audit");
+  mockRoutes({
+    "/api/auth/me": () => response({ ...user, role: "auditor" }),
+    "/api/audit/checkpoints": () => response({ configured: true, status: "retained", fingerprint: "a".repeat(64), unanchored_events: 0 }),
+    "/api/audit/checkpoints/export": () => response({ detail: { message: "Signed audit export is unavailable." } }, 409),
+  });
   render(<App />);
-  await screen.findByText("Your next decision, in context.");
-  expect(screen.getByText("0 / 4")).toBeTruthy();
-  expect(screen.getByText("Get your operation ready")).toBeTruthy();
-  expect(screen.getByText("0 of 3 enabled feeds are fresh.")).toBeTruthy();
+  const button = await screen.findByRole("button", { name: "Export signed audit bundle" }, { timeout: 5000 });
+  fireEvent.click(button);
+  await screen.findByText("Signed audit export is unavailable.");
+  expect(button.disabled).toBe(false);
+});
+
+test("unconfigured checkpoint storage never offers an unsigned substitute", async () => {
+  window.history.replaceState({}, "", "/audit");
+  render(<App />);
+  await screen.findByText(/External checkpoint storage is not configured/);
+  expect(screen.queryByRole("button", { name: "Export signed audit bundle" })).toBeNull();
+  expect(screen.getByRole("button", { name: "Download sponsor evidence pack" }).disabled).toBe(true);
+});
+
+test("sponsor evidence pack failures remain visible and allow retry", async () => {
+  window.history.replaceState({}, "", "/audit");
+  mockRoutes({
+    "/api/audit/checkpoints": () => response({ configured: true, status: "retained" }),
+    "/api/evidence/sponsor-pack": () => response({ detail: { message: "Complete evidence exceeds the pilot export bound." } }, 413),
+  });
+  render(<App />);
+  const button = await screen.findByRole("button", { name: "Download sponsor evidence pack" });
+  await waitFor(() => expect(button.disabled).toBe(false));
+  fireEvent.click(button);
+  await screen.findByText("Complete evidence exceeds the pilot export bound.");
+  expect(button.disabled).toBe(false);
+});
+
+const traceabilityFixture = {
+  available_controls: [{ id: "control1", policy_id: "policy1", policy_version: "1", title: "Identity control", version: 1, status: "draft" }],
+  obligations: [{ id: "obligation1", policy_id: "policy1", policy_version: "1", policy_title: "Identity policy", current_policy_version: true, analysis_job_id: "job1", analysis_at: "2026-10-22T00:00:00Z", obligation: "Verify the identity of sender and receiver.", citation: { quote: "Verify sender and receiver identity." }, analysis_scope: "Suggested obligations; not an exhaustive inventory.", analysis_coverage: { complete: false }, controls: [], gaps: ["no_linked_control"], status: "needs_review" }],
+  policies_without_current_analysis: [], counts: { obligations: 1, with_gaps: 1, policies_without_current_analysis: 0 }, scope: "Explicit human mappings; observed alert volume does not measure accuracy.",
+};
+
+test("populated traceability shows citations, partial coverage and mapping failures", async () => {
+  window.history.replaceState({}, "", "/policies/traceability");
+  mockRoutes({
+    "/api/traceability": () => response(traceabilityFixture),
+    "/api/traceability/obligations/obligation1/links": () => response({ detail: { message: "Policy version changed. Refresh the matrix." } }, 409),
+  });
+  render(<App />);
+  await screen.findByText("Verify the identity of sender and receiver.");
+  expect(screen.getByText("Verify sender and receiver identity.")).toBeTruthy();
+  expect(screen.getByText("The analysis used only part of the policy document.")).toBeTruthy();
+  fireEvent.change(screen.getByLabelText("Control to map"), { target: { value: "control1" } });
+  fireEvent.change(screen.getByLabelText(/Mapping rationale/), { target: { value: "Human-reviewed applicability mapping." } });
+  fireEvent.click(screen.getByRole("button", { name: "Record mapping" }));
+  await screen.findByText("Policy version changed. Refresh the matrix.");
+});
+
+test("auditors see traceability without mapping or model-run actions", async () => {
+  window.history.replaceState({}, "", "/policies/traceability");
+  mockRoutes({
+    "/api/auth/me": () => response({ ...user, role: "auditor" }),
+    "/api/traceability": () => response({ ...traceabilityFixture, policies_without_current_analysis: [{ id: "p2", title: "Unanalyzed current policy", version: "2" }] }),
+  });
+  render(<App />);
+  await screen.findByText(/Unanalyzed current policy/);
+  expect(screen.queryByRole("button", { name: "Record mapping" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Prepare cited obligation suggestions" })).toBeNull();
+  expect(screen.queryByLabelText(/Mapping rationale/)).toBeNull();
+});
+
+test("control YAML export, preview and draft import preserve the review boundary", async () => {
+  window.history.replaceState({}, "", "/rules/code?control_id=control1");
+  const yaml = "schema_version: policylens.controls.v1\ncontrols: []\n";
+  const item = { key: "control-key", policy: { version: "1.0" }, replaces: { id: "control1" }, configuration: { title: "Reviewed threshold draft", threshold: "250.00" } };
+  mockRoutes({
+    "/api/control-code/export?control_id=control1": () => ({ ok: true, headers: new Headers({ "content-type": "application/yaml; charset=utf-8" }), text: async () => yaml }),
+    "/api/control-code/preview": () => response({ preview_sha256: "a".repeat(64), count: 1, controls: [item], scope: "Imported controls need independent in-app approval." }),
+    "/api/control-code/import": () => response({ controls: [{ key: "control-key", control: { id: "draft2", title: "Reviewed threshold draft", version: 2 } }], replayed: false }, 201),
+  });
+  render(<App />);
+  fireEvent.click(await screen.findByRole("button", { name: "Load control YAML" }));
+  await waitFor(() => expect(screen.getByLabelText("Control YAML").value).toBe(yaml));
+  fireEvent.click(screen.getByRole("button", { name: "Preview YAML" }));
+  await screen.findByRole("heading", { name: "Preview: 1 control drafts" });
+  fireEvent.click(screen.getByRole("button", { name: "Import reviewed drafts" }));
+  await screen.findByText("These new drafts require independent approval before activation.");
+  expect(screen.getByRole("link", { name: "Reviewed threshold draft" }).getAttribute("href")).toBe("/policies/controls/draft2");
+  const imported = fetch.mock.calls.find(([url]) => url === "/api/control-code/import");
+  expect(JSON.parse(imported[1].body).preview_sha256).toBe("a".repeat(64));
+});
+
+test("changing YAML clears its preview and auditors cannot import", async () => {
+  window.history.replaceState({}, "", "/rules/code");
+  mockRoutes({
+    "/api/control-code/preview": () => response({ preview_sha256: "b".repeat(64), count: 1, controls: [], scope: "Draft only." }),
+  });
+  const view = render(<App />);
+  fireEvent.change(await screen.findByLabelText("Control YAML"), { target: { value: "test YAML content" } });
+  fireEvent.click(screen.getByRole("button", { name: "Preview YAML" }));
+  await screen.findByRole("button", { name: "Import reviewed drafts" });
+  fireEvent.change(screen.getByLabelText("Control YAML"), { target: { value: "changed after preview" } });
+  expect(screen.queryByRole("button", { name: "Import reviewed drafts" })).toBeNull();
+  view.unmount();
+  mockRoutes({ "/api/auth/me": () => response({ ...user, role: "auditor" }) });
+  render(<App />);
+  await screen.findByRole("heading", { name: "Controls as code" });
+  expect(screen.queryByRole("button", { name: "Preview YAML" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Import reviewed drafts" })).toBeNull();
+});
+
+test("engine imports require customer mapping and a fresh preview before commit", async () => {
+  window.history.replaceState({}, "", "/settings/imports");
+  const sourceId = "11111111-1111-4111-8111-111111111111";
+  mockRoutes({
+    "/api/customers": () => response([{ id: "customer1", name: "Fictional customer", external_id: "C-1" }]),
+    "/api/adapters/marble/preview": options => {
+      const mapped = JSON.parse(options.body).bundle.customer_mappings.length > 0;
+      return response({ preview_sha256: "a".repeat(64), can_import: mapped, objects: [{ id: "object1", object_type: "case", source_id: sourceId, source_name: "Upstream fictional case", action: "new", creates_alert: false, errors: mapped ? [] : ["customer_mapping_required"], customer_id: mapped ? "customer1" : null }], scope: "Selected records; local cases stay open for review." });
+    },
+    "/api/adapters/marble/import": () => response({ replayed: false, objects: [{ local_case_id: "imported-case1" }] }, 201),
+  });
+  render(<App />);
+  fireEvent.change(await screen.findByLabelText(/Marble instance label/), { target: { value: "fictional-instance" } });
+  fireEvent.click(screen.getByRole("button", { name: "Preview engine import" }));
+  await screen.findByText(/Customer Mapping Required/);
+  expect(screen.getByRole("button", { name: "Import reviewed engine records" }).disabled).toBe(true);
+  fireEvent.change(screen.getByLabelText(new RegExp(`Customer mapping for ${sourceId}`)), { target: { value: "customer1" } });
+  expect(screen.getByRole("button", { name: "Import reviewed engine records" }).disabled).toBe(true);
+  fireEvent.click(screen.getByRole("button", { name: "Preview engine import" }));
+  await waitFor(() => expect(screen.getByRole("button", { name: "Import reviewed engine records" }).disabled).toBe(false));
+  fireEvent.click(screen.getByRole("button", { name: "Import reviewed engine records" }));
+  expect((await screen.findByRole("link", { name: "Open imported investigation" })).getAttribute("href")).toBe("/inbox/cases/imported-case1");
+});
+
+test("imported alerts render source provenance without a fabricated control link", async () => {
+  window.history.replaceState({}, "", "/cases/imported-case1");
+  let graphUnavailable = true;
+  const external = { provider: "marble", instance: "fictional-instance", source_id: "source-case1", source_name: "Fictional upstream case", source_status: "closed", source_outcome: "false_positive", sha256: "a".repeat(64) };
+  mockRoutes({
+    "/api/customers/customer1/graph": () => graphUnavailable ? response({ detail: { message: "Graph is temporarily unavailable." } }, 503) : response({ nodes: [{ id: "customer1", name: "Fictional customer", kind: "customer" }, { id: "counterparty1", name: "Observed counterparty", kind: "counterparty" }], links: [{ source: "customer1", target: "counterparty1", label: "Observed transfer" }], scope: "Latest 100 customer transactions; observed links only." }),
+    "/api/cases/imported-case1": () => response({ id: "imported-case1", title: "Review imported Marble case", customer: { name: "Fictional customer", country: "IN", kyc_status: "pending" }, customer_id: "customer1", customer_name: "Fictional customer", created_at: "2026-10-01T00:00:00Z", due_at: "2026-10-23T00:00:00Z", status: "open", priority: "medium", description: "External source evidence for human review.", external_source: external, alerts: [{ id: "alert1", origin: "external_engine", external_source: { ...external, source_id: "source-decision1" }, rule_id: null, rule_title: "Imported Marble scenario", priority: "medium", facts: { source_outcome: "review", source_score: 70, trigger_object_id: "trigger1" }, created_at: "2026-10-01T00:00:00Z" }], screening_evidence: [], transactions: [], notes: [], tasks: [], agent_runs: [] }),
+  });
+  render(<App />);
+  await screen.findByText("Imported source evidence");
+  expect(screen.getByText("Fictional upstream case")).toBeTruthy();
+  expect(screen.getByText(/Imported source outcome: review/)).toBeTruthy();
+  expect(document.querySelector('a[href="/rules/null"]')).toBeNull();
+  expect(fetch.mock.calls.some(([url]) => url === "/api/customers/customer1/graph")).toBe(false);
+  fireEvent.click(screen.getByRole("button", { name: "Relationships" }));
+  expect(await screen.findByText("Graph is temporarily unavailable.")).toBeTruthy();
+  expect(screen.getByRole("heading", { name: "Review imported Marble case" })).toBeTruthy();
+  graphUnavailable = false;
+  fireEvent.click(screen.getByRole("button", { name: "Retry" }));
+  expect(await screen.findByRole("img", { name: "Observed customer transaction relationships" })).toBeTruthy();
+  expect(screen.getByText(/Links may include activity outside this case/)).toBeTruthy();
+  expect(screen.getByText("Latest 100 customer transactions; observed links only. Showing up to 18 connected nodes.")).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Relationships" }).getAttribute("aria-pressed")).toBe("true");
+});
+
+test("sponsor evidence download checks the archive type and releases its temporary URL", async () => {
+  window.history.replaceState({}, "", "/audit");
+  const archive = new Blob(["fixture zip bytes"], { type: "application/zip" });
+  const create = vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:fixture");
+  const release = vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => {});
+  const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+  mockRoutes({
+    "/api/audit/checkpoints": () => response({ configured: true, status: "retained" }),
+    "/api/evidence/sponsor-pack": () => ({ ok: true, headers: new Headers({ "content-type": "application/zip" }), blob: async () => archive }),
+  });
+  render(<App />);
+  const button = await screen.findByRole("button", { name: "Download sponsor evidence pack" });
+  await waitFor(() => expect(button.disabled).toBe(false));
+  fireEvent.click(button);
+  await waitFor(() => expect(click).toHaveBeenCalledOnce());
+  expect(create).toHaveBeenCalledWith(archive);
+  expect(release).toHaveBeenCalledWith("blob:fixture");
+  create.mockRestore();
+  release.mockRestore();
+  click.mockRestore();
+});
+
+test("empty inbox displays truthful zeroes and actionable setup", async () => {
+  render(<App />);
+  await screen.findByText("Work waiting for human review.");
+  await screen.findByText("Prepare your workspace");
+  expect(within(screen.getByRole("region", { name: "Workspace digest" })).getAllByText("0").length).toBe(6);
+  expect(screen.getByRole("link", { name: "Connect evidence sources" }).getAttribute("href")).toBe("/settings/sources");
+  expect(screen.getByRole("link", { name: "Prepare controls for independent approval" })).toBeTruthy();
   expect(screen.queryByText("API unreachable")).toBeNull();
 });
 
@@ -170,16 +363,17 @@ test("evaluation surfaces provider failure and never shows a made-up verdict", a
   expect(
     screen.getByText("Provider limit reached. No decision recorded."),
   ).toBeTruthy();
-  expect(window.location.pathname).toBe("/evaluate");
-  expect(screen.queryByText("Acceptable")).toBeNull();
+  expect(window.location.pathname).toBe("/evidence/evaluate");
+  expect(screen.queryByText("Advisory: no flag")).toBeNull();
 });
 
 test("sidebar navigation, theme, and policy input mode are interactive", async () => {
   render(<App />);
-  await screen.findByText("Your next decision, in context.");
+  await screen.findByText("Work waiting for human review.");
   fireEvent.click(screen.getByRole("button", { name: "Use dark theme" }));
   expect(localStorage.getItem("policylens-theme")).toBe("dark");
-  fireEvent.click(screen.getByRole("link", { name: "Policy library" }));
+  fireEvent.click(screen.getByRole("link", { name: "Policies & Controls" }));
+  fireEvent.click(await screen.findByRole("link", { name: "Policy library" }));
   fireEvent.click(await screen.findByRole("link", { name: /Add policy/ }));
   await screen.findByText("Add knowledge. Build clarity.");
   fireEvent.click(screen.getByRole("button", { name: /Upload document/ }));
@@ -325,12 +519,12 @@ test("failed agents expose the failure and never display an invented brief", asy
 test.each([
   ["/monitoring", "Every transaction adds context."],
   ["/cases", "From alert to accountable decision."],
-  ["/agents", "Your evidence desk, on demand."],
+  ["/agents", "Raw agent operations"],
   ["/rules", "Controls your team can explain."],
   ["/changes", "Understand what changed. Track what follows."],
-  ["/audit", "A clear view of the work—and its record."],
+  ["/audit", "Evidence packs and audit trail"],
   ["/settings", "Make the workspace work for your team."],
-  ["/sources", "Intelligence you can trace."],
+  ["/sources", "Connections and freshness"],
 ])(
   "product route %s renders its empty workspace without errors",
   async (path, heading) => {
@@ -348,4 +542,191 @@ test("account settings offer authenticated password rotation", async () => {
   fireEvent.click(await screen.findByRole("button", { name: "Account" }));
   expect(screen.getByLabelText("Current password").type).toBe("password");
   expect(screen.getByLabelText("New password").minLength).toBe(12);
+});
+
+test("four primary areas remain active through populated review and evidence routes", async () => {
+  const pending = { id: "pending-control", title: "Pending threshold proposal", version: 2, status: "draft", created_by: user.id, tuning_receipt_id: "receipt1" };
+  mockRoutes({
+    "/api/cases": () => response([{ id: "case-work", title: "Overdue fictional investigation", customer_name: "Fictional customer", status: "investigating", due_at: "2026-01-01T00:00:00Z" }]),
+    "/api/rules": () => response([pending]),
+    "/api/traceability": () => response(traceabilityFixture),
+    "/api/audit/checkpoints": () => response({ configured: true, status: "retained", fingerprint: "a".repeat(64) }),
+  });
+  render(<App />);
+  await screen.findByText("Overdue fictional investigation");
+  expect(screen.getByText("Different reviewer required")).toBeTruthy();
+  const primary = screen.getByRole("navigation", { name: "Main navigation" });
+  expect(within(primary).getAllByRole("link").map(link => link.textContent)).toEqual(["Inbox", "Policies & Controls", "Evidence", "Settings & Agents"]);
+  fireEvent.click(within(primary).getByRole("link", { name: "Policies & Controls" }));
+  await screen.findByText("Verify the identity of sender and receiver.");
+  expect(within(primary).getByRole("link", { name: "Policies & Controls" }).getAttribute("aria-current")).toBe("page");
+  fireEvent.click(within(primary).getByRole("link", { name: "Evidence" }));
+  await screen.findByText("Sponsor evidence pack");
+  expect(screen.queryByText("Observed destination corridors")).toBeNull();
+  expect(fetch.mock.calls.some(([url]) => url === "/api/analytics")).toBe(false);
+  fireEvent.click(within(primary).getByRole("link", { name: "Settings & Agents" }));
+  await screen.findByText("Workspace members");
+  fireEvent.click(screen.getByRole("link", { name: "Connections" }));
+  await screen.findByRole("heading", { name: "Connections and freshness" });
+  expect(within(primary).getByRole("link", { name: "Settings & Agents" }).getAttribute("aria-current")).toBe("page");
+  expect(fetch.mock.calls.some(([url]) => url.startsWith("/api/inbox") || url.startsWith("/api/evidence/assessments"))).toBe(false);
+});
+
+test("legacy case bookmarks preserve customer context, query and fragment", async () => {
+  window.history.replaceState({}, "", "/cases?customer=customer1#open");
+  mockRoutes({ "/api/customers": () => response([{ id: "customer1", name: "Selected fictional customer" }]) });
+  render(<App />);
+  await screen.findByRole("heading", { name: "Open a customer investigation" });
+  await waitFor(() => expect(screen.getByLabelText("Customer").value).toBe("customer1"));
+  expect(window.location.pathname).toBe("/inbox/cases");
+  expect(window.location.search).toBe("?customer=customer1");
+  expect(window.location.hash).toBe("#open");
+});
+
+test("inbox failures do not masquerade as an empty queue or a zero case count", async () => {
+  mockRoutes({ "/api/cases": () => response({ detail: { message: "Case inventory temporarily unavailable." } }, 503), "/api/evidence/digest": () => response({ detail: { message: "Complete digest unavailable." } }, 409) });
+  render(<App />);
+  await screen.findByText("Case inventory temporarily unavailable.");
+  expect(screen.queryByText("No open investigations in the loaded queue.")).toBeNull();
+  expect(screen.queryByText("Prepare your workspace")).toBeNull();
+  await screen.findByText("Complete digest unavailable.");
+  expect(within(screen.getByRole("region", { name: "Workspace digest" })).queryByText("0")).toBeNull();
+  expect(screen.getAllByRole("button", { name: "Retry" }).length).toBe(2);
+});
+
+test("alert pagination keeps source provenance and a way back from an empty page", async () => {
+  window.history.replaceState({}, "", "/inbox/alerts");
+  mockRoutes({
+    "/api/alerts?limit=50&offset=0": () => response({ alerts: [{ id: "a1", case_id: "c1", rule_title: "Imported review signal", origin: "external_engine", external_source: { provider: "marble" }, created_at: "2026-10-01T00:00:00Z" }, { id: "a2", case_id: "c2", rule_title: "Internal threshold signal", created_at: "2026-10-01T00:00:00Z" }], has_more: true }),
+    "/api/alerts?limit=50&offset=50": () => response({ alerts: [], has_more: false }),
+  });
+  render(<App />);
+  await screen.findByText("Imported review signal");
+  expect(screen.getByText("marble")).toBeTruthy();
+  expect(screen.getByText("Starter monitoring engine")).toBeTruthy();
+  expect(document.querySelector('a[href="/inbox/cases/c1"]')).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: "Next alerts" }));
+  await screen.findByText("No alerts on this page.");
+  expect(screen.getByRole("button", { name: "Next alerts" }).disabled).toBe(true);
+  fireEvent.click(screen.getByRole("button", { name: "Previous alerts" }));
+  await screen.findByText("Imported review signal");
+});
+
+test("connection overview hides raw source metadata until advanced inspection", async () => {
+  window.history.replaceState({}, "", "/settings/sources");
+  mockRoutes({ "/api/sources": () => response({ ...sources, feeds: sources.feeds.map((feed, index) => ({ ...feed, status: index === 0 ? "ready" : "stale", sha256: "a".repeat(64) })) }) });
+  render(<App />);
+  await screen.findByText(/1 of 3 enabled feeds are fresh/);
+  expect(screen.queryByText("Snapshot checksum")).toBeNull();
+  fireEvent.click(screen.getByRole("link", { name: "Inspect per-source dates, checksums and sync controls" }));
+  await screen.findByRole("heading", { name: "Sanctions source details" });
+  expect(screen.getAllByText("Snapshot checksum").length).toBe(3);
+  expect(window.location.pathname).toBe("/advanced/sources");
+});
+
+test("connection sync reports partial progress and stops after a feed failure", async () => {
+  window.history.replaceState({}, "", "/settings/sources");
+  let firstStored = false;
+  mockRoutes({
+    "/api/sources": () => response({ ...sources, feeds: sources.feeds.map((feed, index) => ({ ...feed, status: index === 0 && firstStored ? "ready" : "not_synced" })) }),
+    "/api/sources/ofac/sync": () => { firstStored = true; return response({ count: 100 }); },
+    "/api/sources/un/sync": () => response({ detail: { message: "Second feed validation failed." } }, 502),
+  });
+  render(<App />);
+  const button = await screen.findByRole("button", { name: "Sync enabled feeds" });
+  fireEvent.click(button);
+  await screen.findByText("1 enabled feeds completed before the failure. Second feed validation failed.");
+  await screen.findByText(/1 of 3 enabled feeds are fresh/);
+  expect(fetch.mock.calls.some(([url]) => url === "/api/sources/uk/sync")).toBe(false);
+  expect(screen.queryByText("3 enabled feeds downloaded and validated.")).toBeNull();
+  expect(button.disabled).toBe(false);
+});
+
+test("additional analytics are reachable only through advanced navigation", async () => {
+  window.history.replaceState({}, "", "/evidence");
+  render(<App />);
+  await screen.findByRole("heading", { name: "Evidence packs and audit trail" });
+  expect(screen.queryByText("Observed destination corridors")).toBeNull();
+  fireEvent.click(screen.getByRole("link", { name: "Advanced diagnostics" }));
+  await screen.findByRole("heading", { name: "Diagnostics and detailed records" });
+  fireEvent.click(screen.getByRole("link", { name: "Additional activity analytics" }));
+  await screen.findByText("Observed destination corridors");
+  expect(screen.queryByText("Sponsor evidence pack")).toBeNull();
+  expect(window.location.pathname).toBe("/advanced/analytics");
+});
+
+test("settings run summaries exclude maintenance and raw logs retain the complete loaded history", async () => {
+  window.history.replaceState({}, "", "/settings/runs");
+  const jobs = [{ id: "maintenance-run", kind: "maintenance", state: "completed" }, ...Array.from({ length: 11 }, (_, index) => ({ id: "model-run-" + index, kind: "investigation", state: "completed", updated_at: "2026-10-01T00:00:00Z" }))];
+  mockRoutes({ "/api/agents/jobs": () => response(jobs) });
+  render(<App />);
+  await screen.findByRole("heading", { name: "Recent model runs" });
+  await waitFor(() => expect(screen.getAllByRole("link", { name: /^Open run / }).length).toBe(10));
+  expect(screen.queryByText("Maintenance")).toBeNull();
+  const before = fetch.mock.calls.length;
+  fireEvent.click(screen.getByRole("link", { name: "Inspect raw agent operations and complete loaded run history" }));
+  await screen.findByRole("heading", { name: "Raw agent operations" });
+  await waitFor(() => expect(screen.getAllByRole("link", { name: /^Open run / }).length).toBe(12));
+  expect(fetch.mock.calls.slice(before).some(([url]) => url === "/api/agents/catalog")).toBe(false);
+});
+
+test("case work shows a cited draft without exposing raw operations inline", async () => {
+  window.history.replaceState({}, "", "/inbox/cases/case-brief");
+  const brief = { summary: "Synthetic evidence-grounded brief remains a draft for independent human review.", recommendation: "investigate", citations: [{ chunk_id: "p1:1:0", policy_id: "p1", title: "Synthetic identity policy", version: "1", quote: "Verify sender and receiver identity.", source_url: "" }], limitations: ["Only the supplied evidence was inspected."] };
+  mockRoutes({ "/api/cases/case-brief": () => response({ id: "case-brief", title: "Review the fictional transfer", customer_id: "customer1", customer_name: "Fictional customer", customer: { name: "Fictional customer", country: "IN", kyc_status: "pending" }, status: "open", priority: "medium", created_at: "2026-10-01T00:00:00Z", description: "Synthetic investigation context.", alerts: [], transactions: [], screening_evidence: [], notes: [], tasks: [], agent_runs: [{ id: "brief-run", kind: "investigation", state: "completed", created_at: "2026-10-01T00:00:00Z", payload: { result: brief } }] }) });
+  render(<App />);
+  await screen.findByRole("heading", { name: "Review the fictional transfer" });
+  fireEvent.click(screen.getByRole("button", { name: "Agent work" }));
+  await screen.findByText(brief.summary);
+  expect(screen.getByText("Verify sender and receiver identity.")).toBeTruthy();
+  expect(screen.getByText(/does not change the case disposition/)).toBeTruthy();
+  expect(document.querySelector('a[href="/advanced/agents/brief-run"]')).toBeTruthy();
+  expect(screen.queryByText("Collected step outputs")).toBeNull();
+});
+
+test("navigation drawer traps keyboard focus and Escape restores its trigger", async () => {
+  render(<App />);
+  await screen.findByRole("heading", { name: "Work waiting for human review." });
+  const trigger = screen.getByRole("button", { name: "Open navigation" });
+  fireEvent.click(trigger);
+  const dialog = screen.getByRole("dialog", { name: "Workspace navigation" });
+  const first = within(dialog).getByRole("button", { name: "Close workspace navigation" });
+  const last = within(dialog).getByRole("link", { name: "Advanced diagnostics" });
+  expect(document.activeElement).toBe(first);
+  expect(document.querySelector(".main-shell").hasAttribute("inert")).toBe(true);
+  fireEvent.keyDown(first, { key: "Tab", shiftKey: true });
+  expect(document.activeElement).toBe(last);
+  fireEvent.keyDown(last, { key: "Tab" });
+  expect(document.activeElement).toBe(first);
+  fireEvent.keyDown(first, { key: "Escape" });
+  expect(screen.queryByRole("dialog")).toBeNull();
+  expect(document.activeElement).toBe(trigger);
+  expect(trigger.getAttribute("aria-expanded")).toBe("false");
+});
+
+test("settings section links are shareable and read-only users cannot mount key management", async () => {
+  window.history.replaceState({}, "", "/settings/agents");
+  mockRoutes({ "/api/auth/me": () => response({ ...user, role: "auditor" }) });
+  render(<App />);
+  await screen.findByText("Only workspace administrators can manage agent keys.");
+  expect(fetch.mock.calls.some(([url]) => url === "/api/agent-keys")).toBe(false);
+  fireEvent.click(screen.getByRole("link", { name: "Workspace & account" }));
+  await screen.findByText("Make the workspace work for your team.");
+  fireEvent.click(screen.getByRole("button", { name: "Account" }));
+  expect(window.location.search).toBe("?section=Account");
+  expect(screen.getByLabelText("Current password")).toBeTruthy();
+});
+
+test("a favorable assessment remains advisory and auditor access offers no review mutation", async () => {
+  window.history.replaceState({}, "", "/evidence/assessments/advisory1");
+  mockRoutes({
+    "/api/auth/me": () => response({ ...user, role: "auditor" }),
+    "/api/decisions/advisory1": () => response({ id: "advisory1", created_at: "2026-10-01T00:00:00Z", model: "test-model", processing_time_ms: 1000, transaction: { transaction_id: "FICTIONAL-ADVISORY", amount: "100", currency: "USD", sender: "Fictional sender", receiver: "Fictional receiver", sender_country: "India", receiver_country: "UK", description: "Synthetic assessment for interface verification." }, assessment: { verdict: "acceptable", risk_score: 10, reasoning: "No flag was identified within the supplied synthetic evidence scope.", risk_factors: [], citations: [], limitations: ["This is not legal approval or sanctions clearance."] }, screening: { matches: [], scope: "No match is not clearance.", source: { id: "ofac", name: "Synthetic source", sha256: "a".repeat(64), fetched_at: "2026-10-01T00:00:00Z", url: "https://example.invalid/feed" } }, exchange: { amount_usd: "100", base: "USD", rate: "1", date: "2026-10-01", source: "identity" }, reviews: [] }),
+  });
+  render(<App />);
+  await screen.findByRole("heading", { name: "FICTIONAL-ADVISORY" });
+  expect(screen.getByRole("heading", { name: "Advisory: no flag" })).toBeTruthy();
+  expect(screen.getByText("No match is not clearance.")).toBeTruthy();
+  expect(screen.queryByRole("button", { name: "Record review" })).toBeNull();
+  expect(screen.getByText(/only an authorized administrator or reviewer can append a review/)).toBeTruthy();
 });

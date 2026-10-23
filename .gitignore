@@ -19,3 +19,7 @@ test-results/
 Thumbs.db
 .idea/
 .vscode/
+.security-key
+*.key
+*.pem
+*.egg-info/

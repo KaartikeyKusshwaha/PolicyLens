@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "./navigation";
 import { Bot, CircleAlert, LoaderCircle } from "lucide-react";
 import { api } from "./services/api";
 import { ErrorNotice, useResource } from "./components";

@@ -132,7 +132,11 @@ def test_full_snapshot_restores_all_workspaces_and_revokes_sessions(tmp_path):
     manifest = create_snapshot(settings, backup)
     assert len(manifest["files"]) == 3
     assert verify_snapshot(backup)["format"] == 1
-    result = restore_snapshot(backup, tmp_path / "restored")
+    from recovery_helpers import guard_arguments
+
+    result = restore_snapshot(
+        backup, tmp_path / "restored", settings, **guard_arguments(settings, tmp_path)
+    )
     assert result["sessions_revoked"]
     with sqlite3.connect(tmp_path / "restored" / "identity.db") as db:
         assert db.execute("SELECT count(*) FROM sessions").fetchone()[0] == 0
@@ -236,6 +240,7 @@ def test_background_worker_consumes_queued_job_and_records_verified_steps(worksp
         assert {step["step"] for step in result["steps"]} == {
             "collect_evidence",
             "sanctions_screening",
+            "model_identity",
             "draft_analysis",
             "verify_evidence",
         }

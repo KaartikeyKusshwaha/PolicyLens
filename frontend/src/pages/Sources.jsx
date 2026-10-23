@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "../navigation";
 import {
   ArrowUpRight,
   Building2,
@@ -22,7 +22,7 @@ import { Status } from "../product-components";
 import { useSession } from "../session";
 import { useWorkspace } from "../App";
 
-export default function Sources() {
+export default function Sources({ advanced = false }) {
   const r = useResource("/sources");
   const { health } = useWorkspace();
   const { user } = useSession();
@@ -46,11 +46,36 @@ export default function Sources() {
       setBusy("");
     }
   }
+  async function syncEnabled() {
+    setBusy("enabled"); setError(""); setSuccess("");
+    let completed = 0;
+    try {
+      for (const id of r.data.enabled_sources) {
+        await api("/sources/" + id + "/sync", { method: "POST" });
+        completed += 1;
+      }
+      setSuccess(`${completed} enabled feeds downloaded and validated.`);
+    } catch (failure) { setError(`${completed} enabled feeds completed before the failure. ${failure.message}`); }
+    finally { r.reload(); health.reload(); setBusy(""); }
+  }
+  if (!advanced) return <>
+    <PageHeading eyebrow="SETTINGS & AGENTS" title="Connections and freshness" action={<button className="button secondary" onClick={() => { r.reload(); health.reload(); }}>Refresh connection status</button>}>Review source availability before preparing investigations. No match is not clearance.</PageHeading>
+    <ErrorNotice message={r.error || error} retry={r.error ? r.reload : undefined} />
+    {success && <Success>{success}</Success>}
+    {r.loading ? <Loading /> : r.data && <>
+      <section className="panel section-padding"><h2>Sanctions coverage</h2><p>{r.data.feeds.filter(feed => r.data.enabled_sources.includes(feed.id) && feed.status === "ready").length} of {r.data.enabled_sources.length} enabled feeds are fresh. Every enabled feed must be fresh before screening completes.</p><p>Freshness window: {r.data.max_age_hours} hours after download. Potential matches require human investigation.</p>
+        {["admin", "analyst"].includes(user.role) && <button className="button primary" disabled={Boolean(busy) || !r.data.enabled_sources.length} onClick={syncEnabled}>{busy ? "Downloading enabled feeds…" : "Sync enabled feeds"}</button>}
+        <p><Link to="/settings?section=Monitoring">Choose coverage and recurring screening</Link></p><Link to="/advanced/sources">Inspect per-source dates, checksums and sync controls</Link>
+      </section>
+      <section className="panel section-padding"><h2>AI service</h2><Status value={r.data.groq.status} /><p>Model: <code>{r.data.groq.model || "Not reported"}</code>. A configured key indicates presence; a successful run confirms access. Provider limits and workspace run budgets still apply.</p><p className="privacy-note">Selected policy, customer and transaction evidence is sent to Groq. Structured masking can be configured per agent key; free text may still contain personal data.</p><Link to="/settings/agents">Review scoped agent access</Link></section>
+      <section className="panel section-padding"><h2>Engine and transaction connections</h2><p>Import existing engine records with explicit customer mapping, or configure signed webhook ingestion. The built-in monitoring engine is a starter option.</p><Link to="/settings/imports">Review engine imports</Link><p><Link to="/settings?section=Integrations">Configure signed transaction ingestion</Link></p></section>
+    </>}
+  </>;
   return (
     <>
       <PageHeading
         eyebrow="OFFICIAL SOURCES. VISIBLE COVERAGE."
-        title="Intelligence you can trace."
+        title="Sanctions source details"
         action={
           <button
             className="button secondary"

@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Link, useParams, useSearchParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
+import { Link } from "../navigation";
 import {
   ArrowLeft,
   ArrowUpRight,
@@ -12,6 +13,7 @@ import { api } from "../services/api";
 import {
   Empty,
   ErrorNotice,
+  Evidence,
   Field,
   formatDate,
   Loading,
@@ -29,6 +31,7 @@ import {
   Status,
 } from "../product-components";
 import { useSession } from "../session";
+import RelationshipGraph from "./RelationshipGraph";
 
 export function Cases() {
   const r = useResource("/cases");
@@ -295,35 +298,44 @@ export function CaseDetail() {
       <div className="entity-summary">
         <Status value={c.status} />
         <Status value={c.priority} />
-        <span>{c.alerts.length} control alerts</span>
+        <span>{c.alerts.length} alerts</span>
         <span>Owner: {assignee?.name || "Unassigned"}</span>
         <span>Due {formatDate(c.due_at)}</span>
       </div>
       <div className="case-layout">
         <div>
           <div className="page-tabs">
-            {["Evidence", "Activity", "Tasks", "Agent work"].map((v) => (
+            {["Evidence", "Relationships", "Activity", "Tasks", "Agent work"].map((v) => (
               <button
                 key={v}
                 className={tab === v ? "active" : ""}
+                aria-pressed={tab === v}
                 onClick={() => setTab(v)}
               >
                 {v}
               </button>
             ))}
           </div>
+          {tab === "Relationships" && (
+            <section className="panel section-padding">
+              <h2>Observed customer relationships</h2>
+              <p className="section-copy">Customer transaction context for this investigation. Links may include activity outside this case; they do not establish verified identity or wrongdoing.</p>
+              <RelationshipGraph id={c.customer_id} />
+            </section>
+          )}
           {tab === "Evidence" && (
             <>
               <section className="panel section-padding">
                 <h2>Investigation context</h2>
                 <p className="section-copy preserve-lines">{c.description}</p>
+                {c.external_source && <><h3>Imported source evidence</h3><DefinitionList items={[["Provider", c.external_source.provider], ["Instance", c.external_source.instance], ["Source record", c.external_source.source_id], ["Source name", c.external_source.source_name], ["Upstream status", c.external_source.source_status], ["Upstream outcome", c.external_source.source_outcome]]} /><p>Upstream status and outcome are retained as source evidence. The local investigation requires independent human review.</p><code style={{ overflowWrap: "anywhere" }}>{c.external_source.sha256}</code></>}
                 <Link className="text-link" to={"/customers/" + c.customer_id}>
                   Open customer profile <ArrowUpRight size={14} />
                 </Link>
               </section>
               <section className="panel detail-section">
                 <div className="panel-heading">
-                  <h2>Triggered controls</h2>
+                  <h2>Control hits and imported engine signals</h2>
                   <span className="count-pill">{c.alerts.length}</span>
                 </div>
                 {c.alerts.length ? (
@@ -331,12 +343,12 @@ export function CaseDetail() {
                     {c.alerts.map((a) => (
                       <article key={a.id}>
                         <div className="panel-title-row">
-                          <Link to={"/rules/" + a.rule_id}>
+                          {a.origin === "external_engine" ? <strong>{a.rule_title}</strong> : <Link to={"/rules/" + a.rule_id}>
                             <strong>{a.rule_title}</strong>
-                          </Link>
+                          </Link>}
                           <Status value={a.priority} />
                         </div>
-                        <p>
+                        {a.origin === "external_engine" ? <><p>Imported source outcome: {a.facts.source_outcome}. This is external engine evidence; local disposition requires human review.</p><DefinitionList items={[["Source", a.external_source.provider], ["Instance", a.external_source.instance], ["Source decision", a.external_source.source_id], ["Source score", a.facts.source_score], ["Trigger object reference", a.facts.trigger_object_id]]} /></> : <><p>
                           Control version {a.rule_version} ·{" "}
                           {a.rule_snapshot.policy_title} v
                           {a.rule_snapshot.policy_version}
@@ -348,7 +360,7 @@ export function CaseDetail() {
                             ["Currency", a.facts.currency],
                             ["Window", a.facts.window_hours + " hours"],
                           ]}
-                        />
+                        /></>}
                         <small>{formatDate(a.created_at)}</small>
                       </article>
                     ))}
@@ -482,7 +494,8 @@ export function CaseDetail() {
               {c.agent_runs.length ? (
                 <div className="compact-records">
                   {c.agent_runs.map((j) => (
-                    <Link key={j.id} to={"/agents/" + j.id}>
+                    <article key={j.id} className="section-padding case-agent-entry">
+                    <Link to={"/agents/" + j.id}>
                       <div>
                         <strong>{label(j.kind)}</strong>
                         <small>{formatDate(j.created_at)}</small>
@@ -490,6 +503,14 @@ export function CaseDetail() {
                       <Status value={j.state} />
                       <ArrowUpRight size={15} />
                     </Link>
+                    {j.state === "completed" && j.payload?.result && <>
+                      <h3>Draft for human review</h3>
+                      <p>{j.payload.result.summary}</p>
+                      <p>Suggested action: {label(j.payload.result.recommendation || "human_review")}. This does not change the case disposition.</p>
+                      {j.payload.result.citations && <Evidence citations={j.payload.result.citations} />}
+                      <ul>{(j.payload.result.limitations || []).map((item, index) => <li key={index}>{item}</li>)}</ul>
+                    </>}
+                    </article>
                   ))}
                 </div>
               ) : (

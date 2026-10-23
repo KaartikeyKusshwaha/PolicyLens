@@ -10,7 +10,17 @@ ROOT = Path(__file__).resolve().parent
 class Settings(BaseSettings):
     groq_api_key: SecretStr = SecretStr("")
     groq_model: str = "openai/gpt-oss-20b"
+    groq_model_revision: str = Field(
+        default="provider-unreported", min_length=1, max_length=100
+    )
+    pseudonymize_model_calls: bool = False
+    pseudonymization_scope: str = "interactive"
     database_path: Path = ROOT / "data" / "policylens-v2.db"
+    security_key_path: Path | None = None
+    database_encryption: Literal["none", "sqlcipher4"] = "none"
+    checkpoint_directory: Path | None = None
+    deletion_state_directory: Path | None = None
+    checkpoint_interval_seconds: int = Field(default=300, ge=1, le=86400)
     sanctions_max_age_hours: int = Field(default=24, ge=1, le=168)
     cookie_secure: bool = False
     deployment_mode: Literal["local", "public"] = "local"

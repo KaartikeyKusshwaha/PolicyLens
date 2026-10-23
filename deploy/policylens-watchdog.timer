@@ -1,0 +1,11 @@
+[Unit]
+Description=Check PolicyLens readiness and offsite backups every five minutes
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=5min
+Persistent=true
+Unit=policylens-watchdog.service
+
+[Install]
+WantedBy=timers.target

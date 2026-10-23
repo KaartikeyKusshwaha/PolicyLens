@@ -1,0 +1,121 @@
+{
+  "id": "28b8c4b9-3c63-4ae0-b679-a34b024dc776",
+  "kind": "investigation",
+  "target_id": "fc6475f7-2f2f-46b8-a2e5-25a06c990d84",
+  "state": "failed",
+  "created_at": "2026-10-23T10:18:03.459451+00:00",
+  "updated_at": "2026-10-23T10:18:05.025864+00:00",
+  "actor": "042c237c-f2f3-4d04-9a6a-bb6f4abb59db",
+  "payload": {
+    "error": {
+      "code": "invalid_ai_response",
+      "message": "The provider could not generate a schema-valid draft. No decision was recorded and this run will not retry."
+    },
+    "max_model_calls": 1,
+    "model": "openai/gpt-oss-20b",
+    "model_attempts": 1,
+    "model_revision": "provider-unreported",
+    "prompt_version": "policylens-governance-v2",
+    "pseudonymize": false,
+    "requested_by": "042c237c-f2f3-4d04-9a6a-bb6f4abb59db"
+  },
+  "steps": [
+    {
+      "step": "collect_evidence",
+      "created_at": "2026-10-23T10:18:03.525123+00:00",
+      "output": {
+        "alerts": [],
+        "case": {
+          "assignee_id": "",
+          "created_at": "2026-10-23T10:18:03.421474+00:00",
+          "created_by": "042c237c-f2f3-4d04-9a6a-bb6f4abb59db",
+          "customer_id": "35b4fb65-061e-4995-a3b4-86a8fd088045",
+          "customer_name": "Synthetic Customer 027",
+          "description": "The alerted name belongs to a different person. Verified date of birth and identity documents establish the customer is a namesake; the payment invoice and delivery are validated.",
+          "disposition": "",
+          "due_at": "2026-10-25T10:18:03.421474+00:00",
+          "id": "fc6475f7-2f2f-46b8-a2e5-25a06c990d84",
+          "priority": "medium",
+          "status": "open",
+          "title": "Synthetic transaction investigation 027",
+          "updated_at": "2026-10-23T10:18:03.421474+00:00"
+        },
+        "customer": {
+          "address": "",
+          "country": "GB",
+          "created_at": "2026-10-23T10:18:03.378598+00:00",
+          "external_id": "synthetic-customer-027",
+          "id": "35b4fb65-061e-4995-a3b4-86a8fd088045",
+          "kind": "individual",
+          "kyc_status": "pending",
+          "lei": "",
+          "name": "Synthetic Customer 027",
+          "notes": "",
+          "risk_tier": "medium",
+          "updated_at": "2026-10-23T10:18:03.378598+00:00"
+        },
+        "policies": [
+          {
+            "chunk_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc:evaluation-1:0",
+            "policy_id": "a7aa9cbc-3d7b-4144-8e3f-79a5c234b6dc",
+            "rank": -6.299834574028122e-06,
+            "source_url": "",
+            "text": "Synthetic training policy for transaction investigation; this is not regulatory guidance. Investigate transaction transfers using the supplied customer and case evidence. A documented identity mismatch or admitted falsified invoice is a supported policy breach. A documented duplicate alert, verified namesake, or validated invoice explaining the alert is a false positive. Missing identity records, absent invoices, uncertain ownership, or conflicting unverified documents require more evidence. Do not infer a breach solely from payment amount, country, or transaction volume. Potential sanctions name matches require human investigation and are never clearance. Only an independent human reviewer can resolve a case.",
+            "title": "Synthetic transaction investigation policy",
+            "topic": "aml",
+            "version": "evaluation-1"
+          }
+        ],
+        "task": "Prepare an evidence-grounded investigation brief. Distinguish observations from suspicion. Recommend human action, never legal approval. Consider the explicit source and sample limitations. draft_disposition is a nonbinding suggestion: confirmed means the supplied policy breach is supported, false_positive means the alert is explained by supplied evidence, insufficient_evidence means missing evidence prevents a conclusion. Use null to abstain. No suggestion changes or closes the case.",
+        "transaction_scope": "Latest 50 transactions; not necessarily the full history.",
+        "transactions": [
+          {
+            "account_reference": "",
+            "amount": "215.00",
+            "counterparty": "Synthetic Trading Company 2",
+            "counterparty_country": "GB",
+            "currency": "USD",
+            "customer_id": "35b4fb65-061e-4995-a3b4-86a8fd088045",
+            "description": "Synthetic consulting payment for evaluation only.",
+            "external_id": "synthetic-payment-027",
+            "id": "93b11e07-1f4d-4478-b2fa-6ceeacb09fc0",
+            "occurred_at": "2026-01-01T00:00:00+00:00",
+            "received_at": "2026-10-23T10:18:03.439657+00:00"
+          }
+        ]
+      }
+    },
+    {
+      "step": "sanctions_screening",
+      "created_at": "2026-10-23T10:18:03.564151+00:00",
+      "output": {
+        "matches": [],
+        "scope": "Enabled official sanctions lists, primary names and aliases; normalized name similarity >= 0.88. Potential matches require identity verification. No match is not clearance. Ownership rules, PEP coverage, and all transliterations are not included.",
+        "source": {
+          "count": 0,
+          "docs": "https://ofac.treasury.gov/sanctions-list-service",
+          "fetched_at": "2026-10-23T09:51:09.727083+00:00",
+          "id": "ofac",
+          "name": "OFAC SDN",
+          "published_at": "2026-10-23T09:51:09.727083+00:00",
+          "sha256": "13f9ee28b9fe6f1b02d0c0e79b31a8ab4dcf0d8b11fd7a8c7fd8a77372080379",
+          "status": "ready",
+          "url": "urn:policylens:synthetic-evaluation-feed"
+        },
+        "sources": [
+          {
+            "count": 0,
+            "docs": "https://ofac.treasury.gov/sanctions-list-service",
+            "fetched_at": "2026-10-23T09:51:09.727083+00:00",
+            "id": "ofac",
+            "name": "OFAC SDN",
+            "published_at": "2026-10-23T09:51:09.727083+00:00",
+            "sha256": "13f9ee28b9fe6f1b02d0c0e79b31a8ab4dcf0d8b11fd7a8c7fd8a77372080379",
+            "status": "ready",
+            "url": "urn:policylens:synthetic-evaluation-feed"
+          }
+        ]
+      }
+    }
+  ]
+}

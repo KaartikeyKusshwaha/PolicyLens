@@ -43,6 +43,7 @@ class Credentials(Input):
     model_config = ConfigDict(str_strip_whitespace=False, extra="forbid")
     email: str = Field(min_length=5, max_length=254)
     password: str = Field(min_length=12, max_length=128)
+    second_factor: str = Field(default="", max_length=64)
 
     @field_validator("email")
     @classmethod
@@ -109,6 +110,13 @@ class Hub:
                     )
                 self.bootstrap_file = token_file
 
+        from mfa import AccountMFA
+
+        self.mfa = AccountMFA(self)
+        from agent_keys import AgentKeys
+
+        self.agent_keys = AgentKeys(self)
+
     def connect(self):
         # Store.connect provides commit/rollback and always closes the connection.
         return Store.connect(self)
@@ -173,7 +181,9 @@ class Hub:
             db.execute("INSERT INTO login_attempts VALUES (?,?)", (key, stamp))
 
     def login(self, data):
+        self.throttle("login-account:" + data.email)
         with self.connect() as db:
+            db.execute("BEGIN IMMEDIATE")
             user = db.execute(
                 "SELECT * FROM users WHERE email=?", (data.email,)
             ).fetchone()
@@ -192,6 +202,7 @@ class Hub:
                 raise problem(
                     403, "membership_required", "No active workspace membership."
                 )
+            self.mfa.consume(db, user["id"], data.second_factor)
             return user["id"], membership[0]
 
     def issue_password_reset(self, email):
@@ -295,7 +306,7 @@ class Hub:
                     "workspace_storage_missing",
                     "Workspace storage is missing. Restore its database before restarting; no replacement database was created.",
                 )
-            store = Store(path)
+            store = Store(path, self.settings)
             Operations(store)
             self.stores[org_id] = store
         return self.stores[org_id]
@@ -322,6 +333,7 @@ class Hub:
         return {"token": token, "email": email, "role": data.role, "expires_at": expiry}
 
     def join(self, data):
+        self.throttle("login-account:" + data.email)
         hashed = password_hash(data.password)
         with self.connect() as db:
             db.execute("BEGIN IMMEDIATE")
@@ -346,6 +358,7 @@ class Hub:
                         "Use your existing account password to accept this invitation.",
                     )
                 user_id = user["id"]
+                self.mfa.consume(db, user_id, data.second_factor)
             else:
                 user_id = str(uuid.uuid4())
                 db.execute(
@@ -364,7 +377,7 @@ class Hub:
         path = self.path.parent / "workspaces" / (org_id + ".db")
         from operations import Operations
 
-        Operations(Store(path))
+        Operations(Store(path, self.settings))
         with self.connect() as db:
             db.execute(
                 "INSERT INTO organizations VALUES (?,?,?,?)",

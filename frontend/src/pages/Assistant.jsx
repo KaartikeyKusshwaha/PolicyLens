@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ArrowUpRight, BookOpen, Send, Sparkles } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link } from "../navigation";
 import {
   ErrorNotice,
   Evidence,

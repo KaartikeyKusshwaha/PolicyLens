@@ -103,6 +103,12 @@ class AgentControl(Input):
 class InvestigationBrief(Input):
     summary: str = Field(min_length=30, max_length=6000)
     recommendation: Literal["investigate", "escalate", "review_for_closure"]
+    draft_disposition: (
+        Literal["confirmed", "false_positive", "insufficient_evidence"] | None
+    ) = Field(
+        default=None,
+        description="A nonbinding draft for comparison with human labels. Null means abstention. This never changes the case disposition.",
+    )
     findings: list[str] = Field(min_length=1, max_length=12)
     missing_evidence: list[str] = Field(max_length=12)
     citations: list[Citation] = Field(min_length=1, max_length=6)

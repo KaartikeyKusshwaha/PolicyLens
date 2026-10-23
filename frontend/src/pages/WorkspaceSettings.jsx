@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { Link } from "../navigation";
 import {
   ArrowUpRight,
   Copy,
@@ -22,13 +24,16 @@ import {
 } from "../components";
 import { Status } from "../product-components";
 import { useSession } from "../session";
+import AccountMFA from "./AccountMFA";
 
 export default function WorkspaceSettings() {
   const { user } = useSession();
+  const [params, setParams] = useSearchParams();
   const team = useResource("/team");
   const prefs = useResource("/preferences");
   const workspaces = useResource("/auth/workspaces");
-  const [tab, setTab] = useState("Team");
+  const sections = ["Team", "Monitoring", "Integrations", "Workspaces", "Account"];
+  const tab = sections.includes(params.get("section")) ? params.get("section") : "Team";
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [busy, setBusy] = useState(false);
@@ -90,13 +95,13 @@ export default function WorkspaceSettings() {
         <Status value={user.role} />
       </div>
       <div className="page-tabs">
-        {["Team", "Monitoring", "Integrations", "Workspaces", "Account"].map(
+        {sections.map(
           (t) => (
             <button
               key={t}
               className={tab === t ? "active" : ""}
               onClick={() => {
-                setTab(t);
+                setParams({ section: t });
                 setError("");
                 setSuccess("");
               }}
@@ -109,6 +114,7 @@ export default function WorkspaceSettings() {
       <ErrorNotice message={error} />
       {success && <Success>{success}</Success>}
       {copied && <Success>Copied.</Success>}
+      {tab === "Account" && <AccountMFA />}
       {tab === "Account" && (
         <form
           className="panel form-panel editor-panel"
@@ -148,6 +154,9 @@ export default function WorkspaceSettings() {
               minLength={12}
               maxLength={128}
             />
+          </Field>
+          <Field label="Authenticator or recovery code" hint="Required when two-factor authentication is enabled.">
+            <input name="second_factor" autoComplete="one-time-code" maxLength={64} />
           </Field>
           <Submit busy={busy}>Update password</Submit>
         </form>

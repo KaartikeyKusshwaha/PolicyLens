@@ -1,71 +1,35 @@
-import { createContext, useContext, useEffect, useState } from "react";
-import {
-  BrowserRouter,
-  Link,
-  NavLink,
-  Route,
-  Routes,
-  useLocation,
-} from "react-router-dom";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { BrowserRouter, Link, NavLink, useLocation } from "react-router-dom";
 import {
   Activity,
-  ArrowUpRight,
   BookOpen,
   ChevronRight,
-  Database,
   FileCheck2,
   HelpCircle,
-  LayoutDashboard,
+  Inbox as InboxIcon,
+  LogOut,
   Menu,
   Moon,
-  PanelLeftClose,
   ScanLine,
+  Settings2,
   ShieldCheck,
-  Sparkles,
   Sun,
   X,
-  Users,
-  Workflow,
-  Bot,
-  SlidersHorizontal,
-  GitCompareArrows,
-  Settings2,
-  Fingerprint,
-  LogOut,
 } from "lucide-react";
 import { useResource } from "./components";
-import Evaluate from "./pages/Evaluate";
-import { Policies, PolicyEditor } from "./pages/Policies";
-import Assistant from "./pages/Assistant";
-import { Decisions, DecisionDetail } from "./pages/Decisions";
-import Sources from "./pages/Sources";
 import { SessionProvider, AuthGate, useSession } from "./session";
 import { api } from "./services/api";
-import CommandCenter from "./pages/CommandCenter";
-import { Customers, CustomerEditor, CustomerDetail } from "./pages/Customers";
-import Monitoring from "./pages/Monitoring";
-import { Cases, CaseDetail } from "./pages/Cases";
-import { AgentOperations, AgentRun } from "./pages/AgentOperations";
-import { Controls, ControlEditor, ControlDetail } from "./pages/Controls";
-import { PolicyChanges, ChangeDetail } from "./pages/PolicyChanges";
-import AuditAnalytics from "./pages/AuditAnalytics";
-import WorkspaceSettings from "./pages/WorkspaceSettings";
+import { AREAS, areaFor } from "./navigation";
+import WorkspaceRoutes from "./workspaceRoutes";
 
 const WorkspaceContext = createContext(null);
 export const useWorkspace = () => useContext(WorkspaceContext);
-const navigation = [
-  { to: "/", label: "Command center", icon: LayoutDashboard },
-  { to: "/customers", label: "Customers & entities", icon: Users },
-  { to: "/monitoring", label: "Transaction monitoring", icon: Activity },
-  { to: "/cases", label: "Investigations", icon: Workflow },
-  { to: "/agents", label: "Agent operations", icon: Bot },
-  { to: "/rules", label: "Control workbench", icon: SlidersHorizontal },
-  { to: "/policies", label: "Policy library", icon: BookOpen },
-  { to: "/changes", label: "Policy change impact", icon: GitCompareArrows },
-  { to: "/assistant", label: "Policy assistant", icon: Sparkles },
-  { to: "/sources", label: "Data sources", icon: Database },
-  { to: "/audit", label: "Audit & analytics", icon: Fingerprint },
-  { to: "/settings", label: "Workspace settings", icon: Settings2 },
+const icons = [InboxIcon, BookOpen, FileCheck2, Settings2];
+const advancedLinks = [
+  ["/advanced", "Diagnostics"],
+  ["/advanced/agents", "Agent logs"],
+  ["/advanced/analytics", "Analytics"],
+  ["/advanced/sources", "Source details"],
 ];
 
 function Workspace() {
@@ -75,16 +39,49 @@ function Workspace() {
   const [dark, setDark] = useState(
     () => localStorage.getItem("policylens-theme") === "dark",
   );
+  const menu = useRef(null);
+  const sidebar = useRef(null);
   const location = useLocation();
+  const active = areaFor(location.pathname);
+  const advanced =
+    location.pathname === "/advanced" ||
+    location.pathname.startsWith("/advanced/");
+  const links = advanced ? advancedLinks : active?.links || [];
   useEffect(() => {
     document.documentElement.dataset.theme = dark ? "dark" : "light";
     localStorage.setItem("policylens-theme", dark ? "dark" : "light");
   }, [dark]);
-  const active = navigation.find((n) =>
-    n.to === "/"
-      ? location.pathname === "/"
-      : location.pathname.startsWith(n.to),
-  );
+  useEffect(() => {
+    if (!open) return;
+    const focusable = () =>
+      [...sidebar.current.querySelectorAll("a, button")].filter(
+        (node) => !node.disabled,
+      );
+    focusable()[0]?.focus();
+    function keydown(event) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setOpen(false);
+      }
+      if (event.key !== "Tab") return;
+      const items = focusable();
+      const first = items[0],
+        last = items[items.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last?.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first?.focus();
+      }
+    }
+    document.addEventListener("keydown", keydown);
+    const trigger = menu.current;
+    return () => {
+      document.removeEventListener("keydown", keydown);
+      trigger?.focus();
+    };
+  }, [open]);
   const closeMenu = () => setOpen(false);
   return (
     <WorkspaceContext.Provider value={{ health }}>
@@ -96,73 +93,99 @@ function Workspace() {
             onClick={closeMenu}
           />
         )}
-        <aside className={`sidebar ${open ? "is-open" : ""}`}>
-          <Link className="brand" to="/" onClick={closeMenu}>
+        <aside
+          ref={sidebar}
+          id="workspace-navigation"
+          className={`sidebar ${open ? "is-open" : ""}`}
+          role={open ? "dialog" : undefined}
+          aria-modal={open ? "true" : undefined}
+          aria-label={open ? "Workspace navigation" : undefined}
+        >
+          {open && (
+            <button
+              className="icon-button drawer-close"
+              aria-label="Close workspace navigation"
+              onClick={closeMenu}
+            >
+              <X size={20} />
+            </button>
+          )}
+          <Link className="brand" to="/inbox" onClick={closeMenu}>
             <span className="brand-mark">
               <ScanLine size={24} />
             </span>
             <span>
               Policy<span className="brand-light">Lens</span>
-              <small>COMPLIANCE INTELLIGENCE</small>
+              <small>GOVERNANCE & EVIDENCE</small>
             </span>
           </Link>
           <div className="workspace-picker">
             <span className="workspace-avatar">PL</span>
             <span>
               {session.user.workspace}
-              <small>{session.user.role} · Cross-border compliance</small>
+              <small>{session.user.role} · Human review required</small>
             </span>
           </div>
           <div className="nav-label">WORKSPACE</div>
           <nav aria-label="Main navigation">
-            {navigation.map(({ to, label, icon: Icon }) => (
-              <NavLink key={to} to={to} end={to === "/"} onClick={closeMenu}>
-                <Icon size={19} />
-                <span>{label}</span>
-                {to === "/assistant" && <span className="ai-tag">AI</span>}
-              </NavLink>
-            ))}
+            {AREAS.map((area, index) => {
+              const Icon = icons[index];
+              return (
+                <Link
+                  key={area.path}
+                  to={area.path}
+                  className={active?.path === area.path ? "active" : undefined}
+                  aria-current={active?.path === area.path ? "page" : undefined}
+                  onClick={closeMenu}
+                >
+                  <Icon size={19} />
+                  <span>{area.title}</span>
+                </Link>
+              );
+            })}
           </nav>
           <div className="sidebar-bottom">
-            <div className="sidebar-note">
-              <ShieldCheck size={20} />
-              <strong>Evidence at every step.</strong>
-              <p>Trace an assessment back to the policy that supports it.</p>
-              <Link to="/policies" onClick={closeMenu}>
-                Explore your library <ArrowUpRight size={14} />
-              </Link>
-            </div>
+            <p className="subtle-note">Humans decide. Agents prepare.</p>
+            <Link className="text-link" to="/advanced" onClick={closeMenu}>
+              Advanced diagnostics
+            </Link>
             <div className="sidebar-footer">
               <span className={`status-dot ${health.data ? "green" : ""}`} />
               <span>
                 {health.error
                   ? "API unreachable"
                   : health.data
-                    ? "Local storage connected"
+                    ? "Workspace connected"
                     : "Connecting…"}
               </span>
               <span className="version">v3.0</span>
             </div>
           </div>
         </aside>
-        <div className="main-shell">
+        <div className="main-shell" inert={open ? true : undefined}>
           <div className="topbar">
             <div className="breadcrumbs">
               <button
+                ref={menu}
                 className="icon-button mobile-menu"
                 aria-label="Open navigation"
+                aria-controls="workspace-navigation"
+                aria-expanded={open}
                 onClick={() => setOpen(true)}
               >
                 <Menu size={20} />
               </button>
               <span>Workspace</span>
               <ChevronRight size={13} />
-              <strong>{active?.label || "PolicyLens"}</strong>
+              <strong>
+                {active?.title || "PolicyLens"}
+                {advanced ? " · Advanced" : ""}
+              </strong>
             </div>
             <div className="topbar-actions">
-              <Link className="connection-chip" to="/sources">
+              <Link className="connection-chip" to="/settings/sources">
                 <Activity size={14} />
-                {health.data?.ai.status === "configured"
+                {health.data?.ai?.status === "configured"
                   ? "AI configured"
                   : "Setup required"}
               </Link>
@@ -187,7 +210,7 @@ function Workspace() {
               <span className="profile-avatar" title={session.user.name}>
                 {session.user.name
                   .split(" ")
-                  .map((v) => v[0])
+                  .map((value) => value[0])
                   .slice(0, 2)
                   .join("")}
               </span>
@@ -203,47 +226,30 @@ function Workspace() {
               </button>
             </div>
           </div>
-          <main key={location.pathname} id="main-content">
-            <Routes>
-              <Route path="/" element={<CommandCenter />} />
-              <Route path="/customers" element={<Customers />} />
-              <Route path="/customers/new" element={<CustomerEditor />} />
-              <Route path="/customers/:id" element={<CustomerDetail />} />
-              <Route path="/customers/:id/edit" element={<CustomerEditor />} />
-              <Route path="/monitoring" element={<Monitoring />} />
-              <Route path="/cases" element={<Cases />} />
-              <Route path="/cases/:id" element={<CaseDetail />} />
-              <Route path="/agents" element={<AgentOperations />} />
-              <Route path="/agents/:id" element={<AgentRun />} />
-              <Route path="/rules" element={<Controls />} />
-              <Route path="/rules/new" element={<ControlEditor />} />
-              <Route path="/rules/:id" element={<ControlDetail />} />
-              <Route path="/rules/:id/edit" element={<ControlEditor />} />
-              <Route path="/changes" element={<PolicyChanges />} />
-              <Route path="/changes/:id" element={<ChangeDetail />} />
-              <Route path="/audit" element={<AuditAnalytics />} />
-              <Route path="/settings" element={<WorkspaceSettings />} />
-              <Route path="/evaluate" element={<Evaluate />} />
-              <Route path="/policies" element={<Policies />} />
-              <Route path="/policies/new" element={<PolicyEditor />} />
-              <Route path="/policies/:id/edit" element={<PolicyEditor />} />
-              <Route path="/assistant" element={<Assistant />} />
-              <Route path="/query" element={<Assistant />} />
-              <Route path="/decisions" element={<Decisions />} />
-              <Route path="/decisions/:id" element={<DecisionDetail />} />
-              <Route path="/sources" element={<Sources />} />
-              <Route path="/external-data" element={<Sources />} />
-              <Route
-                path="*"
-                element={
-                  <div className="empty">
-                    <X size={30} />
-                    <h1>Page not found</h1>
-                    <Link to="/">Back to overview</Link>
-                  </div>
-                }
-              />
-            </Routes>
+          {active && (
+            <nav
+              className="area-navigation"
+              aria-label={
+                advanced ? "Advanced navigation" : active.title + " navigation"
+              }
+            >
+              {links
+                .filter(
+                  ([path]) =>
+                    path !== "/settings/retention" ||
+                    ["admin", "reviewer", "auditor"].includes(
+                      session.user.role,
+                    ),
+                )
+                .map(([path, title], index) => (
+                  <NavLink key={path} to={path} end={index === 0}>
+                    {title}
+                  </NavLink>
+                ))}
+            </nav>
+          )}
+          <main key={location.pathname} id="main-content" tabIndex={-1}>
+            <WorkspaceRoutes />
             <footer className="page-footer">
               <span>
                 <ShieldCheck size={13} /> PolicyLens · Evidence-led compliance

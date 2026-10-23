@@ -103,6 +103,18 @@ def parse_public_feed(source, content):
     }
 
 
+def source_freshness(data, max_age_hours, at=None):
+    if not data:
+        return "not_synced"
+    at = at or datetime.now(timezone.utc)
+    try:
+        stamp = datetime.fromisoformat(data["fetched_at"])
+        fresh = at - timedelta(hours=max_age_hours) < stamp <= at
+    except (KeyError, TypeError, ValueError, OverflowError):
+        fresh = False
+    return "ready" if fresh else "stale"
+
+
 class Intelligence(Providers):
     def __init__(self, settings, store, client):
         super().__init__(settings, store, client)
@@ -122,14 +134,11 @@ class Intelligence(Providers):
                 "count": 0,
                 "fetched_at": None,
             }
-        fresh = datetime.fromisoformat(data["fetched_at"]) > datetime.now(
-            timezone.utc
-        ) - timedelta(hours=self.settings.sanctions_max_age_hours)
         return {
             "id": source,
             **SOURCES[source],
             **{k: v for k, v in data.items() if k != "entries"},
-            "status": "ready" if fresh else "stale",
+            "status": source_freshness(data, self.settings.sanctions_max_age_hours),
         }
 
     async def sync(self, source):

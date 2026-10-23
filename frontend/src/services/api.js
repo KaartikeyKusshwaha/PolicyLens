@@ -3,7 +3,7 @@ export function setSessionToken(value) {
   csrfToken = value || "";
 }
 
-export async function api(path, { method = "GET", body, signal } = {}) {
+export async function api(path, { method = "GET", body, signal, responseType = "json" } = {}) {
   let response;
   try {
     response = await fetch(`/api${path}`, {
@@ -30,6 +30,16 @@ export async function api(path, { method = "GET", body, signal } = {}) {
     );
   }
   let data;
+  if (response.ok && responseType === "text") {
+    if (response.headers.get("content-type")?.split(";")[0] !== "application/yaml")
+      throw new Error("The server did not return control YAML.");
+    return response.text();
+  }
+  if (response.ok && responseType === "blob") {
+    if (response.headers.get("content-type")?.split(";")[0] !== "application/zip")
+      throw new Error("The server did not return an evidence archive.");
+    return response.blob();
+  }
   try {
     data = await response.json();
   } catch {
