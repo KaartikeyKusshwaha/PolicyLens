@@ -18,6 +18,7 @@ from types import SimpleNamespace
 
 from cryptography.fernet import Fernet
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
 from database import DB_ERRORS, connect_database, descriptor  # noqa: E402
 from snapshot_mapping import verify_workspace_mapping  # noqa: E402
@@ -141,7 +142,7 @@ def verify_archive(payload, max_age_hours=30, *, database_key_file=None):
     return manifest
 
 
-def collect(host, identity, known_hosts):
+def collect(host, identity, known_hosts, *, deletion_state=False):
     if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_-]*@[A-Za-z0-9][A-Za-z0-9.-]*", host):
         raise ValueError("Use a user@hostname SSH target.")
     for path in (identity, known_hosts):
@@ -169,8 +170,12 @@ def collect(host, identity, known_hosts):
         "sudo",
         "-n",
         "/opt/policylens/.venv/bin/python",
-        "/opt/policylens/deploy/export_backup.py",
+        "/opt/policylens/deploy/deletion_state_backup.py"
+        if deletion_state
+        else "/opt/policylens/deploy/export_backup.py",
     ]
+    if deletion_state:
+        command.append("latest")
     result = subprocess.run(command, capture_output=True, timeout=180, check=False)
     if result.returncode:
         raise RuntimeError("Verified SSH snapshot export failed.")
@@ -245,11 +250,23 @@ def main():
     )
     parser.add_argument("--destination", type=Path, required=True)
     parser.add_argument(
+        "--deletion-state-destination",
+        type=Path,
+        help="Also require verified encrypted retention of the newest staged complete deletion history; requires --database-key-file.",
+    )
+    parser.add_argument(
         "--max-age-hours", type=int, default=30, choices=range(1, 169), metavar="1..168"
     )
     args = parser.parse_args()
     args.destination.mkdir(parents=True, exist_ok=True, mode=0o700)
     try:
+        if (
+            args.deletion_state_destination is not None
+            and args.database_key_file is None
+        ):
+            raise ValueError(
+                "Deletion history transfer requires the original installation recovery key"
+            )
         if args.key_file.resolve().is_relative_to(args.destination.resolve()):
             raise ValueError("Keep the decryption key outside the backup destination.")
         result = persist(
@@ -259,6 +276,18 @@ def main():
             args.max_age_hours,
             database_key_file=args.database_key_file,
         )
+        if args.deletion_state_destination is not None:
+            from deploy.deletion_state_backup import persist as persist_deletion_state
+
+            result["deletion_state"] = persist_deletion_state(
+                collect(
+                    args.host, args.identity, args.known_hosts, deletion_state=True
+                ),
+                args.database_key_file,
+                args.key_file,
+                args.deletion_state_destination,
+                max_age_hours=args.max_age_hours,
+            )
     except Exception:
         result = {
             "success": False,

@@ -6,6 +6,19 @@ review and market validation. None of those gates can be inferred from a green C
 
 ## Operational watchdog checkpoint
 
+Scheduled deletion-history source integration: configured daily server backups
+stage complete authenticated history while stopped. The fixed verified-SSH latest
+exporter refuses corrupt/newest/pending state without fallback. The receiver and
+Windows installer accept an optional separate history destination requiring the
+original recovery key. Combined success is recorded only after both copies verify;
+history failure records a failed latest attempt. The service permits the specific
+conventional external-state directory. All 29 scheduling/offsite tests pass;
+PowerShell syntax parses and Ruff passes. Actual rollout/transfer remain pending.
+See `SCHEDULED_DELETION_BACKUP.md`.
+The final 26 scheduling/deletion-history tests also pass after staging permission
+checks. Bash syntax validation passes. Exact preceding `6d1b0f3` CI passed 499
+backend and 73 frontend tests (run `39960233947`); source now has 507 backend tests.
+
 Encrypted compaction checkpoint: the stopped operator can rebuild all retained
 identity/workspace content into a new SQLCipher snapshot. Schema table inventories,
 row counts, sorted logical-row hashes, SQLite/SQLCipher integrity and zero target

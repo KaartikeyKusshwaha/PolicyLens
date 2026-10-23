@@ -6,6 +6,10 @@ encrypts it at a receiver. Installation keys are never included. This complement
 database backup: a database snapshot alone cannot replace current external
 suppression history. The tool has **not** been scheduled or deployed on Oracle.
 
+The source [daily scheduling integration](SCHEDULED_DELETION_BACKUP.md) now stages
+history during stopped snapshots and lets the receiver require both database and
+history verification before recording success. Actual rollout remains pending.
+
 ## Export and receive
 
 Stop the authoritative Python service, select its original configuration and

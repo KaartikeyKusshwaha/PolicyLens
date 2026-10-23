@@ -6,6 +6,7 @@ import hashlib
 import hmac
 import json
 import os
+import re
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -23,6 +24,7 @@ from runtime import InstallationLock  # noqa: E402
 
 SCHEMA = "policylens.deletion-state-backup.v1"
 MAX_BUNDLE_BYTES = 96 * 1024 * 1024
+STAGING_ROOT = Path("/var/backups/policylens-deletion-state")
 
 
 def sign(payload, settings):
@@ -253,12 +255,93 @@ def recover(
     }
 
 
+def staged_files(root):
+    files, total = [], 0
+    for path in root.iterdir():
+        if path.name == ".installation.lock":
+            continue
+        if (
+            path.is_symlink()
+            or not path.is_file()
+            or not re.fullmatch(r"state-\d{8}T\d{12}Z-[a-f0-9]{64}\.json", path.name)
+        ):
+            raise ValueError(
+                "Deletion staging contains incomplete or unknown artifacts"
+            )
+        total += path.stat().st_size
+        if len(files) >= 2000 or total > 512 * 1024 * 1024:
+            raise ValueError("Deletion staging history exceeds its bound")
+        files.append(path)
+    return files, total
+
+
+def stage(settings, root=STAGING_ROOT):
+    root = Path(root).absolute()
+    if root.resolve() != root or root.is_relative_to(
+        settings.database_path.parent.resolve()
+    ):
+        raise ValueError(
+            "Deletion staging must be outside database storage without redirection"
+        )
+    root.mkdir(parents=True, exist_ok=True, mode=0o700)
+    if os.name != "nt" and root.stat().st_mode & 0o077:
+        raise ValueError("Deletion staging permissions must be 0700")
+    with InstallationLock(root):
+        files, total = staged_files(root)
+        content = export_bundle(settings)
+        if len(files) >= 2000 or total + len(content) > 512 * 1024 * 1024:
+            raise ValueError("Deletion staging has no publication capacity")
+        digest = hashlib.sha256(content).hexdigest()
+        stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
+        target = root / ("state-" + stamp + "-" + digest + ".json")
+        pending = target.with_suffix(".pending")
+        if target.exists():
+            raise ValueError("Deletion staging identity already exists")
+        descriptor = os.open(pending, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        with os.fdopen(descriptor, "wb") as stream:
+            stream.write(content)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(pending, target)
+        sync_directory(root)
+        return {"staged": True, "bundle_sha256": digest, "file": target.name}
+
+
+def latest(settings, root=STAGING_ROOT):
+    root = Path(root).absolute()
+    if root.resolve() != root or not root.is_dir():
+        raise ValueError("Deletion staging directory unavailable or redirected")
+    if os.name != "nt" and root.stat().st_mode & 0o077:
+        raise ValueError("Deletion staging permissions must be 0700")
+    with InstallationLock(root):
+        files, _ = staged_files(root)
+        if not files:
+            raise ValueError("No complete staged deletion history is available")
+        selected = max(files)
+        if selected.stat().st_size > MAX_BUNDLE_BYTES:
+            raise ValueError("Staged deletion bundle oversized")
+        with selected.open("rb") as stream:
+            content = stream.read(MAX_BUNDLE_BYTES + 1)
+        if hashlib.sha256(content).hexdigest() != selected.stem.rsplit("-", 1)[1]:
+            raise ValueError("Staged deletion history checksum changed")
+        verify_bundle(content, settings)
+        return content
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser(
         "export",
         help="Write authenticated state to stdout from a stopped server; no installation keys included.",
+    )
+    commands.add_parser(
+        "stage",
+        help="Stage complete state while stopped for the fixed verified-SSH exporter.",
+    )
+    commands.add_parser(
+        "latest",
+        help="Read the newest authenticated staged state; never fall back after failure.",
     )
     receive = commands.add_parser(
         "receive", help="Verify stdin and retain an encrypted complete-history copy."
@@ -279,6 +362,10 @@ def main():
     try:
         if args.command == "export":
             sys.stdout.buffer.write(export_bundle(Settings()))
+        elif args.command == "stage":
+            print(json.dumps(stage(Settings())))
+        elif args.command == "latest":
+            sys.stdout.buffer.write(latest(Settings()))
         elif args.command == "receive":
             content = sys.stdin.buffer.read(MAX_BUNDLE_BYTES + 1)
             print(

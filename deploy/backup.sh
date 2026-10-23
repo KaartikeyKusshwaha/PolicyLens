@@ -10,6 +10,9 @@ systemctl stop policylens
 snapshot="$backup_root/snapshot-$(date -u +%Y%m%dT%H%M%SZ)"
 cd /opt/policylens
 .venv/bin/python manage.py backup --output "$snapshot"
+if [[ -n "${DELETION_STATE_DIRECTORY:-}" ]]; then
+    .venv/bin/python deploy/deletion_state_backup.py stage
+fi
 systemctl start policylens
 trap - EXIT
 # Only this service's dated snapshot directories; keep at least fourteen days.
