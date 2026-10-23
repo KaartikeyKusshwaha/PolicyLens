@@ -52,6 +52,16 @@ so the new daily receiver was moved to the owner's C: recovery directory and
 the task configuration was updated. Recovery keys remain outside archive roots.
 No notification delivery path has been configured or message sent.
 
+The first console-based task launch was interrupted (`0xC000013A`). Switching
+the task to the matching `pythonw.exe`, with an explicit working directory,
+produced an actual scheduler exit code `0` and a fresh successful receiver
+receipt. The source installer now selects that background launcher; SSH children
+also use `CREATE_NO_WINDOW` on Windows. Manual initial validation still uses
+console Python synchronously before task registration. The final watchdog passed
+readiness, database archive, both history archives and the disk floor (about
+14.9 GB free on C:). This proves a manual scheduler invocation, not the future
+daily trigger or notification delivery.
+
 Still open: final populated desktop/mobile browser acceptance, authenticated
 production workflow, deployed MCP/provider acceptance, populated load on the
 1 GB VM, complete copy/physical retention handling, actual Marble comparison,

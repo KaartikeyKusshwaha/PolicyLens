@@ -38,7 +38,9 @@ if ($DatabaseKey) { $backupValues += @('--database-key-file', $DatabaseKey) }
 if ($DeletionStateDestination) { $backupValues += @('--deletion-state-destination', $DeletionStateDestination) }
 if ($CheckpointDestination) { $backupValues += @('--checkpoint-destination', $CheckpointDestination, '--checkpoint-fingerprint', $CheckpointFingerprint) }
 $backupArguments = ($backupValues | ForEach-Object { '"' + [regex]::Replace($_, '(\\+)$', '$1$1') + '"' }) -join ' '
-$backupAction = New-ScheduledTaskAction -Execute (Resolve-Path -LiteralPath $Python).Path -Argument $backupArguments
+$backupTaskPython = Join-Path (Split-Path -Parent $Python) 'pythonw.exe'
+if (-not (Test-Path -LiteralPath $backupTaskPython -PathType Leaf)) { throw 'A matching pythonw.exe is required for a background Windows task.' }
+$backupAction = New-ScheduledTaskAction -Execute $backupTaskPython -Argument $backupArguments -WorkingDirectory (Split-Path -Parent $PSScriptRoot)
 $backupTrigger = New-ScheduledTaskTrigger -Daily -At '09:00'
 $backupSettings = New-ScheduledTaskSettingsSet -StartWhenAvailable -MultipleInstances IgnoreNew -ExecutionTimeLimit (New-TimeSpan -Minutes 10)
 $backupPrincipal = New-ScheduledTaskPrincipal -UserId ([System.Security.Principal.WindowsIdentity]::GetCurrent().Name) -LogonType Interactive -RunLevel Limited
