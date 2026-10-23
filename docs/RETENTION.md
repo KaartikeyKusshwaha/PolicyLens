@@ -201,6 +201,14 @@ JSON and PDF. Native backup downloads verify the saved content hash when availab
 
 ## Boundaries still requiring implementation
 
+The daily backup source script now preserves dated snapshots rather than pruning
+after thirteen days. The previous unconditional filesystem rule could bypass
+approved preservation periods and holds. Removal requires explicit operator copy
+discovery/reconciliation and reviewed evidence; source tests execute the shell's
+failure/restart behavior while preserving an aged synthetic snapshot. This has not
+been deployed to Oracle. Free-space monitoring and preservation planning remain
+operator responsibilities.
+
 Restore now requires the current external deletion guard and an independently
 retained digest for every snapshot. It refuses recorded operational targets and
 changed/omitted receipts before creating a restored installation, with a second

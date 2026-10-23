@@ -6,6 +6,20 @@ review and market validation. None of those gates can be inferred from a green C
 
 ## Operational watchdog checkpoint
 
+Backup retention correction: removed the source shell script's unconditional
+thirteen-day snapshot deletion, which could bypass approved preservation periods
+and holds. Snapshots now remain until explicit reviewed copy reconciliation/removal.
+Four real Bash-script tests verify database-only/combined success, both failure
+paths, exact restart behavior, preserved exit status and retained aged snapshots.
+Only deployment paths/service commands are redirected into the synthetic fixture;
+Windows substitutes directory creation because Git Bash cannot chmod its temp
+directory, while Linux CI uses real `install`. No host service or live backup was
+modified. Disk monitoring and deployed rollout remain pending.
+Ruff and all four shell tests pass. The source suite contains 511 backend tests;
+exact previous `eb6d980` CI passed 507 backend and 73 frontend tests
+(run `39961336656`). `RELEASE_READINESS.md` now audits remaining requirements
+separately from source and synthetic evidence; the full goal remains incomplete.
+
 Scheduled deletion-history source integration: configured daily server backups
 stage complete authenticated history while stopped. The fixed verified-SSH latest
 exporter refuses corrupt/newest/pending state without fallback. The receiver and

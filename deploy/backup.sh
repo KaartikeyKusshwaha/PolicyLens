@@ -15,6 +15,6 @@ if [[ -n "${DELETION_STATE_DIRECTORY:-}" ]]; then
 fi
 systemctl start policylens
 trap - EXIT
-# Only this service's dated snapshot directories; keep at least fourteen days.
-find /var/backups/policylens -mindepth 1 -maxdepth 1 -type d \
-    -name 'snapshot-????????T??????Z' -mtime +13 -exec rm -rf -- {} +
+# Retained snapshots may be subject to approved preservation periods and holds.
+# Removal requires reconciled copy custody and explicit operator evidence. Do
+# not prune by age alone. Monitor free space and follow the retention procedure.

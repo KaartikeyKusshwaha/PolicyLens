@@ -9,6 +9,11 @@ authenticated history after the database snapshot while the app is still stopped
 The existing exit trap restarts the service on failure, while the backup service
 reports failure. Without the setting, database-only behavior remains.
 
+The source script retains snapshots instead of deleting them after a fixed age.
+An age-only cutoff cannot enforce approved retention periods or legal holds.
+Monitor disk growth and use explicit reconciled copy-removal procedures. Neither
+database snapshots nor history bundles are automatically pruned by this pipeline.
+
 Staging uses fixed `/var/backups/policylens-deletion-state`, private 0700 on Unix.
 A new file is flushed and atomically published with timestamp and full SHA-256 in
 its name. Unknown files, incomplete publication, redirection and full capacity

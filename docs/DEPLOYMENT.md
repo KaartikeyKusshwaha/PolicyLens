@@ -123,6 +123,12 @@ Test restoration with fictional data before depending on a backup. The automated
 
 The Oracle pilot installs `deploy/backup.sh` and its systemd service/timer. At 02:30 UTC daily (with up to five minutes of jitter), it briefly stops the app, creates a verified snapshot in root-only `/var/backups/policylens`, restarts the app even if snapshotting fails, and removes only its own snapshot directories older than thirteen full days. This pauses availability and background work briefly. A manual service run and separate cloud restore drill passed. A cloud snapshot was downloaded over verified SSH, encrypted with Fernet and verified by decryption on the owner's computer. Archive and decryption key are stored separately. This is one off-machine copy, not an automatic remote-backup schedule; losing the key makes the encrypted copy unrecoverable.
 
+The backup paragraph above records the original deployment checkpoint, not a fresh
+server verification. Current source `deploy/backup.sh` no longer removes snapshots
+by age alone: approved preservation periods, holds and copy-custody reconciliation
+must govern removal. This change is not deployed yet. Monitor available space and
+arrange explicit reviewed archival/removal; there is no automatic pruning substitute.
+
 ## Private account recovery
 
 Passwords are scrypt hashes and cannot be retrieved. An operator with server access can run `manage.py password-reset --email owner@example.com --origin https://your.actual.domain --output /private/reset-link-UNIQUE.txt` with the same protected environment used by the service. It creates a one-use 15-minute reset link and leaves the old password valid until the user completes the form.
