@@ -231,7 +231,11 @@ def test_sqlcipher_offsite_round_trip_restores_all_tenants_without_plaintext_sta
             target.write_bytes(archive.extractfile(name).read())
     restored = tmp_path / "restored"
     recovery_settings = settings.model_copy(update={"security_key_path": recovery_key})
-    restore_snapshot(verified, restored, recovery_settings)
+    from recovery_helpers import guard_arguments
+
+    restore_snapshot(
+        verified, restored, recovery_settings, **guard_arguments(settings, tmp_path)
+    )
     restarted = recovery_settings.model_copy(
         update={"database_path": restored / "workspace.db"}
     )

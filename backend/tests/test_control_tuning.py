@@ -452,7 +452,14 @@ def test_encrypted_restore_preserves_proposal_and_independent_review(tmp_path):
         parent, _, _ = setup(client)
         result, _ = propose(client, body(parent))
     create_snapshot(settings, tmp_path / "snapshot")
-    restore_snapshot(tmp_path / "snapshot", tmp_path / "restored", settings)
+    from recovery_helpers import guard_arguments
+
+    restore_snapshot(
+        tmp_path / "snapshot",
+        tmp_path / "restored",
+        settings,
+        **guard_arguments(settings, tmp_path),
+    )
     recovered = settings.model_copy(
         update={"database_path": tmp_path / "restored" / "workspace.db"}
     )

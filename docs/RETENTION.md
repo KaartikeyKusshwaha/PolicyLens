@@ -199,6 +199,14 @@ JSON and PDF. Native backup downloads verify the saved content hash when availab
 
 ## Boundaries still requiring implementation
 
+Restore now requires the current external deletion guard and an independently
+retained digest for every snapshot. It refuses recorded operational targets and
+changed/omitted receipts before creating a restored installation, with a second
+check on copied bytes. This prerequisite is documented in
+`DELETION_RESTORE_GUARD.md`. Production deletion execution and durable external
+publication/crash reconciliation remain unfinished; synthetic guard tests do not
+constitute a completed deletion workflow or physical erasure proof.
+
 - Implement execution of independently reviewed requests, handle shared and
   ambiguous references, reconcile saved exports and revalidate the exact
   eligible record set during execution. Concurrent changes must invalidate approval.

@@ -51,7 +51,12 @@ it must never be treated as a usable snapshot without successful verification.
 
 Next, select `DATABASE_ENCRYPTION=sqlcipher4`, retain the same absolute
 `SECURITY_KEY_PATH`, and run `manage.py verify NEW_ENCRYPTED_SNAPSHOT_DIRECTORY`,
-then `manage.py restore NEW_ENCRYPTED_SNAPSHOT_DIRECTORY --destination NEW_DATA_DIRECTORY`.
+then `manage.py restore NEW_ENCRYPTED_SNAPSHOT_DIRECTORY --destination NEW_DATA_DIRECTORY --deletion-guard CURRENT_EXTERNAL_GUARD --deletion-guard-sha256 CURRENT_INDEPENDENTLY_RETAINED_SHA256`.
+Export the guard with `manage.py deletion-guard --output NEW_EXTERNAL_GUARD_FILE`
+while the original plaintext source is stopped and still selected. Its
+purpose-separated authentication remains valid with the same installation key
+after selecting SQLCipher. Retain the current guard and digest independently;
+see `DELETION_RESTORE_GUARD.md` for recovery requirements and remaining limits.
 Only after successful verification, restore and operator acceptance should the
 stopped service's `DATABASE_PATH` point into that new data directory. Restore
 rebases tenant paths and revokes credentials as described below. Keep the original

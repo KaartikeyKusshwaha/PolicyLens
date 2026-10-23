@@ -92,7 +92,8 @@ Stop the Python server, then run these commands from the repository root (use `.
 ```sh
 .venv\Scripts\python manage.py backup --output /private/backups/policylens-snapshot-UNIQUE
 .venv\Scripts\python manage.py verify /private/backups/policylens-snapshot-UNIQUE
-.venv\Scripts\python manage.py restore /private/backups/policylens-snapshot-UNIQUE --destination /private/restore-drills/policylens-UNIQUE
+.venv\Scripts\python manage.py deletion-guard --output /private/recovery/deletion-guard-UNIQUE.json
+.venv\Scripts\python manage.py restore /private/backups/policylens-snapshot-UNIQUE --destination /private/restore-drills/policylens-UNIQUE --deletion-guard /private/recovery/deletion-guard-UNIQUE.json --deletion-guard-sha256 CURRENT_INDEPENDENTLY_RETAINED_SHA256
 ```
 
 Restart the live server after taking the snapshot. A restore drill can run while the live server is back online because it creates a separate destination. The private environment/API-key file is intentionally excluded; preserve it separately. Backups contain confidential records and integration secrets: protect directory permissions and encrypt them before sending to an off-machine destination. Checksums detect corruption but do not authenticate a backup against a malicious administrator who can replace both the files and manifest.

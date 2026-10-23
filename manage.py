@@ -61,6 +61,13 @@ def main():
     )
     restore.add_argument("backup", type=Path)
     restore.add_argument("--destination", type=Path, required=True)
+    restore.add_argument("--deletion-guard", type=Path, required=True)
+    restore.add_argument("--deletion-guard-sha256", required=True)
+    deletion_guard = commands.add_parser(
+        "deletion-guard",
+        help="Export current deletion suppression state from a stopped installation; retain its SHA-256 separately.",
+    )
+    deletion_guard.add_argument("--output", type=Path, required=True)
     reset = commands.add_parser(
         "password-reset", help="Write a private, one-use 15-minute reset link."
     )
@@ -128,7 +135,21 @@ def main():
         result = verify_snapshot(args.backup, Settings())
         print(json.dumps({"verified": True, "databases": len(result["files"])}))
     elif args.command == "restore":
-        print(json.dumps(restore_snapshot(args.backup, args.destination, Settings())))
+        print(
+            json.dumps(
+                restore_snapshot(
+                    args.backup,
+                    args.destination,
+                    Settings(),
+                    deletion_guard_path=args.deletion_guard,
+                    trusted_guard_sha256=args.deletion_guard_sha256,
+                )
+            )
+        )
+    elif args.command == "deletion-guard":
+        from deletion_guard import export_guard
+
+        print(json.dumps(export_guard(Settings(), args.output)))
     else:
         origin = urlsplit(args.origin)
         settings = Settings()

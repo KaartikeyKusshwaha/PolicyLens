@@ -50,7 +50,9 @@ def test_sponsor_pack_tracks_exact_bytes_and_prior_custody_in_next_signed_snapsh
         (tmp_path / "custody-report.pdf").write_bytes(archive.read("report.pdf"))
     with zipfile.ZipFile(io.BytesIO(first.content)) as archive:
         bundle = json.loads(archive.read("audit.json"))
-        assert not any(event["data"].get("id") == custody["id"] for event in bundle["events"])
+        assert not any(
+            event["data"].get("id") == custody["id"] for event in bundle["events"]
+        )
     from verify_evidence_pack import verify_pack
 
     assert verify_pack(second.content, manager.status(org)["fingerprint"])["valid"]
@@ -233,7 +235,14 @@ def test_restored_installation_cannot_treat_local_absence_as_origin_copy_removal
         before = checksum(origin)
     monkeypatch.setattr(product_api, "verify_database_integrity", original_verifier)
     create_snapshot(settings, tmp_path / "snapshot")
-    restore_snapshot(tmp_path / "snapshot", tmp_path / "restored", settings)
+    from recovery_helpers import guard_arguments
+
+    restore_snapshot(
+        tmp_path / "snapshot",
+        tmp_path / "restored",
+        settings,
+        **guard_arguments(settings, tmp_path),
+    )
     recovered = settings.model_copy(
         update={"database_path": tmp_path / "restored" / "workspace.db"}
     )

@@ -196,7 +196,14 @@ def verify_snapshot(directory, settings=None):
     return manifest
 
 
-def restore_snapshot(directory, destination, settings=None):
+def restore_snapshot(
+    directory,
+    destination,
+    settings=None,
+    *,
+    deletion_guard_path=None,
+    trusted_guard_sha256=None,
+):
     manifest = verify_snapshot(directory, settings)
     directory = Path(directory).resolve()
     destination = Path(destination).resolve()
@@ -204,6 +211,22 @@ def restore_snapshot(directory, destination, settings=None):
         raise ValueError(
             "Restore requires a new destination. Existing installations are never overwritten."
         )
+    from deletion_guard import check_snapshot, read_guard
+
+    if deletion_guard_path is None and trusted_guard_sha256 is None:
+        raise ValueError(
+            "A current independently pinned deletion guard is required for every restore, including pre-deletion snapshots"
+        )
+    if (deletion_guard_path is None) != (trusted_guard_sha256 is None):
+        raise ValueError(
+            "Supply both the deletion guard and its independently retained current SHA-256"
+        )
+    if settings is None:
+        raise ValueError(
+            "Original installation settings and signing key are required to authenticate the deletion guard"
+        )
+    guard = read_guard(deletion_guard_path, trusted_guard_sha256, settings)
+    check_snapshot(directory, manifest, settings, guard)
     destination.mkdir(parents=True, mode=0o700)
     with InstallationLock(destination):
         for item in manifest["files"]:
@@ -211,6 +234,17 @@ def restore_snapshot(directory, destination, settings=None):
             target.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
             shutil.copyfile(safe_child(directory, item["path"]), target)
             target.chmod(0o600)
+        # Bind actual copied bytes before rebasing any identity paths. The input
+        # can change between initial verification and copying.
+        for item in manifest["files"]:
+            target = safe_child(destination, item["path"])
+            if checksum(target) != item["sha256"] or (
+                "bytes" in item and target.stat().st_size != item["bytes"]
+            ):
+                raise ValueError(
+                    "Copied snapshot changed during restore; destination is incomplete and must not be started"
+                )
+        check_snapshot(destination, manifest, settings, guard)
         with closing(connect_database(destination / "identity.db", settings)) as db, db:
             for org_id, relative in manifest["organization_paths"].items():
                 db.execute(
@@ -242,4 +276,7 @@ def restore_snapshot(directory, destination, settings=None):
         "restored_databases": len(manifest["files"]),
         "sessions_revoked": True,
         "source_modified": False,
+        "deletion_guard_verified": True,
+        "deletion_guard_receipts": len(guard["receipts"]),
+        "deletion_protection": "Checked against the supplied independently pinned current guard.",
     }

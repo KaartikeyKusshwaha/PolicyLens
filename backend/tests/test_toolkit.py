@@ -546,7 +546,11 @@ def test_restored_snapshot_revokes_all_agent_keys(tmp_path):
     snapshot = tmp_path / "snapshot"
     create_snapshot(settings, snapshot)
     restored = tmp_path / "restored"
-    restore_snapshot(snapshot, restored)
+    from recovery_helpers import guard_arguments
+
+    restore_snapshot(
+        snapshot, restored, settings, **guard_arguments(settings, tmp_path)
+    )
     recovered = Hub(
         settings.model_copy(update={"database_path": restored / "workspace.db"})
     )

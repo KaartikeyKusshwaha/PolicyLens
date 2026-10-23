@@ -388,7 +388,11 @@ def test_encrypted_recovery_preserves_active_policies_and_pending_holds(tmp_path
         )
     snapshot, restored = tmp_path / "snapshot", tmp_path / "restored"
     create_snapshot(settings, snapshot)
-    restore_snapshot(snapshot, restored, settings)
+    from recovery_helpers import guard_arguments
+
+    restore_snapshot(
+        snapshot, restored, settings, **guard_arguments(settings, tmp_path)
+    )
     recovered_settings = settings.model_copy(
         update={"database_path": restored / "workspace.db"}
     )

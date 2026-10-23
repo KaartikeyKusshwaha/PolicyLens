@@ -5,6 +5,7 @@ from pathlib import Path
 from contextlib import closing
 
 import pytest
+from recovery_helpers import guard_arguments
 from fastapi.testclient import TestClient
 
 from config import Settings
@@ -175,7 +176,9 @@ def test_encrypted_full_snapshot_restore_preserves_tenants_and_fts(tmp_path):
         item["path"]: (backup / item["path"]).read_bytes() for item in manifest["files"]
     }
     restored = tmp_path / "restored"
-    assert restore_snapshot(backup, restored, settings)["sessions_revoked"]
+    assert restore_snapshot(
+        backup, restored, settings, **guard_arguments(settings, tmp_path)
+    )["sessions_revoked"]
     with closing(
         connect_database(restored / "identity.db", settings, readonly=True)
     ) as db:
@@ -300,7 +303,9 @@ def test_plaintext_migration_preserves_source_identity_fts_and_recovery(
         assert not content.startswith(b"SQLite format 3")
         assert b"Fictional migration customer marker" not in content
     restored = tmp_path / "encrypted-installation"
-    restore_snapshot(snapshot, restored, encrypted_settings)
+    restore_snapshot(
+        snapshot, restored, encrypted_settings, **guard_arguments(plain, tmp_path)
+    )
     restarted_settings = encrypted_settings.model_copy(
         update={"database_path": restored / plain.database_path.name}
     )

@@ -6,6 +6,21 @@ review and market validation. None of those gates can be inferred from a green C
 
 ## Deletion review checkpoint
 
+Recovery-guard implementation: all restores now require current external
+HMAC-authenticated deletion state and an independently retained digest, even for
+pre-deletion backups. Workspace coverage, receipt identity/hash and operational
+target absence are checked before creating a destination and against actual
+copied bytes. Input/copy changes refuse restoration before path rebasing. The
+operator CLI exports guards only from a stopped installation and never overwrites
+an existing guard. This is a prerequisite, not deletion execution or physical
+erasure. See `DELETION_RESTORE_GUARD.md`; durable post-deletion publication and
+crash recovery remain required before enabling execution.
+Local validation: 25 guard/recovery/migration tests pass, including encrypted and
+plaintext recovery, orphan targets, malformed/altered manifests, operator CLI
+requirements and changed copied bytes. Ruff passes. The source suite contains
+385 backend tests; the previous `acf5e12` CI passed 369 backend and 72 frontend
+tests (run `39944668970`). No browser or deployed recovery acceptance occurred.
+
 Exact pushed commit `40d30b0` passed CI with 301 backend and 51 frontend tests,
 Ruff, ESLint, production build and npm audit (run `39853582175`).
 
