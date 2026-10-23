@@ -1,5 +1,9 @@
 # Signed audit checkpoints outside database storage
 
+The source [checkpoint-history backup tool](CHECKPOINT_BACKUP.md) now supports
+complete signed export, independently pinned encrypted receiver retention and
+new-directory recovery. Actual off-machine transfer and scheduling remain pending.
+
 Implemented on the governance branch. Production provisioning and browser
 acceptance are still pending. This feature does not claim off-machine retention,
 an independent timestamp, or resistance to a compromised application host/signing key.

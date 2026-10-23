@@ -206,6 +206,8 @@ class Checkpoints:
                 "Checkpoint storage must be outside the installation database directory."
             )
         root.mkdir(parents=True, exist_ok=True, mode=0o700)
+        if (root / "restoration.pending").exists():
+            raise ValueError("External checkpoint history restoration is incomplete")
         if os.name != "nt" and root.stat().st_mode & 0o077:
             raise ValueError("Checkpoint storage permissions must be 0700.")
         return root

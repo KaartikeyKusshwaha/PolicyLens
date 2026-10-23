@@ -6,6 +6,19 @@ review and market validation. None of those gates can be inferred from a green C
 
 ## Operational watchdog checkpoint
 
+Checkpoint-history backup source now exports every workspace's complete signed
+anchor history after capture, verifies outer/individual Ed25519 signatures and
+predecessor continuity, and encrypts at a receiver using only its archive key and
+an independently trusted public fingerprint. New history cannot omit/rewrite
+previously retained anchors or predate receiver state. New-directory recovery
+pins a current bundle digest and keeps a blocking marker until files are durable.
+Normal checkpoint access refuses incomplete recovery. All 27 initial backup/
+checkpoint tests pass; all 12 final backup tests also pass, including the actual
+CLI refusal and wrong recovery-digest checks. Ruff passes. Source now
+contains 523 backend tests. Actual off-machine transfer/scheduling remain pending;
+see `CHECKPOINT_BACKUP.md`. Exact previous `ce11a1a` CI passed 511 backend and
+73 frontend tests (run `39962149535`).
+
 Backup retention correction: removed the source shell script's unconditional
 thirteen-day snapshot deletion, which could bypass approved preservation periods
 and holds. Snapshots now remain until explicit reviewed copy reconciliation/removal.

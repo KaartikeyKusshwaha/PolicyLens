@@ -17,7 +17,7 @@ the governance changes have not been merged into main or deployed to Oracle.
 | MFA | TOTP encrypted seeds/replay protection/recovery tests | Operator key procedure, deployed acceptance and independent review |
 | Encryption | SQLCipher migration, snapshots, compaction, guarded restore and key-failure tests | Actual pilot migration/storage/key recovery proof |
 | Retention/deletion policy and holds | Reviewed policies/holds, exact approved offline logical execution, external suppression, custody and compaction | Complete historical/offline discovery, audit-PII handling policy, physical-copy evidence and deployed drills; no complete-erasure claim |
-| Outside-DB checkpoints | Signed automatic external capture, anti-truncation and independent trusted-key verification | Actual external configuration, off-machine checkpoint preservation and operator acceptance |
+| Outside-DB checkpoints | Signed capture, anti-truncation, complete signed-history encrypted receiver/recovery and trusted-key verification | Actual configuration, scheduled off-machine transfer and operator acceptance |
 | Off-machine backups | Encrypted verified DB/history receiver, fixed SSH exporter and task integration | Restore OCI/SSH access, inspect timer/logs, install schedules and prove fresh transfers/recovery |
 | Operational alerting | Readiness for registered storage/worker/checkpoints; backup/disk watchdog and service templates | Install monitor and prove authorized notification path; no messages sent |
 | Four-area web control room | Four canonical areas, advanced routing, populated component tests and keyboard checks | One final populated desktop/mobile browser pass after implementation |
@@ -34,7 +34,7 @@ has not been started under the user's implementation-before-browser constraint.
 No production log, current timer result, new deployed binary or live encrypted
 storage claim can be inferred from local/CI success.
 
-Immediate source follow-up includes off-machine checkpoint preservation and
+Immediate source follow-up includes checkpoint-backup scheduling integration and
 complete copy-discovery coverage. The partner-selected adapter has an unresolved
 external specification. Automatic briefs remain gated. Deployed/operator, market
 and independent-review evidence cannot be manufactured by adding more unit tests.
