@@ -62,13 +62,14 @@ would not detect a manifest that mapped unchanged files to the wrong tenants.
 
 ## Remaining deletion work
 
-Production deletion execution remains unavailable. Tests seed completed receipts
-only in isolated synthetic installations to exercise the guard contract. Before
-shipping the executor, connect independently approved inventory revalidation,
-atomic row deletion and receipts to durable external suppression publication and
-crash recovery. Guard publication must not silently omit an executed deletion.
-Register/reconcile guard copies and keep the current digest outside rollback
-scope. This implementation alone does not establish those operational properties.
+The stopped-installation executor now revalidates approved inventory and publishes
+pending suppression before atomic row removal. Startup refuses pending or mismatched
+external history; reconciliation requires proof of commit or full rollback. See
+`DELETION_EXECUTION.md`. Tests exercise real logical execution only in isolated
+synthetic installations. Automatic off-machine publication, copy reconciliation,
+physical storage handling and deployed crash/recovery acceptance remain pending.
+Keep the current guard digest outside rollback scope; same-host state alone does
+not establish off-machine resilience or independent erasure proof.
 
 Neither the guard nor logical row deletion proves physical erasure of SQLite
 pages/WAL, immutable audit text, exports, checkpoints or downstream copies.

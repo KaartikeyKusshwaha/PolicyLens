@@ -22,10 +22,12 @@ inventory previews bind candidate hashes, policy/holds and age while flagging
 shared references. A manual custody register adds preservation deadlines,
 independent removal authorization and custodian-report confirmation, with repeated
 hold/policy checks. Explicit application exports/backups register custody and exact
-content hashes automatically. Historical/offline discovery, deletion execution
-and complete reconciliation remain unfinished. Expiring independent deletion-plan
-review pins the inventory and refuses stale/blocked approval; it does not execute
-deletion or certify discovery evidence. Confirmed reports are human attestations,
+content hashes automatically. Historical/offline discovery and complete copy
+reconciliation remain unfinished. Independent deletion-plan review pins inventory
+and refuses stale/blocked approval. A stopped-installation SQLCipher operator
+command can remove exact eligible operational rows after publishing external
+suppression; interrupted execution blocks restart pending reconciliation. This
+does not certify discovery completeness or physical erasure. Confirmed reports are human attestations,
 not automated proof of physical erasure.
 No automated deletion or complete erasure guarantee is claimed. See
 [retention status](RETENTION.md). Backups, snapshots, exports and downstream copies

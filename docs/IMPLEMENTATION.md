@@ -6,6 +6,21 @@ review and market validation. None of those gates can be inferred from a green C
 
 ## Deletion review checkpoint
 
+Offline logical-execution checkpoint: an operator command now revalidates an
+independently approved, unexpired inventory under the installation/write locks.
+It requires SQLCipher and external deletion state, publishes pending suppression
+before exact row removal, and commits request/receipt/audit atomically. Pending
+state blocks startup; reconciliation proves commit or full rollback. Abort cancels
+authorization and needs a fresh independent review. Startup also refuses altered,
+missing or rolled-back receipt history and resurrected targets. The web page and
+signed evidence retain executed receipts; no web/agent execution route was added.
+See `DELETION_EXECUTION.md`. Complete historical-copy discovery, automatic off-machine
+state publication, physical storage handling and deployed recovery remain pending.
+Seventeen focused execution tests and 53 guard/request/encryption/retention checks
+passed locally; 73 frontend tests, Ruff, ESLint and build passed. Full local backend
+regression is running; the source suite contains 413 backend tests. Previous exact
+`99c4b48` CI passed 396 backend and 72 frontend tests (run `39947808780`).
+
 Exact recovery-guard commit `25221b5` passed CI with 385 backend and 72 frontend
 tests, Ruff, ESLint, production build and dependency audit (run `39946957377`).
 Additional recovery hardening now validates manifest paths against captured
@@ -95,8 +110,10 @@ Browser testing and Oracle deployment remain pending.
   shared/text references remain review blockers. Expiring deletion-plan requests
   now pin full snapshots, require independent review and discovery evidence,
   and reject stale/blocked approvals; cancellation/rejection retain history.
-  Execution remains disabled. Deletion execution,
-  audit-PII handling and complete backup/export reconciliation remain unfinished.
+  Logical execution is now an explicit stopped-installation SQLCipher operator
+  command with external suppression and commit/rollback reconciliation. Web/agent
+  execution stays disabled. Audit-PII handling, physical erasure and complete
+  backup/export reconciliation remain unfinished.
   Manual copy custody now records scope/custodian/deadlines and independent
   removal authorization/report confirmation; policy/hold checks repeat at each
   stage. Explicit downloads, toolkit case exports and workspace backups now register

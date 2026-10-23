@@ -46,6 +46,7 @@ Source implementation is separate from deployment and final browser acceptance.
 | Governed toolkit | Scoped expiring agent keys, per-tool permissions, request/run budgets, audited MCP stdio tools, thin CLI and Python SDK. Agents cannot approve, activate controls, close cases or file. |
 | Continuous screening | Opt-in scheduled refresh of selected sanctions feeds and customer name screening. Creates review cases for potential matches; uses no model calls. Requires the Python process to stay running. |
 | Work digest | Inbox snapshot of open/overdue work, review counts, recent alerts and failed runs, with enabled-feed freshness warnings. Zero model calls; explicit refresh; [bounds and notification limits](docs/WORK_DIGEST.md). |
+| Retention and deletion | Independent policies/holds, pinned deletion-plan review and copy custody. [Offline logical execution](docs/DELETION_EXECUTION.md) requires SQLCipher, a stopped installation and durable external suppression. Physical erasure and full historical-copy reconciliation remain incomplete. |
 | Audit and operations | Real counts, corridor/disposition analytics, overdue cases, hash-linked audit events, downloadable checkpoints, workspace SQLite backup and integrity verification. |
 | Sponsor evidence | Workspace-wide PDF and JSON, policy/control/approval records, case notes, source freshness, agent logs, signed audit snapshot and offline archive verifier. |
 

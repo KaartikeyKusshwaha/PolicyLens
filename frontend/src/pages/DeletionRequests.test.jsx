@@ -9,6 +9,15 @@ const detail={request,current_inventory_sha256:"pinned-hash",stale:false,expired
 const user={id:"reviewer",role:"reviewer"};
 async function inspect(){fireEvent.click(screen.getByRole("button",{name:"Inspect request request-one"}));await screen.findByText("Current request evidence");}
 
+test("completed offline execution displays its receipt without a web execution action",async()=>{
+ api.mockResolvedValue({...detail,request:{...request,status:"executed"},current_inventory_sha256:null,current_blockers:[],receipt:{id:"receipt-one",created_at:"2026-10-23T12:00:00Z",deleted_records:[{table:"records",record_id:"customer-one"}],scope:"Logical removal only; audit and physical copies remain."}});
+ render(<DeletionRequests requests={[{...request,status:"executed"}]} user={user} reload={vi.fn()} />);await inspect();
+ expect(screen.getByRole("region",{name:"Logical deletion receipt"})).toBeTruthy();
+ expect(screen.getByText(/1 operational rows removed/)).toBeTruthy();
+ expect(screen.queryByRole("button",{name:"Approve logical deletion plan"})).toBeNull();
+ expect(api.mock.calls.every(([,options])=>!options?.method)).toBe(true);
+});
+
 test("stale plan cannot be approved even when previously requested",async()=>{
  api.mockResolvedValue({...detail,stale:true,current_inventory_sha256:"changed-hash"});
  render(<DeletionRequests requests={[request]} user={user} reload={vi.fn()} />);await inspect();

@@ -3,9 +3,10 @@
 This is an incomplete implementation of the master plan's retention/deletion
 workflow. Policy approval and legal-hold governance are available in Settings
 at `/settings/retention`. No data is deleted or scheduled for deletion by these
-endpoints. Customer-linked inventory preview is implemented; deletion request
-execution, physical storage handling and complete backup/export reconciliation
-remain to be implemented.
+endpoints. Independently approved logical execution is available through the
+stopped-installation operator CLI with SQLCipher and external suppression state;
+see `DELETION_EXECUTION.md`. Physical storage handling, complete backup/export
+reconciliation and deployed recovery acceptance remain incomplete.
 
 ## Expiring independent deletion-plan review
 
@@ -22,7 +23,8 @@ copy-discovery report reference/hash and explicit acknowledgements that immutabl
 audit remains and physical/restore limits are unresolved. This records human review
 of discovery evidence; it does not automatically prove discovery completeness or
 remove the planner's reconciliation warning. Neither approval nor an acknowledgement
-enables deletion. There is no execution endpoint yet.
+executes deletion. There is no web/agent execution endpoint; the stopped operator
+command separately revalidates approval and publishes suppression.
 
 The inspection endpoint compares pinned and current hashes, reports staleness,
 expiry and current blockers, and exposes the full review snapshot. Requests and
@@ -36,7 +38,7 @@ Authors or administrators can cancel pending/approved requests; a different revi
 can reject them. Terminal requests cannot be rewritten through these actions.
 Every transition and its audit event share a transaction. Review history is retained,
 with at most 2,000 requests and 2 MB per pinned snapshot; capacity refusal never
-stores a partial plan. Approval must be revalidated again by the eventual executor,
+stores a partial plan. Approval is revalidated again by the offline executor,
 including expiry, holds, copy reconciliation and exact rows inside its write lock.
 
 ## Policy governance
@@ -203,13 +205,14 @@ Restore now requires the current external deletion guard and an independently
 retained digest for every snapshot. It refuses recorded operational targets and
 changed/omitted receipts before creating a restored installation, with a second
 check on copied bytes. This prerequisite is documented in
-`DELETION_RESTORE_GUARD.md`. Production deletion execution and durable external
-publication/crash reconciliation remain unfinished; synthetic guard tests do not
-constitute a completed deletion workflow or physical erasure proof.
+`DELETION_RESTORE_GUARD.md`. The offline executor publishes pending suppression
+before atomic row removal and retains receipts. Intact pending operations require
+proof of commit or full rollback before restart. Automatic off-machine publication
+and deployed recovery acceptance remain pending; synthetic tests are not erasure proof.
 
-- Implement execution of independently reviewed requests, handle shared and
-  ambiguous references, reconcile saved exports and revalidate the exact
-  eligible record set during execution. Concurrent changes must invalidate approval.
+- Prove offline execution and crash recovery on the deployed filesystem. Shared
+  and ambiguous references remain blockers. Complete discovery/reconciliation of
+  saved exports and copies still requires operator evidence and integration.
 - Keep policy/control versions, approval evidence, deletion receipts and the audit
   chain's integrity. Existing immutable audit events can include customer names
   and other supplied text. Deleting operational rows cannot erase retained text

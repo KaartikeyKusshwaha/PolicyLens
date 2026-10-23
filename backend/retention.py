@@ -106,8 +106,9 @@ def state(store):
             for item in requests
         ],
         "deletion_enabled": False,
+        "offline_execution_supported": True,
         "deletion_preview_available": True,
-        "limits": "Deletion inventory previews and expiring independent plan review are available. Execution, physical erasure and complete copy reconciliation remain unfinished. Holds remain effective during release review. No statutory retention period is supplied.",
+        "limits": "Deletion inventory previews and independent review are available. Logical execution requires the stopped-installation operator CLI, SQLCipher and external deletion state. No web/agent execution or physical erasure claim is available. Holds remain effective during release review. No statutory retention period is supplied.",
     }
 
 

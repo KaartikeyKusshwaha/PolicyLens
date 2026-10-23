@@ -35,7 +35,7 @@ export default function DeletionPreview({ canRequest = false, onCreated = () => 
     finally { setBusy(false); }
   }
   return <section className="panel section-padding"><h2>Customer deletion inventory</h2>
-    <p>Inspect linked records, retention eligibility and holds. This preview does not authorize deletion. Execution is not yet available.</p>
+    <p>Inspect linked records, retention eligibility and holds. This preview does not authorize deletion. Independently approved execution requires the stopped-installation operator command.</p>
     <form className="form-grid" onSubmit={inspect}><Field label="Customer ID for deletion preview"><input value={customerId} maxLength={100} required disabled={busy} onChange={event => { setCustomerId(event.target.value); setResult(null); setError(""); }} /></Field><div><Submit busy={busy}>Preview customer deletion</Submit></div></form>
     <ErrorNotice message={error} />
     {result && <><h3>Inventory snapshot</h3><p>Customer: {result.customer_id} · Generated: {formatDate(result.generated_at)}</p>

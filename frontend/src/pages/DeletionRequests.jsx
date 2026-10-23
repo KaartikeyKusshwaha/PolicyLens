@@ -28,7 +28,7 @@ export default function DeletionRequests({ requests, user, reload }) {
   const canReview = ["admin", "reviewer"].includes(user.role);
   const request = detail?.request;
   return <section className="panel section-padding"><h2>Deletion request reviews</h2>
-    <p>Review is limited to the pinned logical plan. Execution is unavailable. Discovery evidence and acknowledgements do not prove physical erasure or prevent old backups from restoring records.</p>
+    <p>Review is limited to the pinned logical plan. Execution requires the stopped-installation operator command, encrypted storage and external recovery state. Discovery evidence and acknowledgements do not prove physical erasure. Restores require the independently pinned current deletion guard.</p>
     <ErrorNotice message={error} />{notice && <p role="status">{notice}</p>}
     {!requests.length && <p>No deletion requests recorded.</p>}
     {requests.map(item => <article className="detail-section" key={item.id}><h3>{label(item.status)} · {item.customer_id}</h3><p>{item.reason}</p><p>Expires {formatDate(item.expires_at)} · Author {item.created_by}</p><button className="button secondary" disabled={busy} onClick={() => inspect(item.id)}>Inspect request {item.id}</button></article>)}
@@ -41,6 +41,7 @@ export default function DeletionRequests({ requests, user, reload }) {
       <p>{request.snapshot.retained_audit.scope}</p><ul>{request.snapshot.excluded_scope.map(scope => <li key={scope}>{scope}</li>)}</ul>
       <details><summary>Complete pinned inventory and copy evidence</summary><pre className="code-block">{JSON.stringify(request.snapshot,null,2)}</pre></details>
       <p>{request.scope}</p>{request.discovery_reference && <p>Reviewed discovery evidence: {request.discovery_reference} · <code>{request.discovery_evidence_sha256}</code></p>}
+      {detail.receipt && <section className="detail-section" aria-label="Logical deletion receipt"><h4>Logical deletion recorded</h4><p>Receipt <code>{detail.receipt.id}</code> · {formatDate(detail.receipt.created_at)}</p><p>{detail.receipt.deleted_records.length} operational rows removed. {detail.receipt.scope}</p><details><summary>Retained execution receipt</summary><pre className="code-block">{JSON.stringify(detail.receipt,null,2)}</pre></details></section>}
       <details><summary>Review history</summary>{request.history.map((event,index) => <p key={index}>{label(event.action)} · {event.actor} · {formatDate(event.at)}: {event.reason}</p>)}</details>
       {canReview && request.status === "requested" && request.created_by !== user.id && !detail.stale && !detail.expired && detail.current_blockers.every(block => block.code === "external_copy_reconciliation_required") && <form className="form-grid" onSubmit={event => review(event,"approve")}>
         <Field label="Deletion review reason"><textarea name="reason" minLength={20} maxLength={2000} required disabled={busy} /></Field>

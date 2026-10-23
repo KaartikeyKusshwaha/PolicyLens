@@ -62,6 +62,9 @@ def create_app(settings=None, transport=None, *, start_worker=True):
             )
         app.state.store = Store(settings.database_path, settings)
         Operations(app.state.store)
+        from deletion_execution import verify_runtime
+
+        verify_runtime(app.state.hub, settings)
         if app.state.hub.needs_setup():
             logger.warning(
                 "First workspace setup required. Bootstrap key file: %s",

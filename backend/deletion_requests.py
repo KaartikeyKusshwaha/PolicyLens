@@ -1,4 +1,4 @@
-"""Reviewed, expiring deletion plans. No executor or physical-erasure claim."""
+"""Reviewed, expiring deletion plans; execution belongs to the offline operator."""
 
 from datetime import datetime, timedelta, timezone
 
@@ -117,7 +117,7 @@ def create(store, workspace_id, data, user):
             "snapshot": snapshot,
             "history": [],
             "reason": data.reason,
-            "scope": "Review of a logical deletion plan only. Execution is unavailable. Audit history and external/physical/restore limits remain.",
+            "scope": "Review of a logical deletion plan only. Execution requires the stopped-installation operator CLI and external suppression state. Audit history and external/physical/restore limits remain.",
         }
         return append_event(db, value, user, "submitted", data.reason)
 
@@ -202,6 +202,16 @@ def inspect(store, workspace_id, record_id):
     with store.connect() as db:
         db.execute("BEGIN")
         value = get(db, "deletion_request", record_id)
+        if value["status"] == "executed":
+            return {
+                "request": value,
+                "receipt": get(db, "deletion_receipt", value["receipt_id"]),
+                "current_inventory_sha256": None,
+                "stale": False,
+                "expired": False,
+                "current_blockers": [],
+                "execution_available": False,
+            }
         current = plan(db, workspace_id, value["customer_id"])
         return {
             "request": value,

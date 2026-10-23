@@ -68,6 +68,26 @@ def main():
         help="Export current deletion suppression state from a stopped installation; retain its SHA-256 separately.",
     )
     deletion_guard.add_argument("--output", type=Path, required=True)
+    execute_deletion = commands.add_parser(
+        "execute-deletion",
+        help="Execute an independently approved logical deletion while stopped; publishes external suppression before commit.",
+    )
+    execute_deletion.add_argument("--workspace", required=True)
+    execute_deletion.add_argument("--request", required=True)
+    execute_deletion.add_argument("--reason", required=True)
+    execute_deletion.add_argument(
+        "--acknowledge-retained-data", action="store_true", required=True
+    )
+    reconcile_deletion = commands.add_parser(
+        "reconcile-deletion",
+        help="Prove commit or full rollback of an interrupted deletion before restarting.",
+    )
+    reconcile_deletion.add_argument("--workspace", required=True)
+    reconcile_deletion.add_argument("--request", required=True)
+    reconcile_deletion.add_argument(
+        "--outcome", choices=("commit", "abort"), required=True
+    )
+    reconcile_deletion.add_argument("--reason", required=True)
     reset = commands.add_parser(
         "password-reset", help="Write a private, one-use 15-minute reset link."
     )
@@ -150,6 +170,30 @@ def main():
         from deletion_guard import export_guard
 
         print(json.dumps(export_guard(Settings(), args.output)))
+    elif args.command == "execute-deletion":
+        from deletion_execution import execute
+
+        print(
+            json.dumps(
+                execute(
+                    Settings(),
+                    args.workspace,
+                    args.request,
+                    args.reason,
+                    acknowledge_retained_data=args.acknowledge_retained_data,
+                )
+            )
+        )
+    elif args.command == "reconcile-deletion":
+        from deletion_execution import reconcile
+
+        print(
+            json.dumps(
+                reconcile(
+                    Settings(), args.workspace, args.request, args.outcome, args.reason
+                )
+            )
+        )
     else:
         origin = urlsplit(args.origin)
         settings = Settings()

@@ -9,7 +9,7 @@ import json
 import os
 import re
 import uuid
-from contextlib import closing
+from contextlib import closing, nullcontext
 from datetime import datetime
 from pathlib import Path
 
@@ -175,7 +175,27 @@ def read_guard(path, trusted_sha256, settings):
     return document["payload"]
 
 
-def export_guard(settings, output):
+def receipt_entry(value, workspace_id):
+    if value["workspace_id"] != workspace_id or value["status"] != "executed":
+        raise ValueError("Invalid completed deletion receipt")
+    return {
+        "workspace_id": workspace_id,
+        "receipt_id": value["id"],
+        "request_id": value["request_id"],
+        "receipt_sha256": sha256(value),
+        "customer_id": value["customer_id"],
+        "candidates": [
+            {
+                "table": item["table"],
+                "kind": item["kind"] if item["table"] == "records" else item["table"],
+                "record_id": item["record_id"],
+            }
+            for item in value["deleted_records"]
+        ],
+    }
+
+
+def export_guard(settings, output, *, prospective_receipt=None, already_locked=False):
     """Export only while the complete source installation is stopped."""
     root = settings.database_path.parent.resolve()
     output = Path(output).absolute()
@@ -187,7 +207,15 @@ def export_guard(settings, output):
         raise ValueError(
             "Keep deletion guards outside the database directory without redirected paths"
         )
-    with InstallationLock(root):
+    with nullcontext() if already_locked else InstallationLock(root):
+        if (
+            prospective_receipt is None
+            and settings.deletion_state_directory is not None
+        ):
+            from auth import Hub
+            from deletion_execution import verify_runtime
+
+            verify_runtime(Hub(settings), settings)
         if (root / "identity.db").is_symlink():
             raise ValueError("Identity database cannot be redirected")
         with closing(
@@ -224,22 +252,11 @@ def export_guard(settings, output):
                     targets += len(value["deleted_records"])
                     if targets > MAX_CANDIDATES:
                         raise ValueError("Deletion guard exceeds target bound")
-                    receipts.append(
-                        {
-                            "workspace_id": workspace_id,
-                            "receipt_id": row[0],
-                            "request_id": value["request_id"],
-                            "receipt_sha256": sha256(value),
-                            "customer_id": value["customer_id"],
-                            "candidates": [
-                                {
-                                    name: item[name]
-                                    for name in ("table", "kind", "record_id")
-                                }
-                                for item in value["deleted_records"]
-                            ],
-                        }
-                    )
+                    receipts.append(receipt_entry(value, workspace_id))
+        if prospective_receipt is not None:
+            receipts.append(
+                receipt_entry(prospective_receipt, prospective_receipt["workspace_id"])
+            )
         payload = {
             "schema": SCHEMA,
             "created_at": now(),

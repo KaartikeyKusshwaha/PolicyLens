@@ -40,6 +40,7 @@ RECORD_KINDS = (
     "retention_hold",
     "retained_copy",
     "deletion_request",
+    "deletion_receipt",
 )
 LIMITATIONS = [
     "This workspace snapshot supports human review; it is not compliance certification or legal advice.",

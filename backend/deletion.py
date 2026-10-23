@@ -347,7 +347,8 @@ def plan(db, workspace_id, customer_id, *, current=None):
     if residual:
         block("unresolved_shared_or_text_references")
     # External copies and physical compaction are deliberately not represented as
-    # completed by a logical row inventory. Execution remains unavailable.
+    # completed by a logical row inventory. The offline executor requires a
+    # separate approved request and acknowledged discovery evidence.
     block("external_copy_reconciliation_required")
     external_copies = [
         copy
