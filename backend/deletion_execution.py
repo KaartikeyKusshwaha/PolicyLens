@@ -108,6 +108,7 @@ def local_entries(hub):
 
 def verify_runtime(hub, settings):
     entries = local_entries(hub)
+    current = {(item["workspace_id"], item["receipt_id"]): item for item in entries}
     if settings.deletion_state_directory is None:
         if entries:
             raise ValueError(
@@ -123,13 +124,47 @@ def verify_runtime(hub, settings):
     for path in files:
         payload = read_state(path, settings)
         if path.suffix == ".aborted":
+            # The extension is not authenticated. Bind an aborted publication
+            # to the exact cancellation saved by rollback reconciliation, and
+            # require every prior receipt in that guard to remain committed.
+            uncommitted = [
+                item
+                for item in payload["receipts"]
+                if (item["workspace_id"], item["receipt_id"]) not in current
+            ]
+            if len(uncommitted) != 1:
+                raise ValueError(
+                    "Aborted deletion state does not identify exactly one cancelled execution"
+                )
+            aborted = uncommitted[0]
+            if path.stem != aborted["request_id"]:
+                raise ValueError(
+                    "Aborted deletion filename does not match its authenticated request"
+                )
+            with hub.store(aborted["workspace_id"]).connect() as db:
+                request = get(db, "deletion_request", aborted["request_id"])
+            if (
+                request["status"] != "cancelled"
+                or request.get("aborted_execution_receipt_id") != aborted["receipt_id"]
+                or request["customer_id"] != aborted["customer_id"]
+            ):
+                raise ValueError(
+                    "Aborted deletion state lacks its matching cancelled request"
+                )
+            if any(
+                current.get((item["workspace_id"], item["receipt_id"])) != item
+                for item in payload["receipts"]
+                if item is not aborted
+            ):
+                raise ValueError(
+                    "Aborted deletion state contains missing or changed prior receipts"
+                )
             continue
         for item in payload["receipts"]:
             identity = (item["workspace_id"], item["receipt_id"])
             if identity in external and external[identity] != item:
                 raise ValueError("External deletion history conflicts")
             external[identity] = item
-    current = {(item["workspace_id"], item["receipt_id"]): item for item in entries}
     if external != current:
         raise ValueError(
             "External deletion history and live receipts differ; do not replace missing history or start a rolled-back installation"

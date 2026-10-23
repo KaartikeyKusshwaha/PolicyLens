@@ -6,6 +6,19 @@ review and market validation. None of those gates can be inferred from a green C
 
 ## Deletion review checkpoint
 
+Execution hardening: aborted external artifacts must now identify exactly one
+uncommitted receipt and match its authenticated request, cancelled state, aborted
+receipt link and filename. Every prior receipt must remain committed with its
+original hash. Renaming a committed guard or rolling back an aborted request
+cannot turn an extension into permission to ignore suppression history.
+Exact pushed `edc3388` CI passed 413 backend and 73 frontend tests
+(run `39952745758`). The earlier local full run completed 412 tests; the final
+execution suite separately passed 17 tests before this hardening. Twenty-one
+execution tests including the four new abort-binding checks passed locally.
+All six abort-binding and flush/truncated-publication checks pass, including the
+two final write-failure additions. Ruff passes; source now contains 419 backend
+tests. No browser/deployment work has occurred.
+
 Offline logical-execution checkpoint: an operator command now revalidates an
 independently approved, unexpired inventory under the installation/write locks.
 It requires SQLCipher and external deletion state, publishes pending suppression

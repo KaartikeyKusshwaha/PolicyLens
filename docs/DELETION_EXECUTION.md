@@ -57,12 +57,21 @@ authorization and retains authenticated `.aborted` history. A retry needs a fres
 preview and independent approval. Reconciliation can resume after interruption
 following its database commit; outcomes are audited.
 
+Startup verifies each aborted artifact against the exact cancelled request,
+aborted receipt identity and filename. Its prior receipts must still match live
+committed receipts. File extensions alone never authorize ignoring signed state:
+renaming a committed guard to `.aborted`, changing the request linkage or rolling
+its cancelled state back to approved refuses startup.
+
 Malformed/partially written pending data cannot be automatically authenticated
 and reconciled. Startup stays refused; preserve it for operator investigation and
 recovery from separately trusted state. Filesystem failures never authorize
 continuing without suppression. Unix directory fsync follows publication/rename;
 Windows uses file fsync and atomic replace, whose final power-loss durability
 depends on storage. Test recovery on the actual deployment.
+Failure-injection tests cover both a failed fsync with an intact guard (full
+rollback followed by proved abort) and a truncated write (rows preserved, startup,
+execution, guard export and automatic reconciliation refused).
 
 Startup authenticates all external guards and matches their hashes to the complete
 live receipt set. Missing/changed history, unexpected files, pending operations or

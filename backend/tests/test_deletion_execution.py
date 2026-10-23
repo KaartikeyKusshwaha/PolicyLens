@@ -331,6 +331,76 @@ def test_guard_publication_failure_prevents_any_row_removal(tmp_path, monkeypatc
     assert not list(settings.deletion_state_directory.glob("*.pending"))
 
 
+def test_guard_flush_failure_keeps_full_rollback_and_requires_abort(
+    tmp_path, monkeypatch
+):
+    import deletion_guard
+
+    settings, user, customer, request, store = prepared(tmp_path)
+    original = deletion_guard.os.fsync
+
+    def fail(*args):
+        raise OSError("Injected guard flush failure")
+
+    monkeypatch.setattr(deletion_guard.os, "fsync", fail)
+    with pytest.raises(OSError, match="Injected guard flush"):
+        run(settings, user, request)
+    assert Operations(store).get("customer", customer["id"])
+    assert not Operations(store).list("deletion_receipt")
+    monkeypatch.setattr(deletion_guard.os, "fsync", original)
+    with pytest.raises(ValueError, match="interrupted deletion"):
+        execution.verify_runtime(Hub(settings), settings)
+    execution.reconcile(
+        settings, user["org_id"], request["id"], "abort", REASON["reason"]
+    )
+    execution.verify_runtime(Hub(settings), settings)
+
+
+def test_partial_guard_write_cannot_start_execute_export_or_claim_reconciliation(
+    tmp_path, monkeypatch
+):
+    import deletion_guard
+
+    settings, user, customer, request, store = prepared(tmp_path)
+    original = deletion_guard.os.fdopen
+
+    class PartialWriter:
+        def __init__(self, descriptor, mode):
+            self.stream = original(descriptor, mode)
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            self.stream.close()
+
+        def write(self, value):
+            self.stream.write(value[: len(value) // 2])
+            raise OSError("Injected partial guard write")
+
+    monkeypatch.setattr(deletion_guard.os, "fdopen", PartialWriter)
+    with pytest.raises(OSError, match="Injected partial"):
+        run(settings, user, request)
+    monkeypatch.setattr(deletion_guard.os, "fdopen", original)
+    assert Operations(store).get("customer", customer["id"])
+    assert not Operations(store).list("deletion_receipt")
+    for action in (
+        lambda: execution.verify_runtime(Hub(settings), settings),
+        lambda: run(settings, user, request),
+        lambda: deletion_guard.export_guard(
+            settings, tmp_path / "must-not-publish.json"
+        ),
+    ):
+        with pytest.raises(ValueError, match="interrupted deletion"):
+            action()
+    with pytest.raises(ValueError):
+        execution.reconcile(
+            settings, user["org_id"], request["id"], "abort", REASON["reason"]
+        )
+    assert not (tmp_path / "must-not-publish.json").exists()
+    assert list(settings.deletion_state_directory.glob("*.pending"))
+
+
 def test_publication_capacity_failure_retains_pending_and_requires_abort(
     tmp_path, monkeypatch
 ):
@@ -396,6 +466,46 @@ def test_missing_tampered_external_state_and_pending_artifacts_block_startup(tmp
             settings.model_copy(update={"deletion_state_directory": None}),
         )
     assert result["guard_sha256"]
+
+
+def test_committed_guard_cannot_be_ignored_by_renaming_it_as_aborted(tmp_path):
+    settings, user, _, request, _ = prepared(tmp_path)
+    run(settings, user, request)
+    guard = settings.deletion_state_directory / (request["id"] + ".guard")
+    guard.rename(guard.with_suffix(".aborted"))
+    with pytest.raises(ValueError, match="exactly one cancelled"):
+        execution.verify_runtime(Hub(settings), settings)
+
+
+@pytest.mark.parametrize("change", ["filename", "request", "receipt_link"])
+def test_aborted_guard_requires_authenticated_identity_and_current_cancelled_request(
+    tmp_path, monkeypatch, change
+):
+    settings, user, _, request, store = prepared(tmp_path)
+    original = execution.audit
+
+    def fail(*args, **kwargs):
+        raise RuntimeError("Injected transaction rollback")
+
+    monkeypatch.setattr(execution, "audit", fail)
+    with pytest.raises(RuntimeError):
+        run(settings, user, request)
+    monkeypatch.setattr(execution, "audit", original)
+    execution.reconcile(
+        settings, user["org_id"], request["id"], "abort", REASON["reason"]
+    )
+    if change == "filename":
+        path = settings.deletion_state_directory / (request["id"] + ".aborted")
+        path.rename(path.with_name(str(uuid.uuid4()) + ".aborted"))
+    else:
+        value = Operations(store).get("deletion_request", request["id"])
+        if change == "request":
+            value["status"] = "approved"
+        else:
+            value["aborted_execution_receipt_id"] = str(uuid.uuid4())
+        Operations(store).save("deletion_request", value, user["id"], request["id"])
+    with pytest.raises(ValueError, match="Aborted deletion"):
+        execution.verify_runtime(Hub(settings), settings)
 
 
 def test_executed_deletion_refuses_old_restore_and_retains_receipt_in_new_restore(
