@@ -173,8 +173,9 @@ export function ControlEditor() {
       setBusy(false);
     }
   }
-  if (id && resource.loading) return <Loading />;
+  if ((id && resource.loading) || policies.loading) return <Loading />;
   if (resource.error) return <ErrorNotice message={resource.error} />;
+  if (policies.error) return <ErrorNotice message={policies.error} />;
   const rule = id ? resource.data : null;
   return (
     <>
