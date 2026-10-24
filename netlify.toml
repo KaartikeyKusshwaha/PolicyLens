@@ -1,0 +1,6 @@
+# PolicyLens runs on Oracle. Stop unnecessary Netlify Git-triggered builds,
+# including production, branch deploys and deploy previews.
+# Netlify build hooks bypass ignore commands; stop builds in the Netlify
+# project settings as well if build hooks are configured.
+[build]
+  ignore = "exit 0"

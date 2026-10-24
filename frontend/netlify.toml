@@ -1,0 +1,4 @@
+# Also cover integrations configured with frontend as their package directory.
+# The live PolicyLens deployment is on Oracle.
+[build]
+  ignore = "exit 0"
