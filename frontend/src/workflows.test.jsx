@@ -1,6 +1,6 @@
 import React from "react";
 import { beforeEach, expect, test, vi } from "vitest";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import App from "./App";
 
 const health = {
@@ -480,6 +480,37 @@ test("auditors can browse customers without a create action", async () => {
   render(<App />);
   await screen.findByText("Start with the people behind the payments.");
   expect(screen.queryByRole("link", { name: /Add customer/ })).toBeNull();
+});
+
+test.each([
+  ["/rules/rule1/edit", "existing control"],
+  ["/rules/new?policy=p1", "policy-linked new control"],
+])("delayed policy options preserve the selected policy for %s (%s)", async (path) => {
+  window.history.replaceState({}, "", path);
+  let resolvePolicies;
+  const pendingPolicies = new Promise((resolve) => { resolvePolicies = resolve; });
+  mockRoutes({
+    "/api/rules/rule1": () => response({ id: "rule1", title: "Existing control", kind: "amount", policy_id: "p1", threshold: "4000", currency: "USD", priority: "high", description: "Synthetic control rationale" }),
+    "/api/policies": () => pendingPolicies,
+  });
+  render(<App />);
+  await waitFor(() => expect(fetch.mock.calls.some(([url]) => url === "/api/policies")).toBe(true));
+  await act(async () => {});
+  await act(async () => {
+    resolvePolicies(response([
+      { id: "p2", title: "New unrelated policy", version: "1" },
+      { id: "p1", title: "Original linked policy", version: "1.1" },
+    ]));
+  });
+  expect((await screen.findByLabelText("Linked policy")).value).toBe("p1");
+});
+
+test("policy loading failures prevent saving a control against missing options", async () => {
+  window.history.replaceState({}, "", "/rules/new");
+  mockRoutes({ "/api/policies": () => response({ detail: { message: "Policy inventory unavailable." } }, 503) });
+  render(<App />);
+  await screen.findByText("Policy inventory unavailable.");
+  expect(screen.queryByRole("button", { name: "Save draft for review" })).toBeNull();
 });
 
 test("editing a corridor control preserves its type and country list", async () => {
