@@ -27,7 +27,6 @@ export const useWorkspace = () => useContext(WorkspaceContext);
 const icons = [InboxIcon, BookOpen, FileCheck2, Settings2];
 const advancedLinks = [
   ["/advanced", "Diagnostics"],
-  ["/advanced/agents", "Agent logs"],
   ["/advanced/analytics", "Analytics"],
   ["/advanced/sources", "Source details"],
 ];

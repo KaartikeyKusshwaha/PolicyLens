@@ -7,7 +7,7 @@ from intelligence import Intelligence, source_freshness
 from fastapi import HTTPException
 from operations import Operations
 from test_product import acting_as, member
-from test_toolkit import key
+from legacy_access_helpers import key
 import work_digest
 
 
@@ -113,7 +113,7 @@ def test_digest_tenant_scope_human_roles_and_bearer_refusal(workspace):
             "/api/evidence/digest",
             headers={"Authorization": "Bearer " + credential["token"]},
         ).status_code
-        == 403
+        == 401
     )
     created = client.post("/api/auth/workspaces", json={"name": "Other workspace"})
     assert created.status_code == 201, created.text

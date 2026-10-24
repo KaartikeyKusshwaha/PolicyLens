@@ -301,7 +301,7 @@ export default function WorkspaceSettings() {
             onSaved={() => {
               prefs.reload();
               setSuccess(
-                "Monitoring preferences saved. Scheduled runs appear in Agent operations.",
+                "Monitoring preferences saved. New alerts appear in the Inbox.",
               );
             }}
             onError={setError}

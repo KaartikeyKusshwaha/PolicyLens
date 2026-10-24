@@ -15,7 +15,7 @@ export default function WorkDigest() {
         data && (
           <>
             <p>
-              Snapshot at {formatDate(data.generated_at)} · zero model calls
+              Snapshot at {formatDate(data.generated_at)} Â· zero model calls
             </p>
             <dl className="detail-grid">
               {[
@@ -36,7 +36,7 @@ export default function WorkDigest() {
               <div>
                 <dt>Failed runs in the last 24 hours</dt>
                 <dd>
-                  <Link to="/advanced/agents">{data.failed_runs}</Link>
+                  <span>{data.failed_runs}</span>
                 </dd>
               </div>
             </dl>

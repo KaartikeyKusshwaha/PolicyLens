@@ -45,9 +45,8 @@ test("digest exposes stale evidence, invalid dates and human follow-up links", a
       .getByRole("link", { name: "Review and sync evidence sources" })
       .getAttribute("href"),
   ).toBe("/settings/sources");
-  expect(screen.getByRole("link", { name: "3" }).getAttribute("href")).toBe(
-    "/advanced/agents",
-  );
+  expect(screen.getByText("3")).toBeTruthy();
+  expect(screen.queryByRole("link", { name: "3" })).toBeNull();
   expect(api.mock.calls[0][0]).toBe("/evidence/digest");
 });
 

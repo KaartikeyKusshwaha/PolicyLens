@@ -31,7 +31,6 @@ import {
   Status,
 } from "../product-components";
 import { useSession } from "../session";
-import RelationshipGraph from "./RelationshipGraph";
 
 export function Cases() {
   const r = useResource("/cases");
@@ -305,7 +304,7 @@ export function CaseDetail() {
       <div className="case-layout">
         <div>
           <div className="page-tabs">
-            {["Evidence", "Relationships", "Activity", "Tasks", "Agent work"].map((v) => (
+            {["Evidence", "Activity", "Tasks", "Drafts"].map((v) => (
               <button
                 key={v}
                 className={tab === v ? "active" : ""}
@@ -316,13 +315,6 @@ export function CaseDetail() {
               </button>
             ))}
           </div>
-          {tab === "Relationships" && (
-            <section className="panel section-padding">
-              <h2>Observed customer relationships</h2>
-              <p className="section-copy">Customer transaction context for this investigation. Links may include activity outside this case; they do not establish verified identity or wrongdoing.</p>
-              <RelationshipGraph id={c.customer_id} />
-            </section>
-          )}
           {tab === "Evidence" && (
             <>
               <section className="panel section-padding">
@@ -486,7 +478,7 @@ export function CaseDetail() {
               )}
             </section>
           )}
-          {tab === "Agent work" && (
+          {tab === "Drafts" && (
             <section className="panel">
               <div className="panel-heading">
                 <h2>Agent investigations and drafts</h2>
