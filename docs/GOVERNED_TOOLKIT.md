@@ -1,3 +1,5 @@
+> Historical document: this product surface was removed at the owner's request on 24 October 2026. See [current product scope](CORE_PRODUCT.md). These setup instructions no longer apply.
+
 # Governed agent toolkit
 
 Implemented and deployed to Oracle. Actual HTTPS CLI/MCP context, review-task,

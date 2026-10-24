@@ -38,17 +38,12 @@ def test_fixture_survives_restart_with_roles_counts_and_no_secret_manifest(tmp_p
             assert login.status_code == 200
             assert login.json()["role"] == identity["role"]
             cases = client.get("/api/cases").json()
-            assert len(cases) == 4
+            assert len(cases) == 3
             assert sum(row["status"] == "resolved" for row in cases) == 1
             assert len(client.get("/api/monitor/transactions").json()) == 6
         assert client.get("/api/ready").status_code == 200
         resolved = client.get(f"/api/cases/{manifest['resolved_case_id']}").json()
         assert resolved["resolved_by"] != resolved["assignee_id"]
-        imported_cases = [client.get(f"/api/cases/{row['id']}").json() for row in cases]
-        imported = next(row for row in imported_cases if row.get("external_source"))
-        assert imported["status"] == "open"
-        assert imported["external_source"]["source_status"] == "closed"
-        assert imported["alerts"][0]["origin"] == "external_engine"
     original = (directory / "fixture.json").read_bytes()
     with pytest.raises(FileExistsError):
         prepare(directory)

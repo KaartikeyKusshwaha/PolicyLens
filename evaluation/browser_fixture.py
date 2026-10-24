@@ -8,7 +8,6 @@ import sys
 from contextlib import closing
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from uuid import NAMESPACE_URL, uuid5
 
 import httpx
 from fastapi.testclient import TestClient
@@ -40,56 +39,6 @@ def no_outbound(request):
     raise RuntimeError("External providers disabled for isolated browser fixture")
 
 
-def marble_bundle(customer_id, timestamp):
-    def identifier(name):
-        return str(
-            uuid5(NAMESPACE_URL, f"https://example.invalid/policylens-fixture/{name}")
-        )
-
-    case_id = identifier("case")
-    return {
-        "schema_version": "policylens.marble-import.v1",
-        "source_instance": "fictional-browser-fixture",
-        "cases": {
-            "data": [
-                {
-                    "id": case_id,
-                    "inbox": {"id": identifier("inbox")},
-                    "name": "FICTIONAL upstream closed case; local review still required",
-                    "status": "closed",
-                    "outcome": "false_positive",
-                    "contributors": [],
-                    "tags": [],
-                    "review_level": None,
-                    "created_at": timestamp,
-                }
-            ]
-        },
-        "decisions": {
-            "data": [
-                {
-                    "id": identifier("decision"),
-                    "case": {"id": case_id},
-                    "outcome": "review",
-                    "review_status": None,
-                    "score": 70,
-                    "scenario": {
-                        "id": identifier("scenario"),
-                        "iteration_id": identifier("iteration"),
-                        "version": "1",
-                    },
-                    "trigger_object": {
-                        "object_id": "FICTIONAL-TRIGGER-001",
-                        "updated_at": timestamp,
-                    },
-                    "created_at": timestamp,
-                }
-            ]
-        },
-        "customer_mappings": [
-            {"object_type": "case", "source_id": case_id, "customer_id": customer_id}
-        ],
-    }
 
 
 def prepare(directory):
@@ -305,24 +254,9 @@ def prepare(directory):
             simulation = request(owner, "POST", f"/api/rules/{controls[2]}/backtest")
             if simulation["match_count"] != 1:
                 raise RuntimeError("Synthetic aggregate backtest mismatch")
-            bundle = marble_bundle(
-                next(iter(customers.values())), timestamp.isoformat()
-            )
-            preview = request(
-                owner, "POST", "/api/adapters/marble/preview", json={"bundle": bundle}
-            )
-            imported = request(
-                owner,
-                "POST",
-                "/api/adapters/marble/import",
-                201,
-                json={"bundle": bundle, "preview_sha256": preview["preview_sha256"]},
-            )
-            if imported["replayed"]:
-                raise RuntimeError("Fresh synthetic import unexpectedly replayed")
             cases = request(owner, "GET", "/api/cases")
             matrix = request(owner, "GET", "/api/traceability")
-            if len(cases) != 4 or not any(
+            if len(cases) != 3 or not any(
                 row["id"] == policy["id"]
                 for row in matrix["policies_without_current_analysis"]
             ):
@@ -336,15 +270,12 @@ def prepare(directory):
                     "alert_ids": alerts,
                     "case_ids": [row["id"] for row in cases],
                     "resolved_case_id": native_case["id"],
-                    "marble_bundle_sha256": hashlib.sha256(
-                        json.dumps(bundle, sort_keys=True).encode()
-                    ).hexdigest(),
                     "expected": {
                         "transactions": 6,
                         "native_alerts": 6,
-                        "open_cases": 3,
+                        "open_cases": 2,
                         "resolved_cases": 1,
-                        "imported_alerts": 1,
+                        "imported_alerts": 0,
                         "aggregate_backtest_hits": 1,
                         "investigator_self_resolution_refused": True,
                         "policy_without_current_analysis": True,

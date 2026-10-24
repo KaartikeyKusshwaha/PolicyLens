@@ -7,8 +7,6 @@ from pathlib import Path
 import pytest
 
 import evaluation_artifacts as artifacts
-from test_product import acting_as, member
-from test_toolkit import key
 
 
 def test_retained_live_result_recomputes_every_case_failure_and_quote():
@@ -102,30 +100,6 @@ def test_verifier_requires_trusted_digest_and_bounded_whole_bundle(monkeypatch):
         artifacts.reference_result()
 
 
-def test_read_only_reference_is_explicit_and_unavailable_result_never_falls_back(
-    workspace, monkeypatch
-):
-    client, *_ = workspace
-    auditor = member(client, "auditor")
-    with acting_as(client, auditor):
-        response = client.get("/api/evidence/scorecards/reference")
-        assert response.status_code == 200
-        assert response.json()["kind"] == "bundled_synthetic_reference"
-        assert response.json()["workspace_measurement"] is False
-        assert "customers" not in response.json()
-    credential = key(client, scopes=["search_policy"])
-    assert (
-        client.get(
-            "/api/evidence/scorecards/reference",
-            headers={"Authorization": "Bearer " + credential["token"]},
-        ).status_code
-        == 403
-    )
-    monkeypatch.setattr(artifacts, "REFERENCE_SCORECARD_SHA256", "a" * 64)
-    refused = client.get("/api/evidence/scorecards/reference")
-    assert refused.status_code == 409
-    assert "metrics" not in refused.json()
-    assert refused.json()["detail"]["code"] == "scorecard_reference_unavailable"
 
 
 def test_offline_verifier_subprocess_recomputes_the_committed_run_bundle():

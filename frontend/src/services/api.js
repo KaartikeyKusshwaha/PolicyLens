@@ -30,11 +30,6 @@ export async function api(path, { method = "GET", body, signal, responseType = "
     );
   }
   let data;
-  if (response.ok && responseType === "text") {
-    if (response.headers.get("content-type")?.split(";")[0] !== "application/yaml")
-      throw new Error("The server did not return control YAML.");
-    return response.text();
-  }
   if (response.ok && responseType === "blob") {
     if (response.headers.get("content-type")?.split(";")[0] !== "application/zip")
       throw new Error("The server did not return an evidence archive.");

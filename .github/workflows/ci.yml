@@ -17,7 +17,7 @@ jobs:
           cache-dependency-path: backend/requirements*.txt
       - run: python -m pip install -r backend/requirements-dev.txt
       - run: python -m pytest
-      - run: python -m ruff check backend toolkit/src evaluation run.py manage.py evaluate_agents.py verify_agent_evaluation.py deploy/export_backup.py deploy/pull_backup.py deploy/watchdog.py deploy/telegram_alerts.py deploy/setup_telegram.py deploy/deletion_state_backup.py deploy/checkpoint_backup.py deploy/recovery_set.py deploy/server_settings.py
+      - run: python -m ruff check backend evaluation run.py manage.py evaluate_agents.py verify_agent_evaluation.py deploy/export_backup.py deploy/pull_backup.py deploy/watchdog.py deploy/telegram_alerts.py deploy/setup_telegram.py deploy/deletion_state_backup.py deploy/checkpoint_backup.py deploy/recovery_set.py deploy/server_settings.py
   python-dependency-security:
     runs-on: ubuntu-latest
     steps:

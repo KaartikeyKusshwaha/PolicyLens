@@ -15,7 +15,6 @@ from pydantic import ValidationError
 from starlette.concurrency import run_in_threadpool
 
 from agents import AgentEngine, CATALOG
-from auth import digest
 from operations import Operations, audit, canonical, uid
 from product_models import (
     AgentControl,
@@ -157,74 +156,6 @@ async def company_intelligence(customer_id: str, request: Request):
         {"customer_id": customer_id, "data": result},
         request.state.user["id"],
     )
-
-
-@router.get("/customers/{customer_id}/graph")
-def relationship_graph(customer_id: str, request: Request):
-    customer = request.state.ops.get("customer", customer_id)
-    txns = request.state.ops.customer_transactions(customer_id, 100)
-    nodes = [
-        {
-            "id": customer_id,
-            "name": customer["name"],
-            "kind": "customer",
-            "country": customer["country"],
-        }
-    ]
-    seen = {customer_id}
-    links = []
-    for txn in txns:
-        other = (
-            "party:"
-            + digest(
-                txn["counterparty"].casefold() + ":" + txn["counterparty_country"]
-            )[:16]
-        )
-        if other not in seen:
-            nodes.append(
-                {
-                    "id": other,
-                    "name": txn["counterparty"],
-                    "country": txn["counterparty_country"],
-                    "kind": "counterparty",
-                }
-            )
-            seen.add(other)
-        links.append(
-            {
-                "source": customer_id,
-                "target": other,
-                "transaction_id": txn["id"],
-                "label": txn["currency"] + " " + txn["amount"],
-                "kind": "transaction",
-            }
-        )
-        if txn["account_reference"]:
-            account = "account:" + digest(txn["account_reference"])[:16]
-            if account not in seen:
-                nodes.append(
-                    {
-                        "id": account,
-                        "name": txn["account_reference"],
-                        "kind": "account_reference",
-                    }
-                )
-                seen.add(account)
-            links.append(
-                {
-                    "source": other,
-                    "target": account,
-                    "transaction_id": txn["id"],
-                    "label": "Supplied reference",
-                    "kind": "account",
-                }
-            )
-    return {
-        "nodes": nodes,
-        "links": links,
-        "transactions_sampled": len(txns),
-        "scope": "Latest 100 customer transactions. Names and supplied account references are observed links, not verified identities or evidence of wrongdoing.",
-    }
 
 
 @router.get("/monitor/transactions")

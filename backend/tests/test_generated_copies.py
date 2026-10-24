@@ -12,14 +12,13 @@ import product_api
 import retained_copies
 from config import Settings
 from main import create_app
-from operations import canonical
 from providers import problem
 from recovery import checksum, create_snapshot, restore_snapshot
 from test_evidence import setup_pack
 from test_deletion import approved
 from test_product import add_customer, member, acting_as
 from test_retention import REVIEW
-from test_toolkit import case, key, call
+from legacy_access_helpers import case
 from test_workflows import authenticate
 
 
@@ -84,30 +83,6 @@ def test_case_view_is_not_a_download_but_case_export_tracks_customer_scope(works
     assert custody["content_sha256"] == hashlib.sha256(response.content).hexdigest()
 
 
-def test_toolkit_export_hashes_masked_result_not_unmasked_context(workspace):
-    client, *_ = workspace
-    customer, investigation = case(client, name="Fictional private export marker")
-    credential = key(
-        client, scopes=["export_case_pack", "get_case_context"], pseudonymize=True
-    )
-    assert (
-        call(
-            client, credential, "get_case_context", case_id=investigation["id"]
-        ).status_code
-        == 200
-    )
-    assert copies(client) == []
-    response = call(client, credential, "export_case_pack", case_id=investigation["id"])
-    assert response.status_code == 200
-    assert customer["name"] not in response.text
-    custody = copies(client)[0]
-    assert custody["hash_encoding"] == "canonical-json-tool-result"
-    assert (
-        custody["content_sha256"]
-        == hashlib.sha256(canonical(response.json()).encode()).hexdigest()
-    )
-    assert custody["target_id"] == customer["id"]
-    assert custody["custodian"].startswith("agent:")
 
 
 def test_workspace_backup_reserves_local_custody_and_tracks_each_download(workspace):

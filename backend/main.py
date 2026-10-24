@@ -184,31 +184,11 @@ def create_app(settings=None, transport=None, *, start_worker=True):
                     raise problem(
                         403, "origin_denied", "Cross-site mutations are not allowed."
                     )
-                authorization = request.headers.get("authorization", "")
-                if path.startswith("/api/toolkit/") or authorization.startswith(
-                    "Bearer "
-                ):
-                    token = (
-                        authorization[7:] if authorization.startswith("Bearer ") else ""
-                    )
-                    user = app.state.hub.agent_keys.authenticate(token)
-                    if not path.startswith("/api/toolkit/"):
-                        with app.state.hub.store(user["org_id"]).connect() as db:
-                            audit(
-                                db,
-                                user["id"],
-                                "agent_route_denied",
-                                {"path": path[:160], "method": request.method},
-                            )
-                        raise problem(
-                            403,
-                            "agent_route_denied",
-                            "Agent keys can use only the governed toolkit endpoints.",
-                        )
-                else:
-                    user = app.state.hub.authenticate(
-                        request.cookies.get("policylens_session")
-                    )
+                if request.headers.get("authorization", "").startswith("Bearer "):
+                    raise problem(401, "authentication_required", "Sign in to your workspace.")
+                user = app.state.hub.authenticate(
+                    request.cookies.get("policylens_session")
+                )
                 request.state.user = user
                 if path not in public:
                     if not user:
@@ -731,22 +711,16 @@ def create_app(settings=None, transport=None, *, start_worker=True):
 
     from product_api import router
     from access_api import router as access_router
-    from toolkit_api import router as toolkit_router
     from checkpoint_api import router as checkpoint_router
     from evidence_api import router as evidence_router
     from traceability_api import router as traceability_router
-    from control_code_api import router as control_code_router
-    from adapter_api import router as adapter_router
     from control_tuning_api import router as control_tuning_router
 
     app.include_router(router)
     app.include_router(access_router)
-    app.include_router(toolkit_router)
     app.include_router(checkpoint_router)
     app.include_router(evidence_router)
     app.include_router(traceability_router)
-    app.include_router(control_code_router)
-    app.include_router(adapter_router)
     app.include_router(retention_router)
     app.include_router(control_tuning_router)
     dist = ROOT.parent / "frontend" / "dist"

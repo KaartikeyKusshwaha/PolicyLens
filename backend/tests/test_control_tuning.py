@@ -10,7 +10,7 @@ import control_tuning as tuning
 from operations import Operations, canonical
 from product_models import RuleAction
 from test_product import add_customer, add_policy, approve, acting_as, member, rule, txn
-from test_toolkit import call, key
+
 
 
 def setup(client, kind="amount", threshold="100"):
@@ -355,39 +355,6 @@ def test_cross_workspace_receipt_and_parent_are_not_disclosed(workspace):
     )
 
 
-def test_agent_scope_keeps_issuer_out_of_approval_and_records_identity(workspace):
-    client, *_ = workspace
-    parent, _, reviewer = setup(client)
-    credential = key(
-        client,
-        scopes=["simulate_control_tuning", "draft_control_tuning", "get_control"],
-    )
-    data = body(parent)
-    checked = call(client, credential, "simulate_control_tuning", **data)
-    assert checked.status_code == 200, checked.text
-    request = {
-        **checked.json()["request"],
-        "preview_sha256": checked.json()["preview_sha256"],
-    }
-    result = call(client, credential, "draft_control_tuning", **request)
-    assert result.status_code == 200, result.text
-    draft = result.json()["control"]
-    assert draft["created_by"].startswith("agent:")
-    denied = client.post(
-        "/api/rules/" + draft["id"] + "/actions",
-        json={
-            "action": "approve",
-            "notes": "Attempting issuer approval of an agent proposal.",
-        },
-    )
-    assert denied.status_code == 403
-    assert (
-        call(client, credential, "approve_control", control_id=draft["id"]).status_code
-        == 403
-    )
-    observed = call(client, credential, "get_control", control_id=draft["id"]).json()
-    assert observed["tuning_receipt"]["draft_id"] == draft["id"]
-    assert approve(client, reviewer, draft)["status"] == "active"
 
 
 @pytest.mark.parametrize(

@@ -1,6 +1,8 @@
+> Current product scope: policies, controls, investigations and evidence reports. See [final product scope](docs/CORE_PRODUCT.md). Older dated plans describe historical functionality and are not a current feature list.
+
 # PolicyLens Operations
 
-A governance and evidence pilot for AI-assisted compliance built with **React 19, Python/FastAPI, and SQLite**. Connect customer activity to documented controls, investigate exceptions, and retain the evidence behind human decisions. Built-in monitoring is a starter engine; governed agents and imported engine records share the review/evidence workflow.
+A governance and evidence pilot for AI-assisted compliance built with **React 19, Python/FastAPI, and SQLite**. Connect customer activity to documented controls, investigate exceptions, and retain the evidence behind human decisions. Built-in monitoring is a starter engine; cited drafts support the review/evidence workflow.
 
 The application runs as one native Python process with persistent SQLite storage. It does not fabricate answers, switch AI providers after failures, or seed business records. SQLite FTS5/BM25 is the primary document retrieval engine.
 
@@ -36,14 +38,11 @@ Source implementation is separate from deployment and final browser acceptance.
 | Customers | Individuals and companies, country, internal risk tier, recorded due diligence status, notes, public LEI lookup and sanctions screening. The observed relationship graph lives inside the case view. |
 | Monitoring | Validated money and UTC timestamps, idempotent external IDs, CSV validation/import results, signed webhook ingestion, explicit internal controls, immutable alert snapshots and customer case grouping. |
 | Control workbench | Amount, transaction velocity, same-currency aggregate, corridor and due diligence conditions; draft versions; independent approval; historical simulation without live alerts. No regulatory thresholds are supplied or inferred. |
-| Controls as code | Versioned YAML, policy/parent hashes, previewed atomic draft imports, supplied Git provenance and replay protection. Activation still requires independent human approval. |
-| Engine imports | Marble decision/case export bundles, explicit customer mapping, provenance, atomic replay and imported review alerts. Source outcomes never grant local approval or close investigations. |
 | Investigations | Assignment, status transitions, escalation, notes, tasks, linked alerts and evidence, independent resolution review, and downloadable JSON case packs. Agents cannot close cases. |
 | Policy library | Text, text PDF and DOCX upload, lexical retrieval, archived versions, grounded Q&A and verified verbatim citations. Scanned PDFs need OCR before upload. |
 | Policy change impact | Archived version diff, linked controls, explicitly unconfirmed customer candidates, an analyst draft, human approval/dismissal and applicability review tasks. |
 | Traceability | Cited suggested obligations, explicit human control mappings, current/historical policy gaps, last recorded simulations, observed alerts and linked screening evidence. |
 | Agents | Investigation, screening, policy analyst, policy change and report roles; fixed tool sequence, durable jobs, recorded steps, pause/resume/cancel, budget limits, and deterministic evidence verification. |
-| Governed toolkit | Scoped expiring agent keys, per-tool permissions, request/run budgets, audited MCP stdio tools, thin CLI and Python SDK. Agents cannot approve, activate controls, close cases or file. |
 | Continuous screening | Opt-in scheduled refresh of selected sanctions feeds and customer name screening. Creates review cases for potential matches; uses no model calls. Requires the Python process to stay running. |
 | Work digest | Inbox snapshot of open/overdue work, review counts, recent alerts and failed runs, with enabled-feed freshness warnings. Zero model calls; explicit refresh; [bounds and notification limits](docs/WORK_DIGEST.md). |
 | Retention and deletion | Independent policies/holds, pinned deletion-plan review and copy custody. [Offline logical execution](docs/DELETION_EXECUTION.md) requires SQLCipher, a stopped installation and durable external suppression. Physical erasure and full historical-copy reconciliation remain incomplete. |
@@ -82,10 +81,7 @@ Context is limited to 18,000 characters. Investigation samples use up to 50 rece
 
 ## Configuration and persistence
 
-See [governed toolkit setup](docs/GOVERNED_TOOLKIT.md) for the registry, agent keys,
-CLI/Python SDK, MCP stdio transport and Claude Desktop/Cursor examples. Queued runs
-use saved model configuration. Explicit provider revisions are enforced when
-configured; the default `provider-unreported` does not establish immutable model weights.
+Policy suggestions and investigation drafts run inside the application. External agent access, MCP/CLI/SDK distribution, engine imports, YAML control workflows, scorecard pages, raw run logs and relationship graphs were removed at the owner's request. Historical imported records and signed evidence remain readable.
 
 Copy `backend/.env.example` if starting manually. Relevant settings:
 
@@ -114,7 +110,6 @@ Configure `CHECKPOINT_DIRECTORY` outside the database directory to retain signed
 
 The same area exports a [sponsor evidence pack](docs/SPONSOR_EVIDENCE.md) with a printable PDF, complete business JSON, signed file manifest and offline verifier. Generation requires configured external checkpoints and refuses oversized exports without silently dropping records. Exported copies contain private workspace data and need their own access controls.
 
-Use [controls as code](docs/CONTROLS_AS_CODE.md) from the control workbench to review YAML in Git, preview it and import new drafts. Git provenance is supplied by the author; the server does not fetch repositories or turn a Git commit into approval authority.
 
 The operator command `python manage.py backup --output <new-private-folder>` takes a verified full snapshot while the server is stopped. `manage.py verify` checks it. Restore requires `--destination <new-folder> --deletion-guard <current-guard> --deletion-guard-sha256 <independently-retained-current-digest>` and rebases workspace paths/revokes sessions. Export the guard from the stopped authoritative installation with `manage.py deletion-guard --output <new-external-file>`; see [recovery safeguards and remaining limits](docs/DELETION_RESTORE_GUARD.md). The OS installation lock rejects concurrent server/backup writers. Private environment/API keys are excluded from snapshots.
 

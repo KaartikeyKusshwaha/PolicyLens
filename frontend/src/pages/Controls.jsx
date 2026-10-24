@@ -61,7 +61,6 @@ export function Controls() {
         Configure explicit conditions, test historical impact, and approve each
         version before it runs.
       </PageHeading>
-      <p><Link className="button secondary" to="/rules/code">Controls as code: export or import YAML</Link></p>
       <div className="notice neutral">
         <SlidersHorizontal size={18} />
         <div>
@@ -369,7 +368,6 @@ export function ControlDetail() {
       >
         {kinds[c.kind]} · {c.policy_title} v{c.policy_version}
       </PageHeading>
-      <p><Link className="button secondary" to={`/rules/code?control_id=${encodeURIComponent(id)}`}>Export this control as YAML</Link></p>
       {c.tuning_receipt_id && <TuningEvidence receiptId={c.tuning_receipt_id} />}
       {c.status === "active" && ["amount", "velocity", "aggregate"].includes(c.kind) && ["admin", "analyst"].includes(user.role) && <ControlTuning key={c.id + c.updated_at} control={c} />}
       <ErrorNotice message={error} />
