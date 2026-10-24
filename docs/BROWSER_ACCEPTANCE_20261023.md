@@ -4,6 +4,21 @@ Scope amendment, 24 October 2026: account 2FA was removed at the owner's request
 Older MFA/enrollment references below describe the historical pass, not a current
 acceptance requirement. See [current authentication](ACCOUNT_AUTHENTICATION.md).
 
+Follow-up, 24 October 2026, after runtime PR #15: the Brave extension browser
+confirmed password-only sign-in/out, model-backed mapping/simulation, historical
+policy-version warnings, and independent tuning activation and hold release in
+the same isolated fictional installation. A control-editor loading race selected
+the wrong policy; no incorrect draft was saved. Three regressions reproduced it,
+the fix was merged/deployed, and the browser then retained the correct policy.
+The tuning comparison covered six transactions and three candidate thresholds;
+its author had no approval form, a different reviewer activated it, and the pinned
+one-to-two match comparison remained visible. A pending hold remained effective
+until a different reviewer released it. Read-only API checks confirmed distinct
+actors, a superseded parent, released hold and valid audit. Protected screenshots
+and receipts are outside Git in `browser-governance-20261024`. The earlier pass
+below is historical; [release readiness](RELEASE_READINESS.md) records remaining
+account, custody/deletion, linked-screening and operational-workspace acceptance.
+
 The final browser pass started after full CI passed for `ecbaea0` and PR #3
 merged as `3f4d976`. It used the connected Edge extension directly, without the
 computer-use skill. The separate HTTPS acceptance installation on the actual

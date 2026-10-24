@@ -5,7 +5,10 @@ engines and AI-assisted investigations. People review and approve; agents retrie
 evidence, prepare cited drafts and request review. The synthetic pilot works, but
 the full master plan and real-customer release gates are not complete.
 
-This report covers source, deployed checks and retained results as of this date.
+This report covers source, deployed checks and retained results as of this date,
+including runtime PRs #13–#15. The latest reviewed runtime source is `9b652450`;
+its main merge is `294ab232`. Documentation commits after that merge do not
+change the deployed runtime identity.
 The requirement ledger is [RELEASE_READINESS.md](RELEASE_READINESS.md), and the
 original scope remains [MASTER_PLAN.md](MASTER_PLAN.md). A percentage would mix
 implemented code with human, market and independent-review gates; it is not a
@@ -32,10 +35,13 @@ Internal thresholds are supplied by users; they are not statutory limits.
 1. **Governed toolkit:** MCP stdio bridge, Python SDK and CLI expose scoped
    read/draft/request-approval tools. Expiry, revocation, request/run budgets,
    agent audit identity and optional masking apply. There are no agent tools to
-   approve, activate, close, file or execute payments. Deployed HTTPS context/task/
-   denial/revocation passed; a separate local MCP subprocess produced a real
-   four-citation draft in one model attempt. Claude/Cursor configuration is
-   documented but not accepted in those host applications.
+   approve, activate, close, file or execute payments. An actual stdio MCP client
+   investigated the deployed HTTPS fixture and retained a one-attempt Groq draft
+   with six verified quotations, a review task, decision denials and revocation.
+   Its narrative incorrectly described four transactions as five. Quotations
+   verify source text, not the factual correctness of the entire draft.
+   Claude/Cursor configuration examples are documented; host-specific UI checks
+   would provide additional assurance.
 2. **Sponsor evidence:** complete signed PDF/JSON packs and verification tooling
    are implemented. A browser-downloaded deployed pack independently verified.
    The Oracle 1,000-transaction run generated and verified a pack in 47.397 seconds.
@@ -44,7 +50,10 @@ Internal thresholds are supplied by users; they are not statutory limits.
 3. **Traceability:** suggested policy obligations, explicit human control mappings,
    current/version gaps, simulations, alert counts and evidence links are
    implemented. Suggestions require review and are not an exhaustive legal
-   obligation inventory. Model-backed populated browser acceptance remains open.
+   obligation inventory. Browser mapping/simulation/mobile unlink/relink passed.
+   A policy-version update retained the old five suggestions and mapping while
+   explicitly flagging their historical version and missing current analysis.
+   Current-version analysis and broader linked-screening acceptance remain open.
 4. **Scorecard:** 50 synthetic labeled cases were replayed through the real
    provider/runner. Forty-six completed and four produced invalid output;
    109/109 retained citations verified, and disposition agreement was 43/50 (86%).
@@ -53,9 +62,11 @@ Internal thresholds are supplied by users; they are not statutory limits.
    remain open; preparation quality gate failed.
 5. **Tuning:** supplied threshold candidates are compared against historical
    workload and a supplied target. A pinned proposal remains a draft until a
-   different human approves. Browser stale-parent refusal and deployed API
-   independent activation passed; existing alerts were unchanged. Workload match
-   counts do not measure detection accuracy.
+   different human approves. Browser stale-parent refusal and independent
+   activation passed. A new browser comparison tested three thresholds against
+   six transactions, kept the one-to-two match comparison visible after approval
+   and superseded the parent. Workload match counts do not measure detection
+   accuracy; no live alerts are created by the comparison.
 6. **Autopilot preparation:** deterministic digests and stale-source warnings work.
    Automatic model briefs remain disabled under the failed gate. One successful
    draft does not justify enabling them.
@@ -81,14 +92,16 @@ Internal thresholds are supplied by users; they are not statutory limits.
 | Storage | Encrypted live identity/tenant files, protected installation key, external checkpoint/deletion-state roots. Original plaintext migration copies remain preserved. |
 | Server backups | Enabled daily timer and actual successful logs inspected. Database and complete history exports use explicit protected server settings. |
 | Off-machine receiver | Encrypted database, deletion-state and checkpoint-history archives on the Windows receiver; protected separate recovery/archive keys. Verified transfer and separate restore passed. |
-| Receiver schedule | Daily 09:00 local while signed in; triggered scheduled invocation succeeded. The next daily trigger has not yet been observed. |
+| Receiver schedule | Daily 09:00 local while signed in. Task last ran 24 October at 14:08:31 local with exit 0; today's three receiver archives match their receipt hashes. Automatic-versus-manual trigger origin is unproved because scheduler operational logging was disabled. |
 | Operational monitor | Every five minutes while signed in; readiness, archive freshness/integrity and disk floor checks. Healthy scheduled execution and isolated disk alarm passed. Local latest/failure reports survive recovery; no external notification delivery is configured. |
 | Render | Signed-in fallback was prepared; no Render deployment replaced Oracle. |
 
-The live deployment was built from the governance release with the subsequently
-reviewed exporter and mobile fixes applied. A release-directory name alone does
-not identify all later applied files. Dated deployment evidence records this
-composition; a green CI run alone is not proof of deployment.
+The live deployment was built from the governance release with reviewed exporter,
+mobile, draft-input-summary and password-only authentication fixes applied.
+PR #14 upgraded deployed pypdf to 6.21.2 and pip to 26.2.2. PR #15 fixed the
+frontend's policy-selection loading race; both HTTPS sites serve matching asset
+hashes. A release-directory name alone does not identify all later applied files.
+Private deployment receipts record this composition; CI alone does not prove it.
 
 ## Retained acceptance results
 
@@ -110,12 +123,24 @@ composition; a green CI run alone is not proof of deployment.
   sign-in/out, simulation, distinct-reviewer activation, YAML/Git round trip,
   evidence download, case notes, policy approval, effective pending hold and
   mobile drawer exercised. A real mobile graph overflow was fixed and rechecked.
-  Password lifecycle, remaining deletion/custody and model-backed mappings
-  are not fully accepted in the browser.
+  Later browser checks covered real model-backed mappings, historical policy
+  version gaps, current-policy control drafting, independent tuning activation
+  and independent hold release. Password lifecycle, remaining deletion/custody,
+  linked-screening and owner acceptance are incomplete.
+- The operator's protected `browser-governance-20261024` evidence directory
+  outside Git retains the latest deployment receipt, browser screenshots and
+  read-only API confirmation: distinct tuning author/approver, superseded parent,
+  released hold with different requester/reviewer and valid audit.
+- The protected `dependency-security-20261024` evidence directory retains the
+  deployed package inventory and before/after pip-audit reports. Three pypdf and
+  six distinct pip advisory IDs were found; after remediation all 32 installed
+  packages were checked with zero known advisories and none skipped. This does
+  not assess OS/native dependencies or replace independent security review.
 
-Full CI at runtime source `9522903` passed **585 backend tests** and **73 frontend
-tests**, plus Ruff, frontend lint/build and npm audit. Later evidence/documentation
-commits require their own CI status; counts alone never establish release readiness.
+Full CI at runtime source `9b652450` passed **591 backend tests** and **75 frontend
+tests**, plus Ruff, frontend lint/build, npm audit and the new Python dependency
+audit. The three new policy-loading regressions fail against the previous source
+and pass with the fix. Counts alone never establish release readiness.
 
 ## Code and data flow
 
@@ -126,6 +151,10 @@ retrieval. No vector database is required. Deterministic monitoring creates aler
 evidence, and the durable agent runner prepares drafts from bounded snapshots.
 Groq is the configured model provider. Returned quotations are verified against
 collected excerpts before a successful draft is retained.
+New drafts also retain server-computed transaction counts and exact totals per
+currency for their bounded model input; reviewers can compare those facts with
+the prose. Older runs are explicitly identified as lacking that summary. These
+checks do not establish narrative correctness or clear the failed quality gate.
 
 Hash-linked audit and independently retained signed checkpoints bind covered
 history. Evidence archives include verification material; verification requires
@@ -137,8 +166,8 @@ guard, revokes credentials and refuses overwriting an existing installation.
 
 | Requirement | Required evidence/action |
 | --- | --- |
-| User account acceptance | Verify normal email/password sign-in and password/session browser checks without exposing secrets. 2FA is removed from scope. |
-| Final populated browser pass | Complete remaining mapped-policy, live preparation, custody/deletion and account scenarios; retain actual outcomes. API checks do not replace browser observations. |
+| User account acceptance | Normal email/password browser sign-in/out passed. Password-change/reset handoff and remaining session checks need operator participation. 2FA is removed from scope. |
+| Final populated browser pass | Complete current-policy analysis, broader linked-screening, custody/deletion and remaining account scenarios; retain actual outcomes. The live draft is visible with its factual failure preserved. |
 | Production-owner acceptance | Authenticated acceptance in the owner's intended operational workspace, separately from fictional acceptance. |
 | Provider identity/quality | Immutable provider revision remains unproved; fix and independently validate the failed preparation gate before considering automatic briefs. |
 | Complete retention handling | Reconcile historical/offline/downstream copies, audit-PII policy and physical-copy evidence; conduct populated deployed deletion/recovery drills. Logical deletion is not a complete-erasure claim. |
