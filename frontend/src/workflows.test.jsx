@@ -712,3 +712,12 @@ test("a favorable assessment remains advisory and auditor access offers no revie
   expect(screen.queryByRole("button", { name: "Record review" })).toBeNull();
   expect(screen.getByText(/only an authorized administrator or reviewer can append a review/)).toBeTruthy();
 });
+
+test.each(["/settings/agents", "/settings/runs", "/settings/imports", "/evidence/scorecards", "/advanced/agents"])("removed optional surface %s is unavailable", async path => {
+  window.history.replaceState({}, "", path);
+  render(<App />);
+  await screen.findByRole("heading", { name: "Page not found" });
+  expect(screen.queryByRole("link", { name: "Agent keys" })).toBeNull();
+  expect(screen.queryByRole("link", { name: "Agent scorecards" })).toBeNull();
+  expect(fetch.mock.calls.some(([url]) => /agent-keys|adapters|scorecards\/reference/.test(url))).toBe(false);
+});

@@ -65,6 +65,7 @@ export default function WorkspaceRoutes() {
       <Route path="/policies/library/:id/edit" element={<PolicyEditor />} />
       <Route path="/policies/controls" element={<Controls />} />
       <Route path="/policies/controls/new" element={<ControlEditor />} />
+      <Route path="/policies/controls/code" element={<Navigate replace to="/policies/controls" />} />
       <Route path="/policies/controls/:id" element={<ControlDetail />} />
       <Route path="/policies/controls/:id/edit" element={<ControlEditor />} />
       <Route path="/policies/changes" element={<PolicyChanges />} />
