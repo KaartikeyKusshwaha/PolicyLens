@@ -43,7 +43,6 @@ class Credentials(Input):
     model_config = ConfigDict(str_strip_whitespace=False, extra="forbid")
     email: str = Field(min_length=5, max_length=254)
     password: str = Field(min_length=12, max_length=128)
-    second_factor: str = Field(default="", max_length=64)
 
     @field_validator("email")
     @classmethod
@@ -110,9 +109,6 @@ class Hub:
                     )
                 self.bootstrap_file = token_file
 
-        from mfa import AccountMFA
-
-        self.mfa = AccountMFA(self)
         from agent_keys import AgentKeys
 
         self.agent_keys = AgentKeys(self)
@@ -124,6 +120,15 @@ class Hub:
     def needs_setup(self):
         with self.connect() as db:
             return not bool(db.execute("SELECT 1 FROM users LIMIT 1").fetchone())
+
+    @staticmethod
+    def verify_password(db, user_id, password):
+        user = db.execute("SELECT * FROM users WHERE id=?", (user_id,)).fetchone()
+        if not user or not password_matches(password, user["password"]):
+            raise problem(
+                401, "reauthentication_required", "Current password is incorrect."
+            )
+        return user
 
     def setup(self, data):
         hashed = password_hash(data.password)
@@ -202,7 +207,6 @@ class Hub:
                 raise problem(
                     403, "membership_required", "No active workspace membership."
                 )
-            self.mfa.consume(db, user["id"], data.second_factor)
             return user["id"], membership[0]
 
     def issue_password_reset(self, email):
@@ -358,7 +362,6 @@ class Hub:
                         "Use your existing account password to accept this invitation.",
                     )
                 user_id = user["id"]
-                self.mfa.consume(db, user_id, data.second_factor)
             else:
                 user_id = str(uuid.uuid4())
                 db.execute(

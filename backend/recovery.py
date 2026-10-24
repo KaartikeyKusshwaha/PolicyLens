@@ -72,7 +72,7 @@ def migrate_encryption(settings, destination):
         raise ValueError(
             "Encryption migration requires a plaintext source configuration."
         )
-    # Preserve existing MFA/signing identity. Never generate a replacement master.
+    # Preserve the existing encryption/signing identity; never replace the master.
     box = SecretBox(settings)
     box.key()
     target_settings = settings.model_copy(
@@ -97,6 +97,7 @@ def _create_snapshot(settings, destination, target_settings, *, rebuild=False):
             organizations = db.execute(
                 "SELECT id,db_path FROM organizations"
             ).fetchall()
+            # Legacy snapshot compatibility only; factor rows no longer govern login.
             if (
                 not encrypted(settings)
                 and encrypted(target_settings)
@@ -333,6 +334,7 @@ def restore_snapshot(
                     (str(safe_child(destination, relative)), org_id),
                 )
             db.execute("DELETE FROM sessions")
+            # Old snapshots can contain obsolete factor state; never revive its codes.
             if db.execute(
                 "SELECT 1 FROM sqlite_master WHERE type='table' AND name='account_mfa'"
             ).fetchone():

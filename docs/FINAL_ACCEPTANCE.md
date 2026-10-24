@@ -65,7 +65,7 @@ not only page loads. Include a narrow mobile viewport and keyboard navigation.
 
 | Area | Checkpoints |
 | --- | --- |
-| Account | Sign-in, MFA enrollment/confirmation, required second factor, recovery handling and revoked sessions. Never record secrets in screenshots or acceptance logs. |
+| Account | Normal email/password sign-in, sign-out, password changes, single-use operator password reset and revoked sessions. Account 2FA was removed at the owner's request. Never record passwords or reset tokens in screenshots or logs. |
 | Inbox | Imported/native alerts, customer links, case tabs including graph, cited draft, notes/tasks, evidence age, reviewer resolution and denial for the assigned investigator. Distinguish preparation from final decisions. |
 | Policies & Controls | Policy versions, traceability mappings/gaps, linked simulations/evidence, YAML preview/import and stale-parent denial. An author cannot activate their control; a different reviewer can approve. Tuning shows before/after results and remains a draft until approval. |
 | Evidence | Populated PDF/JSON pack export, recorded freshness and audit anchor. Independently run the trusted verifier against the downloaded artifact and trusted fingerprint. Show scorecard metrics and explicit coverage/accuracy limits. |

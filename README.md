@@ -32,7 +32,7 @@ Source implementation is separate from deployment and final browser acceptance.
 
 | Capability | Working behavior |
 | --- | --- |
-| Team access | Owner bootstrap; invite-only membership; administrator, analyst, reviewer and read-only auditor roles; TOTP MFA with encrypted seeds and single-use recovery codes; password changes; access revocation; workspace switching and separate tenant databases. |
+| Team access | Email/password sign-in; owner bootstrap; invite-only membership; administrator, analyst, reviewer and read-only auditor roles; password changes; access revocation; workspace switching and separate tenant databases. |
 | Customers | Individuals and companies, country, internal risk tier, recorded due diligence status, notes, public LEI lookup and sanctions screening. The observed relationship graph lives inside the case view. |
 | Monitoring | Validated money and UTC timestamps, idempotent external IDs, CSV validation/import results, signed webhook ingestion, explicit internal controls, immutable alert snapshots and customer case grouping. |
 | Control workbench | Amount, transaction velocity, same-currency aggregate, corridor and due diligence conditions; draft versions; independent approval; historical simulation without live alerts. No regulatory thresholds are supplied or inferred. |
@@ -106,7 +106,7 @@ The existing filename `backend/data/policylens-v2.db` is retained to preserve v2
 
 Sessions use HttpOnly, SameSite=Strict cookies, hashed session IDs and per-session CSRF tokens. Passwords use scrypt; login attempts are throttled in SQLite. Production requires HTTPS, `COOKIE_SECURE=true`, an explicit hostname allowlist and a trusted reverse proxy. Invitation tokens expire after 48 hours and are single-use/email-bound; share the generated invitation link yourself. The app does not send email.
 
-Account MFA is configured in Settings & Agents -> Workspace & account -> Account. Public enrollment requires a separately provisioned `SECURITY_KEY_PATH`; seeds are encrypted with AES-256-GCM. Recovery codes are displayed once and stored hashed. Password resets preserve MFA, and existing-account invitations cannot bypass it. Keep the installation key separate from database snapshots. Explicit SQLCipher mode separately encrypts whole database files; the existing pilot has not been migrated. See the [security overview](docs/SECURITY.md), [database encryption and migration](docs/DATABASE_ENCRYPTION.md), and [trust operations](docs/TRUST_OPERATIONS.md) for protections, remaining limits and recovery procedures.
+Accounts use normal email/password sign-in. Two-factor authentication was removed from PolicyLens at the owner's request on 24 October 2026. Password changes, operator-issued single-use password reset links, session revocation, role checks and password confirmation for new agent keys remain. Keep the installation key separate from database snapshots: it is still required for database encryption, protected integration data and audit signing. The Oracle pilot uses SQLCipher. See [account authentication](docs/ACCOUNT_AUTHENTICATION.md), the [security overview](docs/SECURITY.md), and [database encryption and migration](docs/DATABASE_ENCRYPTION.md).
 
 Use **Audit & analytics -> Create backup** for an administrator-only workspace backup. A full disaster-recovery backup must also include `identity.db` and every workspace database. See [deployment and recovery](docs/DEPLOYMENT.md).
 

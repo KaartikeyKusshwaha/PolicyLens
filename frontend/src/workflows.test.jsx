@@ -125,6 +125,22 @@ test("signed audit download failures are visible to a read-only auditor", async 
   expect(button.disabled).toBe(false);
 });
 
+test("ordinary sign-in sends only email and password", async () => {
+  let signedIn = false;
+  let submitted;
+  mockRoutes({
+    "/api/auth/me": () => response(signedIn ? user : { detail: "Sign in" }, signedIn ? 200 : 401),
+    "/api/auth/login": (options) => { submitted = JSON.parse(options.body); signedIn = true; return response(user); },
+  });
+  render(<App />);
+  const email = await screen.findByLabelText("Work email");
+  expect(screen.queryByLabelText(/Authenticator|recovery code/i)).toBeNull();
+  fireEvent.change(email, { target: { value: user.email } });
+  fireEvent.change(screen.getByLabelText("Password", { exact: false }), { target: { value: "Test-only-password-2026" } });
+  fireEvent.click(screen.getByRole("button", { name: "Sign in", exact: true }));
+  await waitFor(() => expect(submitted).toEqual({ email: user.email, password: "Test-only-password-2026" }));
+});
+
 test("unconfigured checkpoint storage never offers an unsigned substitute", async () => {
   window.history.replaceState({}, "", "/audit");
   render(<App />);

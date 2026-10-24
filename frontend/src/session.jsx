@@ -250,11 +250,6 @@ function SignIn() {
                 <input name="confirm_password" type="password" autoComplete="new-password" minLength={12} maxLength={128} required />
               </Field>
             )}
-            {!setup && !reset && (
-              <Field label="Authenticator or recovery code" hint="Required if you enabled two-factor authentication. Otherwise leave blank.">
-                <input name="second_factor" autoComplete="one-time-code" maxLength={64} />
-              </Field>
-            )}
             <ErrorNotice message={error} />
             <Submit busy={busy}>
               {reset ? "Update password" : setup

@@ -26,7 +26,6 @@ class KeyCreate(Input):
     daily_runs: int = Field(default=5, ge=0, le=100)
     pseudonymize: bool = True
     password: str = Field(min_length=12, max_length=128)
-    second_factor: str = Field(default="", max_length=64)
 
     @field_validator("scopes")
     @classmethod
@@ -79,8 +78,7 @@ class AgentKeys:
         ).isoformat()
         with self.hub.connect() as db:
             db.execute("BEGIN IMMEDIATE")
-            self.hub.mfa.password(db, user["id"], data.password)
-            self.hub.mfa.consume(db, user["id"], data.second_factor)
+            self.hub.verify_password(db, user["id"], data.password)
             if data.pseudonymize:
                 SecretBox(settings).key(create=True)
             db.execute(

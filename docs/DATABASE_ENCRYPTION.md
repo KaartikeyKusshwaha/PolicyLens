@@ -16,8 +16,9 @@ The pinned `sqlcipher3==0.6.4` dependency supplies the native database driver.
 The connection checks its SQLCipher major version, applies a raw 256-bit key,
 reads the actual schema to prove successful decryption and checks cipher status.
 Database keys are HMAC-SHA256 derived from the original 32-byte installation key
-with the distinct purpose `policylens:database-encryption:v1`. MFA secrets and
-audit signing retain their existing, separate derivations.
+with the distinct purpose `policylens:database-encryption:v1`. Protected values and
+audit signing retain separate derivations. Account 2FA was removed; historical
+snapshots may still contain obsolete encrypted factor records.
 
 Public installations must pre-provision `SECURITY_KEY_PATH` separately. A new local
 installation can generate its key; existing databases never cause a missing key
@@ -43,7 +44,8 @@ Stop the application first. Keep the source's original `DATABASE_PATH`,
 If the installation has never created a master key, provision a private raw
 32-byte key first using `manage.py security-key --output PRIVATE_KEY_PATH` and
 configure its absolute path. Do not replace any existing key. Migration validates
-existing MFA ciphertext against the supplied key and refuses a mismatch.
+obsolete MFA ciphertext, if present in a historical source, against the supplied
+key and refuses a mismatch. This compatibility check does not enable account 2FA.
 
 Migration holds the installation lock and uses SQLCipher's `sqlcipher_export`
 to copy identity and every registered tenant, including FTS indexes. It requires
@@ -83,9 +85,10 @@ sizes, SQLite integrity, SQLCipher page authentication and tenant mappings.
 Legacy plaintext manifests remain supported in plaintext mode.
 
 Restore requires a new destination, preserves source snapshots, rebases tenant
-paths, revokes sessions, reset links and agent keys, removes pending MFA setup
-and recovery codes, and interrupts jobs that had been running. Enabled MFA seeds
-still require the original installation key. Point `SECURITY_KEY_PATH` explicitly
+paths, revokes sessions, reset links and agent keys, clears pending factor setup
+and obsolete recovery codes if an old snapshot contains them, and interrupts jobs
+that had been running. Old factor rows do not impose a sign-in challenge.
+Encrypted databases still require the original key. Point `SECURITY_KEY_PATH` explicitly
 at that key when starting a restored installation; do not use a new destination's
 default key path. Keep encryption mode consistent for every process and operator
 command.

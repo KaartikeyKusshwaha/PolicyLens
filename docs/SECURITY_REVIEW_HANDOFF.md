@@ -31,7 +31,7 @@ Do not supply master keys/provider tokens through this document or Git.
 
 | Boundary | Source/evidence | Required independent challenge |
 | --- | --- | --- |
-| Human authentication/MFA | `backend/auth.py`, `backend/mfa.py`, `backend/mfa_api.py`, `backend/security.py`; `test_mfa.py` | Replay/races, enrollment expiry, reauthentication, invitation/reset/account lifecycle, recovery consumption and session revocation. Assess operator recovery without an unauthenticated reset bypass. |
+| Human authentication | `backend/auth.py`, `backend/access_api.py`, `backend/security.py`; `test_password_auth.py` and existing account tests | Email/password sign-in, reauthentication, invitations, reset expiry/single use, session revocation and compatibility with obsolete factor records. Account 2FA was removed at the owner's request; see ACCOUNT_AUTHENTICATION.md. |
 | Tenant/role selection | `backend/main.py`, `backend/auth.py`, product/retention/traceability APIs | Cross-tenant IDs, forged workspace selection, role downgrade/revocation, IDOR, CSRF/origin, cookie and host/proxy configuration. Include evidence export and nested records. |
 | Human decisions | `backend/operations.py`, `backend/control_tuning.py`, `backend/retention.py`, `backend/deletion_requests.py` | Independent control activation/case review, agent-key issuer conflicts, stale parents/inventories, concurrent approval, hold release and changed membership/expiry. |
 | Agent keys/MCP | `backend/agent_keys.py`, `backend/toolkit_api.py`, `backend/tool_contracts.py`, `toolkit/src/policylens_toolkit/` | Scope bypass, extra arguments, mutation class, budget/rate races, key expiry/revocation/issuer membership, agent cookie fallback and cross-agent run control. Prove approval/closure/filing remain unavailable. |
@@ -77,7 +77,7 @@ independent retest and residual-risk disposition; an empty template is not proof
 of acceptance. The operator must define and approve the release criteria with
 the reviewer before calling the review complete.
 
-Outstanding known questions include MFA/browser recovery, host configuration,
+Outstanding known questions include password/session browser acceptance, host configuration,
 complete historical/customer copy reconciliation, audit-PII handling, preserved
 plaintext originals, independent monitoring and notification delivery, immutable
 provider revision, failed preparation quality and partner-specific source/load
