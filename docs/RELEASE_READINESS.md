@@ -10,6 +10,18 @@ toolkit, draft-input summary and password-only authentication changes; the
 deployment directory name is not a complete source identity. Final browser
 acceptance and the full master plan remain incomplete.
 
+Later acceptance evidence on 24 October is recorded in
+[the acceptance follow-up](ACCEPTANCE_FOLLOWUP_20261024.md). Telegram pairing,
+test-message API acceptance and a successful five-minute scheduled watchdog run
+are verified. Linked sanctions screening, reviewer password rotation via API with
+browser re-login/session revocation, blocked deletion-plan rejection and copy
+preservation checks also passed. All three registered fictional acceptance copies
+were located by exact hash; both sponsor packs passed offline verification.
+These results supersede the corresponding pending checks in the historical
+table below. Complete physical/cross-system custody and operator acceptance are
+not established. The owner deferred independent review and partner validation;
+those are deferred, not completed, and real-data approval is not established.
+
 | Master-plan requirement | Current evidence | Remaining requirement |
 | --- | --- | --- |
 | Scoped MCP, CLI, SDK; agents cannot decide | Real stdio MCP client called the deployed HTTPS fixture, retained a one-attempt Groq draft with six verified policy quotations, created a review task, was refused decisions and was refused after key revocation | Immutable provider revision remains unproved. Draft narrative incorrectly counted four transactions as five; verified quotations do not establish factual correctness. Claude/Cursor examples are supplied; host-specific UI checks are additional assurance |
