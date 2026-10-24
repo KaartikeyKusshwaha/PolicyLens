@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { Link } from "../navigation";
 import {
@@ -23,6 +23,7 @@ import {
   Submit,
   Success,
   useResource,
+  useAutoRefresh,
 } from "../components";
 import {
   AgentButton,
@@ -31,6 +32,7 @@ import {
   Status,
 } from "../product-components";
 import { useSession } from "../session";
+import CaseReview from "./CaseReview";
 
 export function Cases() {
   const r = useResource("/cases");
@@ -235,12 +237,22 @@ export function CaseDetail() {
   const { id } = useParams();
   const r = useResource("/cases/" + id);
   const team = useResource("/team");
-  const [tab, setTab] = useState("Evidence");
+  const [tab, setTab] = useState("Review");
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
   const [busy, setBusy] = useState(false);
   const [action, setAction] = useState("note");
+  const [taskBusy, setTaskBusy] = useState(false);
+  const [notes, setNotes] = useState("");
+  const actionForm = useRef(null);
   const { user } = useSession();
+  useAutoRefresh(r.reload);
+  function prepareAction(nextAction, draft = "") {
+    setAction(nextAction);
+    if (draft && !notes) setNotes(draft.slice(0, 4000));
+    actionForm.current?.scrollIntoView?.({ block: "center" });
+    actionForm.current?.querySelector("textarea")?.focus({ preventScroll: true });
+  }
   async function submit(e) {
     e.preventDefault();
     setBusy(true);
@@ -254,6 +266,7 @@ export function CaseDetail() {
     try {
       await api("/cases/" + id + "/actions", { method: "POST", body });
       form.reset();
+      setNotes("");
       setSaved(true);
       r.reload();
     } catch (e) {
@@ -263,15 +276,20 @@ export function CaseDetail() {
     }
   }
   async function completeTask(taskId) {
+    if (taskBusy) return;
+    setTaskBusy(true);
+    setError("");
     try {
       await api("/tasks/" + taskId + "/complete", { method: "POST" });
       r.reload();
     } catch (e) {
       setError(e.message);
+    } finally {
+      setTaskBusy(false);
     }
   }
-  if (r.loading) return <Loading />;
-  if (r.error) return <ErrorNotice message={r.error} retry={r.reload} />;
+  if (r.loading && !r.data) return <Loading />;
+  if (r.error && !r.data) return <ErrorNotice message={r.error} retry={r.reload} />;
   const c = r.data;
   const assignee = team.data?.find((u) => u.id === c.assignee_id);
   return (
@@ -301,10 +319,12 @@ export function CaseDetail() {
         <span>Owner: {assignee?.name || "Unassigned"}</span>
         <span>Due {formatDate(c.due_at)}</span>
       </div>
+      <ErrorNotice message={r.error || (user.role === "auditor" ? error : "")} retry={r.error ? r.reload : undefined} />
+      {r.loading && <p role="status" className="refresh-indicator">Updating case evidence…</p>}
       <div className="case-layout">
         <div>
           <div className="page-tabs">
-            {["Evidence", "Activity", "Tasks", "Drafts"].map((v) => (
+            {["Review", "Evidence", "Activity", "Tasks", "Drafts"].map((v) => (
               <button
                 key={v}
                 className={tab === v ? "active" : ""}
@@ -315,6 +335,7 @@ export function CaseDetail() {
               </button>
             ))}
           </div>
+          {tab === "Review" && <CaseReview review={c.review} completeTask={completeTask} canEdit={user.role !== "auditor" && !taskBusy && !r.loading} showEvidence={() => setTab("Evidence")} onRequestEvidence={c.status !== "resolved" ? () => prepareAction("task", "Evidence requested: " + c.review.missing_evidence.join(" ")) : undefined} onDecide={c.status !== "resolved" && ["admin", "reviewer"].includes(user.role) && c.assignee_id && c.assignee_id !== user.id ? () => prepareAction("resolve") : undefined} />}
           {tab === "Evidence" && (
             <>
               <section className="panel section-padding">
@@ -523,20 +544,19 @@ export function CaseDetail() {
         </div>
         <aside>
           <section className="panel section-padding">
-            <h2>Investigation support</h2>
+            <h2>Evidence assembled for you</h2>
             <p className="section-copy">
-              Collect current evidence and prepare a cited brief. Agents do not
-              resolve cases.
+              Your review summary and export are prepared automatically from recorded evidence. Optional AI drafts need verification against the original records.
             </p>
             {user.role !== "auditor" && (
-              <div className="stack-actions">
+              <details className="optional-drafts"><summary>Optional AI assistance</summary><div className="stack-actions">
                 <AgentButton kind="investigation" targetId={id}>
-                  Investigate with an agent
+                  Prepare an AI investigation draft
                 </AgentButton>
                 <AgentButton kind="report" targetId={id}>
-                  Draft investigation report
+                  Prepare an AI report draft
                 </AgentButton>
-              </div>
+              </div></details>
             )}
             <div className="aside-rule" />
             <h3>Customer due diligence</h3>
@@ -550,10 +570,11 @@ export function CaseDetail() {
           </section>
           {user.role !== "auditor" && (
             <form
+              ref={actionForm}
               className="panel section-padding detail-section"
               onSubmit={submit}
             >
-              <h2>Move the investigation forward</h2>
+              <h2>Your next decision</h2>
               <Field label="Action">
                 <select
                   value={action}
@@ -608,6 +629,8 @@ export function CaseDetail() {
               <Field label="Notes or evidence request">
                 <textarea
                   name="notes"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
                   rows={4}
                   minLength={5}
                   maxLength={4000}

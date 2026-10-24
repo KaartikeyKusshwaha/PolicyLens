@@ -10,6 +10,22 @@ import {
 import { Link } from "./navigation";
 import { api } from "./services/api";
 
+export function useAutoRefresh(reload, interval = 30000) {
+  useEffect(() => {
+    const refresh = () => {
+      if (document.visibilityState === "visible") reload();
+    };
+    const timer = window.setInterval(refresh, interval);
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refresh);
+    };
+  }, [reload, interval]);
+}
+
 export function useResource(path) {
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
@@ -26,9 +42,11 @@ export function useResource(path) {
     setLoading(true);
     setError("");
     api(path, { signal: controller.signal })
-      .then(setData)
+      .then((value) => {
+        if (!controller.signal.aborted) setData({ path, value });
+      })
       .catch((e) => {
-        if (e.name !== "AbortError") setError(e.message);
+        if (!controller.signal.aborted && e.name !== "AbortError") setError(e.message);
       })
       .finally(() => {
         if (!controller.signal.aborted) setLoading(false);
@@ -37,9 +55,9 @@ export function useResource(path) {
   }, [path, revision]);
   const reload = useCallback(() => setRevision((value) => value + 1), []);
   return {
-    data,
+    data: data?.path === path ? data.value : null,
     error,
-    loading,
+    loading: loading || (Boolean(path) && data?.path !== path && !error),
     reload,
   };
 }

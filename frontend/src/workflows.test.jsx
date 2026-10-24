@@ -49,6 +49,24 @@ const response = (data, status = 200) => ({
   status,
   json: async () => data,
 });
+
+test("automatic case review prepares a request without sending it and preserves editing on refresh", async () => {
+  window.history.replaceState({}, "", "/inbox/cases/automatic-case");
+  const review = { prepared_at: "2026-10-25T10:00:00Z", next_action: "Review outstanding evidence.", transaction_count: 0, total_customer_transactions: 0, totals_by_currency: {}, alert_count: 0, signals: [], policies: [], open_tasks: [], missing_evidence: ["Customer due diligence needs evidence."], limitations: ["Human decision required."] };
+  mockRoutes({ "/api/cases/automatic-case": () => response({ id: "automatic-case", title: "Prepared fictional case", customer_id: "c1", customer_name: "Example", customer: { name: "Example", country: "IN", kyc_status: "pending" }, status: "open", priority: "medium", created_at: "2026-10-25T10:00:00Z", alerts: [], transactions: [], screening_evidence: [], notes: [], tasks: [], agent_runs: [], review }) });
+  render(<App />);
+  await screen.findByRole("heading", { name: "Your case, ready to review" });
+  fireEvent.click(screen.getByRole("button", { name: "Prepare evidence request" }));
+  const notes = screen.getByRole("textbox", { name: "Notes or evidence request" });
+  expect(notes.value).toContain("Customer due diligence needs evidence.");
+  expect(screen.getByRole("combobox", { name: "Action" }).value).toBe("task");
+  expect(fetch.mock.calls.some(([, options]) => options?.method === "POST")).toBe(false);
+  fireEvent.change(notes, { target: { value: "Please provide the fictional invoice." } });
+  fireEvent.focus(window);
+  await waitFor(() => expect(fetch.mock.calls.filter(([url]) => url === "/api/cases/automatic-case").length).toBeGreaterThan(1));
+  expect(screen.getByRole("textbox", { name: "Notes or evidence request" }).value).toBe("Please provide the fictional invoice.");
+  expect(screen.queryByRole("button", { name: "Record your decision" })).toBeNull();
+});
 const defaults = (url) =>
   url === "/api/evidence/digest"
     ? { generated_at: "2026-10-23T12:00:00Z", queues: Object.fromEntries(["open_cases", "overdue_cases", "control_drafts", "policy_changes"].map((name) => [name, { count: 0 }])), sources: [], source_warnings: 0, recent_alerts: 0, failed_runs: 0, invalid_due_dates: 0, scope: "Current workspace snapshot." }
@@ -211,6 +229,8 @@ test("imported alerts render source provenance without a fabricated control link
     "/api/cases/imported-case1": () => response({ id: "imported-case1", title: "Review imported Marble case", customer: { name: "Fictional customer", country: "IN", kyc_status: "pending" }, customer_id: "customer1", customer_name: "Fictional customer", created_at: "2026-10-01T00:00:00Z", due_at: "2026-10-23T00:00:00Z", status: "open", priority: "medium", description: "External source evidence for human review.", external_source: external, alerts: [{ id: "alert1", origin: "external_engine", external_source: { ...external, source_id: "source-decision1" }, rule_id: null, rule_title: "Imported Marble scenario", priority: "medium", facts: { source_outcome: "review", source_score: 70, trigger_object_id: "trigger1" }, created_at: "2026-10-01T00:00:00Z" }], screening_evidence: [], transactions: [], notes: [], tasks: [], agent_runs: [] }),
   });
   render(<App />);
+  await screen.findByRole("button", { name: "Evidence", exact: true });
+  fireEvent.click(screen.getByRole("button", { name: "Evidence", exact: true }));
   await screen.findByText("Imported source evidence");
   expect(screen.getByText("Fictional upstream case")).toBeTruthy();
   expect(screen.getByText(/Imported source outcome: review/)).toBeTruthy();

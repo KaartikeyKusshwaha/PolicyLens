@@ -15,6 +15,7 @@ from pydantic import ValidationError
 from starlette.concurrency import run_in_threadpool
 
 from agents import AgentEngine, CATALOG
+from case_review import prepare_review
 from operations import Operations, audit, canonical, uid
 from product_models import (
     AgentControl,
@@ -288,21 +289,63 @@ def create_case(data: CaseInput, request: Request):
 
 def case_pack(case_id, request):
     ops = request.state.ops
-    case = ops.get("case", case_id)
-    return {
-        **case,
-        "customer": ops.get("customer", case["customer_id"]),
-        "alerts": ops.case_alerts(case_id),
-        "transactions": ops.customer_transactions(case["customer_id"], 200),
-        "notes": [n for n in ops.list("case_note", 5000) if n["case_id"] == case_id],
-        "tasks": [n for n in ops.list("task", 5000) if n.get("case_id") == case_id],
-        "screening_evidence": [
-            n for n in ops.list("case_evidence", 2000) if n["case_id"] == case_id
-        ],
-        "agent_runs": AgentEngine.list(request.state.store, case_id),
-        "exported_at": now(),
-        "audit_checkpoint": ops.verify_audit(),
-    }
+    # One snapshot keeps counts, amounts and case actions consistent during ingestion.
+    with ops.store.connect() as db:
+        db.execute("BEGIN")
+
+        def record(kind, record_id):
+            row = db.execute(
+                "SELECT payload FROM records WHERE kind=? AND id=?", (kind, record_id)
+            ).fetchone()
+            if not row:
+                raise problem(404, "not_found", "Case or customer not found.")
+            return json.loads(row[0])
+
+        def rows(sql, params):
+            return [json.loads(row[0]) for row in db.execute(sql, params)]
+
+        case = record("case", case_id)
+        pack = {
+            **case,
+            "customer": record("customer", case["customer_id"]),
+            "alerts": rows(
+                "SELECT payload FROM alerts WHERE case_id=? ORDER BY created_at DESC,id LIMIT 500",
+                (case_id,),
+            ),
+            "transactions": rows(
+                "SELECT payload FROM transactions WHERE customer_id=? ORDER BY occurred_at DESC,id LIMIT 200",
+                (case["customer_id"],),
+            ),
+            "exported_at": now(),
+        }
+        for name, kind, limit in (
+            ("notes", "case_note", 5000),
+            ("tasks", "task", 5000),
+            ("screening_evidence", "case_evidence", 2000),
+        ):
+            pack[name] = rows(
+                "SELECT payload FROM records WHERE kind=? AND json_extract(payload,'$.case_id')=? ORDER BY updated_at DESC,id LIMIT ?",
+                (kind, case_id, limit),
+            )
+        pack["agent_runs"] = [
+            {**dict(row), "payload": json.loads(row["payload"])}
+            for row in db.execute(
+                "SELECT * FROM jobs WHERE target_id=? ORDER BY created_at DESC LIMIT 1000",
+                (case_id,),
+            )
+        ]
+        counts = (
+            db.execute(
+                "SELECT COUNT(*) FROM transactions WHERE customer_id=?",
+                (case["customer_id"],),
+            ).fetchone()[0],
+            db.execute(
+                "SELECT COUNT(*) FROM alerts WHERE case_id=?", (case_id,)
+            ).fetchone()[0],
+        )
+    pack["audit_checkpoint"] = ops.verify_audit()
+    pack["review"] = prepare_review(pack, ops, request.app.state.settings, counts)
+    return pack
 
 
 @router.get("/cases/{case_id}")

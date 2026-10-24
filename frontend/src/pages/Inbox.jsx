@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import {
   Empty,
   ErrorNotice,
@@ -7,6 +7,7 @@ import {
   Loading,
   PageHeading,
   useResource,
+  useAutoRefresh,
 } from "../components";
 import { Status } from "../product-components";
 import { useSession } from "../session";
@@ -18,7 +19,7 @@ function Queue({ title, resource, rows, children, empty, footer }) {
       <h2>{title}</h2>
       {resource.error ? (
         <ErrorNotice message={resource.error} retry={resource.reload} />
-      ) : resource.loading ? (
+      ) : resource.loading && !resource.data ? (
         <Loading />
       ) : rows.length ? (
         children
@@ -86,6 +87,7 @@ function RetentionApprovals() {
 function AlertQueue({ caseById }) {
   const [offset, setOffset] = useState(0);
   const resource = useResource(`/alerts?limit=50&offset=${offset}`);
+  useAutoRefresh(resource.reload);
   const rows = resource.data?.alerts || [];
   const pagination = (
     <div className="button-row">
@@ -156,6 +158,11 @@ export default function Inbox({ view = "overview" }) {
   const cases = useResource("/cases");
   const rules = useResource("/rules");
   const changes = useResource("/policy-changes");
+  const reloadCases = cases.reload, reloadRules = rules.reload, reloadChanges = changes.reload;
+  const refresh = useCallback(() => {
+    reloadCases(); reloadRules(); reloadChanges();
+  }, [reloadCases, reloadRules, reloadChanges]);
+  useAutoRefresh(refresh);
   const { user } = useSession();
   const open = (cases.data || []).filter((item) => item.status !== "resolved");
   const controls = (rules.data || []).filter((item) => item.status === "draft");
@@ -178,17 +185,13 @@ export default function Inbox({ view = "overview" }) {
         action={
           <button
             className="button secondary"
-            onClick={() => {
-              [cases, rules, changes].forEach((resource) => resource.reload());
-              setRevision((value) => value + 1);
-            }}
+            onClick={() => { refresh(); setRevision((value) => value + 1); }}
           >
             Refresh work queue
           </button>
         }
       >
-        Agents prepare evidence and drafts. Authorized humans approve controls
-        and resolve cases.
+        Cases assemble their evidence automatically. Review what needs your attention and decide what happens next. This queue updates while you work.
       </PageHeading>
       {view === "overview" && (
         <>
@@ -228,6 +231,8 @@ export default function Inbox({ view = "overview" }) {
               {[...open]
                 .sort(
                   (a, b) =>
+                    ({ critical: 0, high: 1, medium: 2, low: 3 }[a.priority] ?? 4) -
+                    ({ critical: 0, high: 1, medium: 2, low: 3 }[b.priority] ?? 4) ||
                     new Date(a.due_at || "9999").getTime() -
                     new Date(b.due_at || "9999").getTime(),
                 )
@@ -240,7 +245,7 @@ export default function Inbox({ view = "overview" }) {
                         {item.customer_name} · Due {formatDate(item.due_at)}
                       </small>
                     </div>
-                    <Status value={item.status} />
+                    <div className="queue-context"><span>{item.alert_count || 0} signals</span><Status value={item.status} /></div>
                   </Link>
                 ))}
             </div>
