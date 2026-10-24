@@ -1,21 +1,22 @@
 import { Link } from "react-router-dom";
-import { ErrorNotice, formatDate, Loading, useResource } from "../components";
+import { ErrorNotice, formatDate, Loading, useResource, useAutoRefresh } from "../components";
 
 export default function WorkDigest() {
   const resource = useResource("/evidence/digest");
+  useAutoRefresh(resource.reload);
   const data = resource.data;
   return (
     <section className="panel section-padding" aria-label="Workspace digest">
       <h2>Workspace digest</h2>
       {resource.error ? (
         <ErrorNotice message={resource.error} retry={resource.reload} />
-      ) : resource.loading ? (
+      ) : resource.loading && !data ? (
         <Loading />
       ) : (
         data && (
           <>
             <p>
-              Snapshot at {formatDate(data.generated_at)} Â· zero model calls
+              Updated {formatDate(data.generated_at)} · Calculated from workspace records
             </p>
             <dl className="detail-grid">
               {[
