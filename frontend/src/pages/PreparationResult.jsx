@@ -2,7 +2,7 @@ import { useParams } from "react-router-dom";
 import { useState } from "react";
 import { api } from "../services/api";
 import { useSession } from "../session";
-import { Link } from "../navigation";
+import { Link, useNavigate } from "../navigation";
 import { ErrorNotice, Evidence, Loading, PageHeading } from "../components";
 import { Status, label, useLiveResource } from "../product-components";
 
@@ -10,19 +10,26 @@ export default function PreparationResult() {
   const { id } = useParams();
   const { user } = useSession();
   const [error, setError] = useState("");
+  const [retrying, setRetrying] = useState(false);
+  const navigate = useNavigate();
   const resource = useLiveResource(`/agents/jobs/${id}`, job => ["queued", "running"].includes(job.state));
   if (resource.loading && !resource.data) return <Loading />;
   if (resource.error) return <ErrorNotice message={resource.error} retry={resource.reload} />;
   const job = resource.data;
   if (!job) return null;
   const result = job.payload.result;
-  const target = job.kind === "policy_analyst" ? "/policies/traceability" : job.kind === "policy_change" ? `/changes/${job.target_id}` : `/cases/${job.target_id}`;
+  const target = job.kind === "policy_analyst" ? `/policies/library/${job.target_id}/workflow` : job.kind === "policy_change" ? `/changes/${job.target_id}` : job.kind === "screening" ? `/customers/${job.target_id}` : `/cases/${job.target_id}`;
   return <>
     <Link to={target}>Back to the source record</Link>
     <PageHeading title="Prepared evidence for review" eyebrow={label(job.kind)} action={<Status value={job.state} />}>
       Review the cited evidence and interpretation before making a decision. Preparation does not approve or resolve work.
     </PageHeading>
     <ErrorNotice message={error || job.payload.error?.message} />
+    {user.role !== "auditor" && ["failed", "interrupted", "cancelled"].includes(job.state) && job.kind !== "maintenance" && <div className="detail-section"><p>A retry starts a new preparation with current evidence and uses one run from your daily budget. This run stays in the history.</p><button className="button primary" disabled={retrying} onClick={async()=>{
+      setRetrying(true);setError("");
+      try {const next=await api("/agents/jobs",{method:"POST",body:{kind:job.kind,target_id:job.target_id}});navigate(`/preparation/${next.id}`);}
+      catch(failure){setError(failure.message);}finally{setRetrying(false);}
+    }}>{retrying ? "Starting…" : "Retry preparation"}</button></div>}
     {user.role !== "auditor" && !["completed", "cancelled"].includes(job.state) && <button className="button secondary" onClick={async () => {
       try { await api(`/agents/jobs/${id}/control`, { method: "POST", body: { action: "cancel" } }); resource.reload(); }
       catch (failure) { setError(failure.message); }

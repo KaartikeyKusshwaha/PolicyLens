@@ -82,3 +82,20 @@ def test_signup_is_rate_limited(workspace):
         ).status_code
         == 429
     )
+
+
+def test_login_returns_to_last_selected_workspace(workspace):
+    client, _, _, _ = workspace
+    original = client.get("/api/auth/me").json()
+    second = client.post(
+        "/api/auth/workspaces", json={"name": "Second operating workspace"}
+    ).json()
+    client.post("/api/auth/workspaces/" + second["id"] + "/switch")
+    client.post("/api/auth/logout")
+    from test_product import PASSWORD
+
+    identity = client.post(
+        "/api/auth/login", json={"email": original["email"], "password": PASSWORD}
+    )
+    assert identity.status_code == 200
+    assert identity.json()["org_id"] == second["id"]

@@ -775,3 +775,29 @@ test("policy workspace shows review coverage and removal requires confirmation",
   await screen.findByText("This policy is archived.");
   expect(removed).toBe(true);
 });
+
+
+test("a flagged policy transaction links directly to its investigation", async () => {
+  window.history.replaceState({}, "", "/policies/library/linked-policy/workflow");
+  mockRoutes({"/api/policies/linked-policy/workflow":()=>response({policy:{id:"linked-policy",title:"Linked policy",version:"1"},preparations:[],archived:false,automation_enabled:true,review:{policy_version:"1",reviewed_at:"2026-10-26T00:00:00Z",active_controls:1,total:1,flagged:1,no_control_hit:0,not_covered:0,scope:"Approved checks only",transactions:[{transaction_id:"t1",external_id:"PAY-LINKED",customer_id:"c1",status:"flagged",hits:[{control_id:"rule1",control_title:"Amount check",control_version:1,facts:{observed:"150"},case_id:"case-linked",alert_id:"alert1"}]}]}})});
+  render(<App/>);
+  const link = await screen.findByRole("link", {name:"Open investigation"});
+  expect(link.getAttribute("href")).toBe("/inbox/cases/case-linked");
+});
+
+
+test("failed preparation offers a new tracked run and returns to its source policy", async () => {
+  window.history.replaceState({}, "", "/preparation/failed-run");
+  let retry;
+  mockRoutes({
+    "/api/agents/jobs/failed-run":()=>response({id:"failed-run",kind:"policy_analyst",target_id:"policy1",state:"failed",payload:{error:{message:"Provider draft failed validation."}}}),
+    "/api/agents/jobs":options=>{retry=JSON.parse(options.body);return response({id:"retry-run"},202);},
+    "/api/agents/jobs/retry-run":()=>response({id:"retry-run",kind:"policy_analyst",target_id:"policy1",state:"queued",payload:{}}),
+  });
+  render(<App/>);
+  await screen.findByText("Provider draft failed validation.");
+  expect(screen.getByRole("link",{name:"Back to the source record"}).getAttribute("href")).toBe("/policies/library/policy1/workflow");
+  fireEvent.click(screen.getByRole("button",{name:"Retry preparation"}));
+  await waitFor(()=>expect(retry).toEqual({kind:"policy_analyst",target_id:"policy1"}));
+  await screen.findByText("Preparing evidence. This page updates automatically.");
+});

@@ -208,3 +208,54 @@ def test_archive_and_policy_workflow_do_not_cross_workspace_boundary(workspace):
     assert client.get(f"/api/policies/{policy['id']}/workflow").status_code == 404
     assert client.post(f"/api/policies/{policy['id']}/review").status_code == 404
     assert client.delete(f"/api/policies/{policy['id']}").status_code == 404
+
+
+def test_historical_review_creates_linked_case_and_replays_without_duplicates(
+    workspace,
+):
+    client, _, _, _ = workspace
+    customer, policy = add_customer(client), add_policy(client)
+    client.post("/api/monitor/transactions", json=txn(customer, "PAST"))
+    control = rule(client, policy)
+    approve(client, member(client), control)
+    first = client.post(f"/api/policies/{policy['id']}/review").json()
+    hit = first["transactions"][0]["hits"][0]
+    case = client.get("/api/cases/" + hit["case_id"]).json()
+    assert case["review"]["alert_count"] == 1
+    assert case["alerts"][0]["id"] == hit["alert_id"]
+    assert case["alerts"][0]["rule_snapshot"]["policy_id"] == policy["id"]
+    client.post(f"/api/policies/{policy['id']}/review")
+    assert len(client.get("/api/cases").json()) == 1
+    assert (
+        client.get("/api/cases/" + hit["case_id"]).json()["review"]["alert_count"] == 1
+    )
+    fresh = client.post("/api/monitor/transactions", json=txn(customer, "NEW")).json()
+    assert fresh["alerts"][0]["case_id"] == hit["case_id"]
+    client.post(f"/api/policies/{policy['id']}/review")
+    assert (
+        client.get("/api/cases/" + hit["case_id"]).json()["review"]["alert_count"] == 2
+    )
+
+
+def test_review_does_not_claim_currency_is_covered_by_unrelated_amount_check(workspace):
+    client, _, _, _ = workspace
+    customer, policy = add_customer(client), add_policy(client)
+    client.post(
+        "/api/monitor/transactions", json=txn(customer, "EUR-PAY", currency="EUR")
+    )
+    approve(client, member(client), rule(client, policy, currency="USD"))
+    result = client.post(f"/api/policies/{policy['id']}/review").json()
+    assert result["not_covered"] == 1 and result["no_control_hit"] == 0
+
+
+def test_archive_cancels_preparation_and_removes_active_analysis_gap(workspace):
+    client, _, _, settings = workspace
+    settings.automatic_policy_analysis = True
+    policy = add_policy(client)
+    job_id = policy["automation"]["preparation_id"]
+    client.delete("/api/policies/" + policy["id"])
+    assert client.get("/api/agents/jobs/" + job_id).json()["state"] == "cancelled"
+    assert (
+        client.get("/api/traceability").json()["policies_without_current_analysis"]
+        == []
+    )
