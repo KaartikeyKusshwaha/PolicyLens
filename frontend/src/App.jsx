@@ -118,13 +118,13 @@ function Workspace() {
               <small>GOVERNANCE & EVIDENCE</small>
             </span>
           </Link>
-          <div className="workspace-picker">
+          <Link className="workspace-picker" to="/workspace" onClick={closeMenu} aria-label={`Open ${session.user.workspace} workspace`}>
             <span className="workspace-avatar">PL</span>
             <span>
               {session.user.workspace}
               <small>{session.user.role} · Human review required</small>
             </span>
-          </div>
+          </Link>
           <div className="nav-label">WORKSPACE</div>
           <nav aria-label="Main navigation">
             {AREAS.map((area, index) => {
@@ -174,7 +174,7 @@ function Workspace() {
               >
                 <Menu size={20} />
               </button>
-              <span>Workspace</span>
+              <Link to="/workspace">{session.user.workspace}</Link>
               <ChevronRight size={13} />
               <strong>
                 {active?.title || "PolicyLens"}

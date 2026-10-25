@@ -17,7 +17,7 @@ export function legacyDestination(destination) {
   const path = boundary < 0 ? destination : destination.slice(0, boundary);
   const suffix = boundary < 0 ? "" : destination.slice(boundary);
   const exact = {
-    "/": "/inbox",
+    "/": "/workspace",
     "/policies": "/policies/library",
     "/policies/traceability": "/policies",
     "/policies/new": "/policies/library/new",
@@ -61,15 +61,18 @@ export function useNavigate() {
 
 export const AREAS = [
   {
-    path: "/inbox",
-    title: "Inbox",
+    path: "/workspace",
+    title: "Workspace",
     links: [
+      ["/workspace", "Overview"],
       ["/inbox", "Work queue"],
       ["/inbox/alerts", "Alerts"],
       ["/inbox/cases", "Cases"],
       ["/inbox/approvals", "Approvals"],
       ["/inbox/customers", "Customers"],
       ["/inbox/transactions", "Transactions"],
+      ["/policies/library", "Company policies"],
+      ["/settings?section=Team", "People"],
     ],
   },
   {
@@ -104,6 +107,7 @@ export const AREAS = [
 ];
 
 export function areaFor(path) {
+  if (path === "/inbox" || path.startsWith("/inbox/")) return AREAS[0];
   if (path === "/advanced" || path.startsWith("/advanced/")) return AREAS[3];
   return AREAS.find(
     (area) => path === area.path || path.startsWith(area.path + "/"),

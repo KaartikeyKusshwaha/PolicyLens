@@ -121,7 +121,7 @@ function mockRoutes(routes) {
   );
 }
 beforeEach(() => {
-  window.history.replaceState({}, "", "/");
+  window.history.replaceState({}, "", "/inbox");
   localStorage.clear();
   vi.stubGlobal(
     "fetch",
@@ -413,6 +413,18 @@ test("first owner setup requires the server bootstrap key", async () => {
   expect(screen.getByLabelText("Workspace name").required).toBe(true);
 });
 
+test("public signup asks for a workspace name without a bootstrap key", async () => {
+  window.history.replaceState({}, "", "/signup");
+  mockRoutes({"/api/auth/me": () => response({detail:"Sign in"},401)});
+  render(<App/>);
+  await screen.findByRole("heading",{name:"Create your workspace"});
+  expect(screen.getByLabelText("Workspace name").required).toBe(true);
+  expect(screen.getByLabelText("Your full name").required).toBe(true);
+  expect(screen.queryByLabelText(/^Local bootstrap key/)).toBeNull();
+  expect(screen.getByRole("button",{name:/Create account & workspace/})).toBeTruthy();
+  expect(screen.getByRole("link",{name:"Sign in"})).toBeTruthy();
+});
+
 test("static-only deployments show a clear missing API error", async () => {
   fetch.mockResolvedValue({
     ok: true,
@@ -554,7 +566,7 @@ test("four primary areas remain active through populated review and evidence rou
   await screen.findByText("Overdue fictional investigation");
   expect(screen.getByText("Different reviewer required")).toBeTruthy();
   const primary = screen.getByRole("navigation", { name: "Main navigation" });
-  expect(within(primary).getAllByRole("link").map(link => link.textContent)).toEqual(["Inbox", "Policies & Controls", "Evidence", "Settings"]);
+  expect(within(primary).getAllByRole("link").map(link => link.textContent)).toEqual(["Workspace", "Policies & Controls", "Evidence", "Settings"]);
   fireEvent.click(within(primary).getByRole("link", { name: "Policies & Controls" }));
   await screen.findByText("Verify the identity of sender and receiver.");
   expect(within(primary).getByRole("link", { name: "Policies & Controls" }).getAttribute("aria-current")).toBe("page");

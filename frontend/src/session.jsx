@@ -86,6 +86,7 @@ export function AuthGate({ children }) {
 function SignIn() {
   const session = useSession();
   const reset = window.location.pathname === "/reset-password";
+  const registering = window.location.pathname === "/signup" && !session.setup;
   const resetParams = new URLSearchParams(reset ? window.location.hash.slice(1) : "");
   const invite =
     window.location.pathname === "/join"
@@ -111,7 +112,7 @@ function SignIn() {
     }
     try {
       const user = await api(
-        reset ? "/auth/password-reset" : setup ? "/auth/setup" : invite ? "/auth/join" : "/auth/login",
+        reset ? "/auth/password-reset" : registering ? "/auth/register" : setup ? "/auth/setup" : invite ? "/auth/join" : "/auth/login",
         { method: "POST", body: data },
       );
       if (reset) {
@@ -122,7 +123,7 @@ function SignIn() {
         return;
       }
       session.accept(user);
-      if (invite) window.location.assign("/");
+      if (invite || registering) window.location.assign("/workspace");
     } catch (e) {
       setError(e.message);
     } finally {
@@ -165,7 +166,7 @@ function SignIn() {
           <h1>
             {reset
               ? resetDone ? "Password updated" : "Choose a new password"
-              : setup
+              : registering ? "Create your workspace" : setup
               ? "Create your first workspace"
               : invite
                 ? "Join your team"
@@ -174,7 +175,7 @@ function SignIn() {
           <p>
             {reset
               ? resetDone ? "Your previous sessions have been signed out. Sign in with your new password." : "Use your private reset link within 15 minutes. It works once."
-              : setup
+              : registering ? "One account, a named workspace, and a clear place for your team's work." : setup
               ? "Set up the owner account. Future team members join by invitation."
               : invite
                 ? "Use the invited email. Existing members should enter their current password."
@@ -201,7 +202,7 @@ function SignIn() {
                 />
               </Field>
             )}
-            {(setup || invite) && (
+            {(setup || invite || registering) && (
               <Field label="Your full name">
                 <input
                   name="name"
@@ -212,7 +213,7 @@ function SignIn() {
                 />
               </Field>
             )}
-            {setup && (
+            {(setup || registering) && (
               <Field label="Workspace name">
                 <input
                   name="workspace"
@@ -238,7 +239,7 @@ function SignIn() {
                 name="password"
                 type="password"
                 autoComplete={
-                  setup || invite || reset ? "new-password" : "current-password"
+                  setup || invite || reset || registering ? "new-password" : "current-password"
                 }
                 minLength={12}
                 maxLength={128}
@@ -252,7 +253,7 @@ function SignIn() {
             )}
             <ErrorNotice message={error} />
             <Submit busy={busy}>
-              {reset ? "Update password" : setup
+              {reset ? "Update password" : registering ? "Create account & workspace" : setup
                 ? "Create workspace"
                 : invite
                   ? "Accept invitation"
@@ -260,7 +261,8 @@ function SignIn() {
               <ArrowRight size={16} />
             </Submit>
           </form>}
-          {!setup && !invite && !reset && <p className="auth-disclosure">Forgot your password? Ask your server operator for a private reset link.</p>}
+          {!setup && !invite && !reset && <p className="auth-disclosure">{registering ? <>Already have an account? <a href="/">Sign in</a></> : <>New to PolicyLens? <a href="/signup">Create an account</a></>}</p>}
+          {!setup && !invite && !reset && !registering && <p className="auth-disclosure">Forgot your password? Ask your server operator for a private reset link.</p>}
           <p className="auth-disclosure">
             AI workflows send selected evidence to your configured Groq
             provider. Sanctions and company reference data come from named

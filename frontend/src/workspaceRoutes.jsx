@@ -1,5 +1,6 @@
 import { Link, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import Inbox from "./pages/Inbox";
+import WorkspaceHome from "./pages/WorkspaceHome";
 import Evaluate from "./pages/Evaluate";
 import { Policies, PolicyEditor } from "./pages/Policies";
 import Assistant from "./pages/Assistant";
@@ -49,6 +50,8 @@ function Advanced() {
 export default function WorkspaceRoutes() {
   return (
     <Routes>
+      <Route path="/workspace" element={<WorkspaceHome />} />
+      <Route path="/signup" element={<Navigate replace to="/workspace" />} />
       <Route path="/inbox" element={<Inbox />} />
       <Route path="/inbox/alerts" element={<Inbox view="alerts" />} />
       <Route path="/inbox/approvals" element={<Inbox view="approvals" />} />

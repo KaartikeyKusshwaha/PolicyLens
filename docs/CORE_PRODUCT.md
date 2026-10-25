@@ -67,3 +67,24 @@ action accent, consistent 44-pixel primary controls, keyboard focus indicators,
 light/dark themes and responsive layouts. External web-font downloads are removed.
 These changes follow Apple's hierarchy, clarity and consistency guidance; this is
 a web application, not a claim of native Apple platform certification.
+
+## Named workspaces and public registration — 25 October 2026
+
+After the server owner completes initial bootstrap, new users can choose Create
+an account, supply their name/email/password and name a new isolated workspace.
+Existing accounts sign in; joining an existing team still requires its invitation.
+Registration does not grant membership in other workspaces. Normal password
+sessions, origin checks and registration rate limits apply. Email ownership
+verification and self-service reset-email delivery are not part of this release.
+
+The default landing page is the named workspace overview. It groups People,
+Customers & companies, Transactions, Company policies, Reviews and Connections.
+Each section links directly to its upload/add/update/review workflow in the same
+workspace. The sidebar name opens the overview; the top bar keeps that name
+visible across sections. Records and failures are shown per section, with no
+invented zero counts when a request fails. Actions continue to honor roles.
+
+The palette uses pale blue backgrounds, cyan surfaces and turquoise action accents,
+with a corresponding dark palette. Native typography, focus states and responsive
+layouts from the previous release remain. Browser visual acceptance must be
+reported separately from automated component/API verification.
