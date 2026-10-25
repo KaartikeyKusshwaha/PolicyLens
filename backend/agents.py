@@ -124,6 +124,16 @@ class AgentEngine:
         elif kind == "policy_analyst":
             if not store.policy(target_id):
                 raise problem(404, "not_found", "Policy not found.")
+            with store.connect() as db:
+                if db.execute(
+                    "SELECT 1 FROM records WHERE kind='policy_archive' AND id=?",
+                    (target_id,),
+                ).fetchone():
+                    raise problem(
+                        409,
+                        "policy_archived",
+                        "Restore the policy before starting preparation.",
+                    )
         elif kind == "policy_change":
             ops.get("policy_change", target_id)
         elif kind != "maintenance":
@@ -186,6 +196,11 @@ class AgentEngine:
                     "prompt_version": PROMPT_VERSION,
                     "pseudonymize": self.settings.pseudonymize_model_calls,
                     "max_model_calls": 0 if kind == "maintenance" else 1,
+                    **(
+                        {"target_policy_version": store.policy(target_id)["version"]}
+                        if kind == "policy_analyst"
+                        else {}
+                    ),
                     "requested_by": actor,
                     **(
                         {
@@ -456,6 +471,28 @@ class AgentEngine:
                     else:
                         policy = store.policy(target)
                         extra = {}
+                        with store.connect() as db:
+                            if db.execute(
+                                "SELECT 1 FROM records WHERE kind='policy_archive' AND id=?",
+                                (target,),
+                            ).fetchone():
+                                raise problem(
+                                    409,
+                                    "policy_archived",
+                                    "This policy was removed from active use. Preparation was stopped.",
+                                )
+                        if (
+                            policy
+                            and job["payload"].get(
+                                "target_policy_version", policy["version"]
+                            )
+                            != policy["version"]
+                        ):
+                            raise problem(
+                                409,
+                                "policy_changed",
+                                "The policy changed after this analysis was queued. Start preparation for the new version.",
+                            )
                     if not policy:
                         raise problem(404, "not_found", "Policy no longer exists.")
                     chunks, coverage = chunks_for_policy(
@@ -721,6 +758,10 @@ class AgentEngine:
                     self.recover(store)
                     recovered.add(org["id"])
                 ops = Operations(store)
+                if self.settings.automatic_policy_analysis:
+                    from policy_workflows import refresh_pending
+
+                    await run_in_threadpool(refresh_pending, store, ops)
                 preferences = ops.preferences()
                 if (
                     preferences.get("monitoring_enabled")

@@ -754,3 +754,24 @@ test.each(["/settings/agents", "/settings/runs", "/settings/imports", "/evidence
   expect(screen.queryByRole("link", { name: "Agent scorecards" })).toBeNull();
   expect(fetch.mock.calls.some(([url]) => /agent-keys|adapters|scorecards\/reference/.test(url))).toBe(false);
 });
+
+
+test("policy workspace shows review coverage and removal requires confirmation", async () => {
+  window.history.replaceState({}, "", "/policies/library/policy-live/workflow");
+  let removed = false;
+  mockRoutes({
+    "/api/policies/policy-live/workflow": () => response({ policy:{id:"policy-live",title:"Company policy",version:"2"}, preparations:[], archived:removed, automation_enabled:true, review:{policy_version:"2",reviewed_at:"2026-10-25T10:00:00Z",active_controls:0,total:1,flagged:0,no_control_hit:0,not_covered:1,scope:"Approved checks only",transactions:[{transaction_id:"t1",external_id:"PAY-1",customer_id:"c1",status:"not_covered",hits:[]}]}}),
+    "/api/policies/policy-live": options => { if(options.method === "DELETE") removed = true; return response({archived:true}); },
+  });
+  render(<App/>);
+  await screen.findByRole("heading",{name:"Company policy"});
+  expect(screen.getByText(/No approved checks cover this policy version yet/)).toBeTruthy();
+  expect(screen.getByText("PAY-1")).toBeTruthy();
+  fireEvent.click(screen.getByLabelText("Actions for Company policy"));
+  fireEvent.click(screen.getByRole("button",{name:"Delete from active library"}));
+  expect(removed).toBe(false);
+  expect(screen.getByText(/Existing evidence stays archived/)).toBeTruthy();
+  fireEvent.click(screen.getByRole("button",{name:"Remove policy",exact:true}));
+  await screen.findByText("This policy is archived.");
+  expect(removed).toBe(true);
+});

@@ -21,9 +21,11 @@ import {
   useResource,
 } from "../components";
 import { api } from "../services/api";
+import PolicyActions from "../policy-actions";
 
 export function Policies() {
-  const { data, error, loading, reload } = useResource("/policies");
+  const [archived, setArchived] = useState(false);
+  const { data, error, loading, reload } = useResource(archived ? "/policy-archive" : "/policies");
   const [search, setSearch] = useState("");
   const [topic, setTopic] = useState("all");
   const filtered = data?.filter(
@@ -48,6 +50,7 @@ export function Policies() {
       </PageHeading>
       <p><Link className="button secondary" to="/policies/traceability">Open policy-to-control traceability</Link></p>
       <ErrorNotice message={error} retry={reload} />
+      <button className="button secondary" onClick={()=>setArchived(value=>!value)}>{archived ? "Show active policies" : "Show archived policies"}</button>
       <section className="panel">
         <div className="library-toolbar">
           <SearchBox
@@ -80,6 +83,7 @@ export function Policies() {
                     <FileText size={24} />
                   </span>
                   <span className="topic-pill">{p.topic.toUpperCase()}</span>
+                  <PolicyActions policy={p} archived={archived} onChanged={reload}/>
                 </div>
                 <h2>{p.title}</h2>
                 <p>Version {p.version}</p>
@@ -143,15 +147,16 @@ export function PolicyEditor() {
     setError("");
     const form = new FormData(event.currentTarget);
     try {
+      let saved;
       if (mode === "file" && !id) {
-        await api("/policies/file", { method: "POST", body: form });
+        saved = await api("/policies/file", { method: "POST", body: form });
       } else {
-        await api(id ? `/policies/${id}` : "/policies", {
+        saved = await api(id ? `/policies/${id}` : "/policies", {
           method: id ? "PUT" : "POST",
           body: Object.fromEntries(form),
         });
       }
-      navigate("/policies");
+      navigate(saved?.id ? `/policies/library/${saved.id}/workflow` : "/policies");
     } catch (e) {
       setError(e.message);
     } finally {

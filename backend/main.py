@@ -20,6 +20,8 @@ from agents import AgentEngine
 from auth import Credentials, Hub, Invite, Join, PasswordReset, Registration, Setup
 from config import ROOT, Settings
 from intelligence import Intelligence, SOURCES
+from invitation_mail import send_invitation
+from policy_workflows import router as policy_workflows_router, review_policy
 from models import (
     Answer,
     Assessment,
@@ -417,7 +419,32 @@ def create_app(settings=None, transport=None, *, start_worker=True):
                 "member_invited",
                 {"email": result["email"], "role": result["role"]},
             )
+        result["delivery"] = send_invitation(
+            settings,
+            result,
+            request.state.user["workspace"],
+            request.state.user["name"],
+        )
+        with request.state.store.connect() as db:
+            audit(
+                db,
+                request.state.user["id"],
+                "invitation_delivery",
+                {"email": result["email"], "status": result["delivery"]["status"]},
+            )
         return result
+
+    @app.get("/api/team/invites")
+    def invitations(request: Request):
+        require_roles(request, "admin")
+        with app.state.hub.connect() as db:
+            return [
+                dict(row)
+                for row in db.execute(
+                    "SELECT email,role,expires_at,used FROM invites WHERE org_id=? ORDER BY expires_at DESC LIMIT 200",
+                    (request.state.user["org_id"],),
+                )
+            ]
 
     @app.get("/api/health")
     def health(request: Request):
@@ -496,6 +523,17 @@ def create_app(settings=None, transport=None, *, start_worker=True):
         return request.state.store.policies()
 
     def record_policy(data, request, policy_id=None):
+        if policy_id:
+            with request.state.store.connect() as db:
+                if db.execute(
+                    "SELECT 1 FROM records WHERE kind='policy_archive' AND id=?",
+                    (policy_id,),
+                ).fetchone():
+                    raise problem(
+                        409,
+                        "policy_archived",
+                        "Restore this policy before updating it.",
+                    )
         try:
             result = request.state.store.save_policy(data, policy_id)
         except ValueError as exc:
@@ -507,6 +545,51 @@ def create_app(settings=None, transport=None, *, start_worker=True):
                 "policy_updated" if policy_id else "policy_added",
                 {"policy_id": result["id"], "version": result["version"]},
             )
+        if settings.automatic_policy_analysis:
+            automatic = {}
+            if policy_id:
+                for previous in app.state.engine.list(request.state.store, policy_id):
+                    if (
+                        previous["kind"] == "policy_analyst"
+                        and previous["state"] in ("queued", "running", "paused")
+                        and previous["payload"].get("target_policy_version")
+                        != result["version"]
+                    ):
+                        try:
+                            app.state.engine.control(
+                                request.state.store,
+                                previous["id"],
+                                "cancel",
+                                request.state.user["id"],
+                            )
+                        except HTTPException:
+                            pass  # A completing run no longer needs cancellation.
+            try:
+                automatic["review"] = review_policy(
+                    request.state.store,
+                    request.state.ops,
+                    result["id"],
+                    request.state.user["id"],
+                )
+            except HTTPException as exc:
+                automatic["review_error"] = exc.detail
+            try:
+                job = app.state.engine.enqueue(
+                    request.state.store,
+                    "policy_analyst",
+                    result["id"],
+                    request.state.user["id"],
+                )
+                automatic["preparation_id"] = job["id"]
+            except HTTPException as exc:
+                automatic["preparation_error"] = exc.detail
+            request.state.ops.save(
+                "policy_automation",
+                {"policy_id": result["id"], "version": result["version"], **automatic},
+                request.state.user["id"],
+                record_id="policy-automation:" + result["id"],
+            )
+            return {**result, "automation": automatic}
         return result
 
     @app.post("/api/policies", status_code=201)
@@ -739,6 +822,7 @@ def create_app(settings=None, transport=None, *, start_worker=True):
     app.include_router(traceability_router)
     app.include_router(retention_router)
     app.include_router(control_tuning_router)
+    app.include_router(policy_workflows_router)
     dist = ROOT.parent / "frontend" / "dist"
     if (dist / "assets").is_dir():
         app.mount("/assets", StaticFiles(directory=dist / "assets"), name="assets")

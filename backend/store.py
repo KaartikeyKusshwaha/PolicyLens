@@ -75,6 +75,17 @@ class Store:
             ).fetchone():
                 raise ValueError("A historical version number cannot be reused.")
             if old:
+                # Checks approved for a prior policy version must stop on update.
+                for row in db.execute(
+                    "SELECT id,payload FROM records WHERE kind='rule' AND json_extract(payload,'$.policy_id')=? AND json_extract(payload,'$.status')='active'",
+                    (policy_id,),
+                ).fetchall():
+                    control = json.loads(row[1])
+                    control.update(status="disabled", updated_at=stamp)
+                    db.execute(
+                        "UPDATE records SET payload=?,updated_at=? WHERE id=?",
+                        (json.dumps(control), stamp, row[0]),
+                    )
                 db.execute(
                     "INSERT OR IGNORE INTO policy_versions VALUES (?,?,?,?)",
                     (
@@ -160,7 +171,7 @@ class Store:
             return [
                 dict(r)
                 for r in db.execute(
-                    "SELECT id,title,topic,version,source_url,created_at,updated_at FROM policies ORDER BY updated_at DESC"
+                    "SELECT id,title,topic,version,source_url,created_at,updated_at FROM policies WHERE NOT EXISTS (SELECT 1 FROM records WHERE kind='policy_archive' AND records.id=policies.id) ORDER BY updated_at DESC"
                 )
             ]
 
@@ -200,6 +211,7 @@ class Store:
                        bm25(chunks,0,0,3,1) AS rank
                 FROM chunks c JOIN policies p ON p.id=c.policy_id
                 WHERE chunks MATCH ? AND (? IS NULL OR p.topic=?)
+                  AND NOT EXISTS (SELECT 1 FROM records WHERE kind='policy_archive' AND records.id=p.id)
                 ORDER BY rank LIMIT 8
             """,
                     (expression, topic, topic),
