@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Link } from "../navigation";
 import { Activity, ArrowUpRight, Download, Plus, Upload } from "lucide-react";
 import { api } from "../services/api";
@@ -24,10 +25,11 @@ import {
 import { useSession } from "../session";
 
 export default function Monitoring() {
+  const [params] = useSearchParams();
   const r = useResource("/monitor/transactions");
   const customers = useResource("/customers");
   const [search, setSearch] = useState("");
-  const [mode, setMode] = useState("");
+  const [mode, setMode] = useState(params.get("mode") === "csv" ? "csv" : "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");

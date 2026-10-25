@@ -59,6 +59,16 @@ class Setup(Credentials):
     bootstrap_token: str = Field(min_length=20, max_length=100)
 
 
+class Registration(Credentials):
+    name: str = Field(min_length=2, max_length=100)
+    workspace: str = Field(min_length=3, max_length=100)
+
+    @field_validator("name", "workspace", mode="before")
+    @classmethod
+    def trim_names(cls, value):
+        return value.strip() if isinstance(value, str) else value
+
+
 class Invite(Input):
     email: str = Field(min_length=5, max_length=254)
     role: str = Field(pattern=r"^(admin|analyst|reviewer|auditor)$")
@@ -166,6 +176,44 @@ class Hub:
             )
             db.execute("DELETE FROM metadata WHERE key='bootstrap'")
         self.bootstrap_file.unlink(missing_ok=True)
+        return user_id, org_id
+
+    def register(self, data):
+        """Create an isolated workspace; registration never joins an existing team."""
+        hashed = password_hash(data.password)
+        org_id, user_id = str(uuid.uuid4()), str(uuid.uuid4())
+        path = self.path.parent / "workspaces" / (org_id + ".db")
+        from operations import Operations
+
+        with self.connect() as db:
+            db.execute("BEGIN IMMEDIATE")
+            if not db.execute("SELECT 1 FROM users LIMIT 1").fetchone():
+                raise problem(
+                    409,
+                    "setup_required",
+                    "The server owner must complete initial setup first.",
+                )
+            if db.execute(
+                "SELECT 1 FROM users WHERE email=?", (data.email,)
+            ).fetchone():
+                raise problem(
+                    409,
+                    "account_exists",
+                    "An account already uses this email. Sign in or use your team invitation.",
+                )
+            # Initialize storage before committing membership. Failure rolls back identity rows.
+            Operations(Store(path, self.settings))
+            db.execute(
+                "INSERT INTO users VALUES (?,?,?,?,?)",
+                (user_id, data.email, data.name, hashed, now()),
+            )
+            db.execute(
+                "INSERT INTO organizations VALUES (?,?,?,?)",
+                (org_id, data.workspace, str(path.resolve()), now()),
+            )
+            db.execute(
+                "INSERT INTO memberships VALUES (?,?,?)", (user_id, org_id, "admin")
+            )
         return user_id, org_id
 
     def throttle(self, key):

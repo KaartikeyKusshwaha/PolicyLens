@@ -17,7 +17,7 @@ from starlette.concurrency import run_in_threadpool
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from agents import AgentEngine
-from auth import Credentials, Hub, Invite, Join, PasswordReset, Setup
+from auth import Credentials, Hub, Invite, Join, PasswordReset, Registration, Setup
 from config import ROOT, Settings
 from intelligence import Intelligence, SOURCES
 from models import (
@@ -125,6 +125,7 @@ def create_app(settings=None, transport=None, *, start_worker=True):
         "/api/auth/password-reset",
         "/api/auth/setup",
         "/api/auth/join",
+        "/api/auth/register",
     }
 
     @app.middleware("http")
@@ -185,7 +186,9 @@ def create_app(settings=None, transport=None, *, start_worker=True):
                         403, "origin_denied", "Cross-site mutations are not allowed."
                     )
                 if request.headers.get("authorization", "").startswith("Bearer "):
-                    raise problem(401, "authentication_required", "Sign in to your workspace.")
+                    raise problem(
+                        401, "authentication_required", "Sign in to your workspace."
+                    )
                 user = app.state.hub.authenticate(
                     request.cookies.get("policylens_session")
                 )
@@ -308,7 +311,7 @@ def create_app(settings=None, transport=None, *, start_worker=True):
     def auth_status():
         return {
             "setup_required": app.state.hub.needs_setup(),
-            "registration": "invite_only",
+            "registration": "public",
             "bootstrap_file": "backend/data/.bootstrap-token",
         }
 
@@ -318,6 +321,19 @@ def create_app(settings=None, transport=None, *, start_worker=True):
             "setup:" + (request.client.host if request.client else "unknown")
         )
         user_id, org_id = app.state.hub.setup(data)
+        result = JSONResponse({}, status_code=201)
+        user = set_session(result, user_id, org_id)
+        result.body = JSONResponse(user).body
+        result.headers["content-length"] = str(len(result.body))
+        return result
+
+    @app.post("/api/auth/register", status_code=201)
+    def register(data: Registration, request: Request):
+        app.state.hub.throttle(
+            "register:" + (request.client.host if request.client else "unknown")
+        )
+        app.state.hub.throttle("register-email:" + data.email)
+        user_id, org_id = app.state.hub.register(data)
         result = JSONResponse({}, status_code=201)
         user = set_session(result, user_id, org_id)
         result.body = JSONResponse(user).body
