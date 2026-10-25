@@ -20,18 +20,14 @@ export function SessionProvider({ children }) {
   async function reload() {
     setError("");
     try {
-      const status = await api("/auth/status");
+      const [status, identity] = await Promise.all([
+        api("/auth/status"),
+        api("/auth/me").catch(e => { if (e.status === 401) return null; throw e; }),
+      ]);
       setSetup(status.setup_required);
       if (!status.setup_required) {
-        try {
-          const value = await api("/auth/me");
-          setUser(value);
-          setSessionToken(value.csrf);
-        } catch (e) {
-          if (e.status !== 401) throw e;
-          setUser(null);
-          setSessionToken("");
-        }
+        setUser(identity);
+        setSessionToken(identity?.csrf || "");
       }
     } catch (e) {
       setError(e.message);

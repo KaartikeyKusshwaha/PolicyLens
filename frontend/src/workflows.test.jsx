@@ -55,7 +55,7 @@ test("automatic case review prepares a request without sending it and preserves 
   const review = { prepared_at: "2026-10-25T10:00:00Z", next_action: "Review outstanding evidence.", transaction_count: 0, total_customer_transactions: 0, totals_by_currency: {}, alert_count: 0, signals: [], policies: [], open_tasks: [], missing_evidence: ["Customer due diligence needs evidence."], limitations: ["Human decision required."] };
   mockRoutes({ "/api/cases/automatic-case": () => response({ id: "automatic-case", title: "Prepared fictional case", customer_id: "c1", customer_name: "Example", customer: { name: "Example", country: "IN", kyc_status: "pending" }, status: "open", priority: "medium", created_at: "2026-10-25T10:00:00Z", alerts: [], transactions: [], screening_evidence: [], notes: [], tasks: [], agent_runs: [], review }) });
   render(<App />);
-  await screen.findByRole("heading", { name: "Your case, ready to review" });
+  await screen.findByRole("heading", { name: "Your case, ready to review" }, { timeout: 5000 });
   fireEvent.click(screen.getByRole("button", { name: "Prepare evidence request" }));
   const notes = screen.getByRole("textbox", { name: "Notes or evidence request" });
   expect(notes.value).toContain("Customer due diligence needs evidence.");

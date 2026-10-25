@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { createContext, lazy, Suspense, useContext, useEffect, useRef, useState } from "react";
 import { BrowserRouter, Link, NavLink, useLocation } from "react-router-dom";
 import {
   Activity,
@@ -16,12 +16,13 @@ import {
   Sun,
   X,
 } from "lucide-react";
-import { useResource } from "./components";
+import { Loading, useResource } from "./components";
 import { SessionProvider, AuthGate, useSession } from "./session";
 import { api } from "./services/api";
 import { AREAS, areaFor } from "./navigation";
-import WorkspaceRoutes from "./workspaceRoutes";
+const WorkspaceRoutes = lazy(() => import("./workspaceRoutes"));
 import { useScrollReveal } from "./motion";
+import WorkspaceBoundary from "./WorkspaceBoundary";
 
 const WorkspaceContext = createContext(null);
 export const useWorkspace = () => useContext(WorkspaceContext);
@@ -249,7 +250,7 @@ function Workspace() {
             </nav>
           )}
           <main key={location.pathname} ref={page} id="main-content" className="page-enter" tabIndex={-1}>
-            <WorkspaceRoutes />
+            <WorkspaceBoundary><Suspense fallback={<Loading />}><WorkspaceRoutes /></Suspense></WorkspaceBoundary>
             <footer className="page-footer">
               <span>
                 <ShieldCheck size={13} /> PolicyLens · Evidence-led compliance
