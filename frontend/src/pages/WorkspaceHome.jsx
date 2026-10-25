@@ -18,7 +18,7 @@ function Content({ resource, children }) {
   return children;
 }
 function Metric({ title, value, detail, icon: Icon, onClick }) {
-  return <button className="overview-metric" onClick={onClick}><span className="metric-label"><span className="metric-symbol"><Icon size={18}/></span>{title}<ArrowUpRight size={15}/></span><strong>{value}</strong><span className="metric-detail">{detail}</span></button>;
+  return <button className="overview-metric" onClick={onClick}><span className="metric-label"><span className="metric-symbol"><Icon size={19}/></span>{title}</span><strong>{value}</strong><span className="metric-detail">{detail}</span></button>;
 }
 
 export default function WorkspaceHome() {
@@ -43,8 +43,7 @@ export default function WorkspaceHome() {
   const filtered = selected.records.filter(r => `${r.title} ${r.subtitle}`.toLowerCase().includes(search.toLowerCase()));
   return <div className="workspace-overview">
     <header className="overview-hero">
-      <div className="overview-hero-copy"><div className="overview-eyebrow"><span/> YOUR WORKSPACE, CONNECTED</div><h1>{user.workspace}</h1><p>A clearer view of your people, policies and activity.<br className="desktop-break"/> Find what matters. Move the next decision forward.</p><div className="overview-hero-actions">{canEdit && <Link className="button primary" to="/policies/new"><Plus size={17}/> Upload policy</Link>}{canEdit && <Link className="button secondary" to="/inbox/transactions?mode=csv"><ArrowDownUp size={17}/> Add activity</Link>}<Link className="hero-settings" to="/settings?section=Workspaces">Manage workspace <ArrowUpRight size={14}/></Link></div></div>
-      <div className="workspace-emblem" aria-hidden="true"><div className="emblem-orbit orbit-a"/><div className="emblem-orbit orbit-b"/><div className="emblem-core"><BookOpen size={38} strokeWidth={1.25}/></div><span className="emblem-dot dot-a"/><span className="emblem-dot dot-b"/></div>
+      <div className="overview-hero-copy"><div className="overview-eyebrow">Workspace overview</div><h1>{user.workspace}</h1><p>Your policies, people and activity. One place to review what matters.</p><div className="overview-hero-actions">{canEdit && <Link className="button primary" to="/policies/new"><Plus size={17}/> Upload policy</Link>}{canEdit && <Link className="button secondary" to="/inbox/transactions?mode=csv"><ArrowDownUp size={17}/> Add activity</Link>}<Link className="hero-settings" to="/settings?section=Workspaces">Manage workspace <ArrowUpRight size={14}/></Link></div></div>
     </header>
     <section className="overview-metrics" aria-label="Workspace at a glance">
       <Metric title="Open reviews" value={cases.data && !cases.error ? open.length : "—"} detail="Loaded case inventory" icon={ClipboardCheck} onClick={() => scrollTo(document.getElementById("workspace-reviews"))}/>
@@ -54,16 +53,16 @@ export default function WorkspaceHome() {
     </section>
     <div className="overview-focus-grid">
       <section id="workspace-reviews" className="panel focus-panel" data-reveal>
-        <div className="panel-heading"><div><span className="section-overline">YOUR NEXT MOVE</span><h2>Needs your attention</h2></div><Link className="subtle-action" to="/inbox">Review queue <ArrowUpRight size={15}/></Link></div>
+        <div className="panel-heading"><div><h2>Needs your attention</h2></div><Link className="subtle-action" to="/inbox">Review queue <ArrowRight size={16}/></Link></div>
         <Content resource={cases}>{open.length ? <div className="focus-records">{open.slice(0,3).map(c => <Link className="focus-record" key={c.id} to={`/cases/${c.id}`}><span className="focus-record-icon"><ClipboardCheck size={20}/></span><div><strong>{c.title}</strong><small>{c.customer_name} · {c.alert_count || 0} signals</small></div><Status value={c.priority}/><ArrowRight size={17}/></Link>)}</div> : <div className="overview-empty"><span className="calm-icon"><ClipboardCheck size={26}/></span><h3>A little breathing room.</h3><p>No open cases in the loaded queue. New control alerts will appear here.</p></div>}<div className="panel-bottom-line"><span>Evidence is assembled when you open a case.</span><Link to="/inbox/approvals">Control approvals <ArrowRight size={14}/></Link></div></Content>
       </section>
       <section className="panel activity-panel" data-reveal>
-        <div className="panel-heading"><div><span className="section-overline">IN THE WORKSPACE</span><h2>Latest activity</h2></div><Link className="subtle-action" to="/inbox/transactions" aria-label="Open all transactions"><ArrowUpRight size={17}/></Link></div>
+        <div className="panel-heading"><div><h2>Latest activity</h2></div><Link className="subtle-action" to="/inbox/transactions" aria-label="Open all transactions"><ArrowRight size={17}/></Link></div>
         <Content resource={transactions}>{transactions.data?.length ? <div className="activity-feed">{transactions.data.slice(0,3).map(t => <Link to={`/customers/${t.customer_id}`} key={t.id}><span className="activity-feed-dot"/><div><strong>{t.external_id}</strong><small>{formatDate(t.occurred_at)}</small></div><span>{money(t.amount,t.currency)}</span></Link>)}</div> : <div className="overview-empty compact"><ArrowDownUp size={25}/><h3>Ready when you are.</h3><p>Recent transactions will appear as activity arrives.</p></div>}</Content>
       </section>
     </div>
     <section ref={directory} className="workspace-library" id={`workspace-${view}`} data-reveal>
-      <div className="library-section-heading"><div><span className="section-overline">A PLACE FOR EVERYTHING</span><h2>Inside your workspace</h2></div><span className="library-scope">Your workspace records</span></div>
+      <div className="library-section-heading"><div><h2>Inside your workspace</h2></div><span className="library-scope">Browse and manage records</span></div>
       <nav aria-label="Workspace sections" className="collection-tabs">{sections.map(({id,title,icon:SectionIcon}) => <button key={id} aria-pressed={view===id} onClick={() => show(id)}><SectionIcon size={16}/>{title}</button>)}</nav>
       <section className="panel collection-panel" aria-label={section.title}>
         <div className="panel-heading"><div><h3>{section.title}</h3><p>{selected.description}</p></div>{canEdit && selected.create && <Link className="button secondary" to={selected.create}><Plus size={15}/>{selected.action}</Link>}</div>
