@@ -259,3 +259,65 @@ def test_archive_cancels_preparation_and_removes_active_analysis_gap(workspace):
         client.get("/api/traceability").json()["policies_without_current_analysis"]
         == []
     )
+
+
+def test_invalid_model_draft_gets_one_budgeted_retry_with_atomic_lineage(workspace):
+    from test_product import execute_job
+
+    client, store, state, settings = workspace
+    settings.automatic_policy_analysis = True
+    policy = add_policy(client)
+    first_id = policy["automation"]["preparation_id"]
+    state["mode"] = "malformed"
+    failed = execute_job(client, first_id)
+    retry_id = failed["payload"]["retry_job_id"]
+    retry = client.get("/api/agents/jobs/" + retry_id).json()
+    assert failed["state"] == "failed" and failed["payload"]["model_attempts"] == 1
+    assert retry["state"] == "queued" and retry["payload"]["retry_of"] == first_id
+    assert retry["payload"]["max_model_calls"] == 1
+    repeated = execute_job(client, retry_id)
+    assert repeated["state"] == "failed" and "retry_job_id" not in repeated["payload"]
+    with store.connect() as db:
+        assert db.execute("SELECT COUNT(*) FROM jobs").fetchone()[0] == 2
+        assert (
+            db.execute(
+                "SELECT COUNT(*) FROM audit_chain WHERE action='automatic_preparation_retry'"
+            ).fetchone()[0]
+            == 1
+        )
+
+
+def test_provider_retry_succeeds_with_current_evidence_and_obeys_daily_budget(
+    workspace,
+):
+    from test_product import execute_job
+
+    client, store, state, settings = workspace
+    settings.automatic_policy_analysis = True
+    policy = add_policy(client)
+    state["mode"] = "malformed"
+    failed = execute_job(client, policy["automation"]["preparation_id"])
+    state["mode"] = "valid"
+    done = execute_job(client, failed["payload"]["retry_job_id"])
+    assert done["state"] == "completed" and done["payload"]["result"]["obligations"]
+    settings.agent_daily_runs = 3
+    next_policy = add_policy(client)
+    state["mode"] = "malformed"
+    failed = execute_job(client, next_policy["automation"]["preparation_id"])
+    assert "retry_job_id" not in failed["payload"]
+    with store.connect() as db:
+        assert db.execute("SELECT COUNT(*) FROM jobs").fetchone()[0] == 3
+
+
+def test_cancelled_preparation_never_starts_automatic_retry(workspace):
+    client, store, _, settings = workspace
+    settings.automatic_policy_analysis = True
+    policy = add_policy(client)
+    id = policy["automation"]["preparation_id"]
+    job = client.get("/api/agents/jobs/" + id).json()
+    client.post("/api/agents/jobs/" + id + "/control", json={"action": "cancel"})
+    client.app.state.engine.retry_invalid_draft(
+        store, job, {"code": "invalid_ai_response"}
+    )
+    with store.connect() as db:
+        assert db.execute("SELECT COUNT(*) FROM jobs").fetchone()[0] == 1

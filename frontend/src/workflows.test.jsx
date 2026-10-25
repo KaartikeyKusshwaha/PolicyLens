@@ -801,3 +801,13 @@ test("failed preparation offers a new tracked run and returns to its source poli
   await waitFor(()=>expect(retry).toEqual({kind:"policy_analyst",target_id:"policy1"}));
   await screen.findByText("Preparing evidence. This page updates automatically.");
 });
+
+
+test("automatic retry is visibly linked without offering a duplicate manual retry", async () => {
+  window.history.replaceState({}, "", "/preparation/failed-auto");
+  mockRoutes({"/api/agents/jobs/failed-auto":()=>response({id:"failed-auto",kind:"policy_analyst",target_id:"policy1",state:"failed",payload:{retry_job_id:"auto-next",error:{message:"Draft invalid."}}})});
+  render(<App/>);
+  const retry = await screen.findByRole("link",{name:"View retry progress"});
+  expect(retry.getAttribute("href")).toBe("/preparation/auto-next");
+  expect(screen.queryByRole("button",{name:"Retry preparation"})).toBeNull();
+});

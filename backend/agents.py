@@ -109,7 +109,9 @@ class AgentEngine:
         self.model_lock = asyncio.Lock()
         self.checkpoints = Checkpoints(hub, settings)
 
-    def enqueue(self, store, kind, target_id, actor, *, agent_policy=None):
+    def enqueue(
+        self, store, kind, target_id, actor, *, agent_policy=None, retry_of=None
+    ):
         if agent_policy and agent_policy.get("prompt_version") != PROMPT_VERSION:
             raise problem(
                 409,
@@ -143,6 +145,26 @@ class AgentEngine:
         ).require_ai() if kind != "maintenance" else None
         with store.connect() as db:
             db.execute("BEGIN IMMEDIATE")
+            original = None
+            if retry_of:
+                original = db.execute(
+                    "SELECT * FROM jobs WHERE id=? AND state='failed'", (retry_of,)
+                ).fetchone()
+                if (
+                    not original
+                    or original["kind"] != kind
+                    or original["target_id"] != target_id
+                    or original["actor"] != actor
+                    or any(
+                        json.loads(original["payload"]).get(key)
+                        for key in ("retry_job_id", "retry_of", "agent_key")
+                    )
+                ):
+                    raise problem(
+                        409,
+                        "retry_not_available",
+                        "This run cannot be retried automatically again.",
+                    )
             pending = db.execute(
                 "SELECT id FROM jobs WHERE kind=? AND target_id=? AND state IN ('queued','running','paused')",
                 (kind, target_id),
@@ -202,6 +224,7 @@ class AgentEngine:
                         else {}
                     ),
                     "requested_by": actor,
+                    **({"retry_of": retry_of} if retry_of else {}),
                     **(
                         {
                             "agent_key": agent_policy["key_id"],
@@ -240,6 +263,23 @@ class AgentEngine:
                     "prompt_version": job["payload"]["prompt_version"],
                 },
             )
+            if original:
+                payload = json.loads(original["payload"])
+                payload["retry_job_id"] = job["id"]
+                db.execute(
+                    "UPDATE jobs SET payload=?,updated_at=? WHERE id=?",
+                    (canonical(payload), now(), retry_of),
+                )
+                audit(
+                    db,
+                    actor,
+                    "automatic_preparation_retry",
+                    {
+                        "failed_job_id": retry_of,
+                        "retry_job_id": job["id"],
+                        "additional_budgeted_runs": 1,
+                    },
+                )
         return job
 
     @staticmethod
@@ -326,6 +366,22 @@ class AgentEngine:
                 "UPDATE jobs SET state='interrupted',updated_at=? WHERE state='running'",
                 (now(),),
             )
+
+    def retry_invalid_draft(self, store, job, detail):
+        """One new budgeted run, with durable lineage; never retry delegated keys."""
+        if (
+            not self.settings.automatic_policy_analysis
+            or detail.get("code") != "invalid_ai_response"
+            or job["payload"].get("retry_of")
+            or job["payload"].get("agent_key")
+        ):
+            return
+        try:
+            self.enqueue(
+                store, job["kind"], job["target_id"], job["actor"], retry_of=job["id"]
+            )
+        except HTTPException:
+            return  # Budget/target/authorization constraints remain authoritative.
 
     def claim(self, store):
         with store.connect() as db:
@@ -681,6 +737,7 @@ class AgentEngine:
                 else {"code": "agent_failed", "message": str(exc.detail)}
             )
             self.finish(store, job["id"], "failed", error=detail)
+            self.retry_invalid_draft(store, job, detail)
         except Exception:
             import logging
 
