@@ -1,3 +1,4 @@
+import BrandLogo from "./BrandLogo";
 import { createContext, lazy, Suspense, useContext, useEffect, useRef, useState } from "react";
 import { BrowserRouter, Link, NavLink, useLocation } from "react-router-dom";
 import {
@@ -10,7 +11,6 @@ import {
   LogOut,
   Menu,
   Moon,
-  ScanLine,
   Settings2,
   ShieldCheck,
   Sun,
@@ -115,7 +115,7 @@ function Workspace() {
           )}
           <Link className="brand" to="/inbox" onClick={closeMenu}>
             <span className="brand-mark">
-              <ScanLine size={24} />
+              <BrandLogo />
             </span>
             <span>
               Policy<span className="brand-light">Lens</span>

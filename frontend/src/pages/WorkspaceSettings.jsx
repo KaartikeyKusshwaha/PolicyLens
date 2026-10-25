@@ -29,6 +29,7 @@ export default function WorkspaceSettings() {
   const { user } = useSession();
   const [params, setParams] = useSearchParams();
   const team = useResource("/team");
+  const invitations = useResource(user.role === "admin" ? "/team/invites" : null);
   const prefs = useResource("/preferences");
   const workspaces = useResource("/auth/workspaces");
   const sections = ["Team", "Monitoring", "Integrations", "Workspaces", "Account"];
@@ -225,15 +226,16 @@ export default function WorkspaceSettings() {
                     Object.fromEntries(new FormData(e.currentTarget)),
                     (value) => {
                       setInvite(value);
+                      invitations.reload();
                       setCopied(false);
                     },
                   );
                 }}
               >
                 <h2>Invite a teammate</h2>
+                {invitations.data?.length > 0 && <section className="detail-section"><h3>Invitation tracking</h3>{invitations.data.map((item,index)=><div className="workspace-row" key={`${item.email}-${index}`}><div><strong>{item.email}</strong><small>{item.role} · expires {formatDate(item.expires_at)}</small></div><Status value={item.used ? "accepted" : new Date(item.expires_at)<new Date() ? "expired" : "pending"}/></div>)}</section>}
                 <p className="section-copy">
-                  Create a single-use invitation valid for 48 hours. Share it
-                  directly with the intended recipient.
+                  Invite a teammate to this workspace. They sign in or create an account when accepting. Invitations expire after 48 hours.
                 </p>
                 <Field label="Teammate email">
                   <input name="email" type="email" required maxLength={254} />
@@ -260,6 +262,7 @@ export default function WorkspaceSettings() {
                 {invite && (
                   <div className="generated-credential">
                     <strong>Invitation for {invite.email}</strong>
+                    <p role="status">{invite.delivery?.message || "Invitation created. Share the private link below."}</p>
                     <p>Expires {formatDate(invite.expires_at)}</p>
                     <code>
                       {window.location.origin + "/join#" + invite.token}

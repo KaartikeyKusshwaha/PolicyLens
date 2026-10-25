@@ -146,7 +146,13 @@ class Operations:
             raise problem(
                 409, "duplicate_customer", "That customer reference already exists."
             )
-        return self.save("customer", data.model_dump(), actor, customer_id)
+        saved = self.save("customer", data.model_dump(), actor, customer_id)
+        if customer_id:
+            from policy_workflows import schedule_reviews
+
+            with self.store.connect() as db:
+                schedule_reviews(db)
+        return saved
 
     def customer_transactions(self, customer_id=None, limit=200):
         with self.store.connect() as db:
@@ -412,6 +418,9 @@ class Operations:
                     "INSERT INTO webhook_events VALUES (?,?,?,?)",
                     (integration_id, event_id, payload_hash, canonical(result)),
                 )
+            from policy_workflows import schedule_reviews
+
+            schedule_reviews(db)
             return result
 
     def case_alerts(self, case_id=None):
@@ -659,6 +668,15 @@ class Operations:
                         "policy_changed",
                         "The linked policy changed. Save a new control draft before approval.",
                     )
+                if db.execute(
+                    "SELECT 1 FROM records WHERE kind='policy_archive' AND id=?",
+                    (rule["policy_id"],),
+                ).fetchone():
+                    raise problem(
+                        409,
+                        "policy_archived",
+                        "Restore the linked policy before approving a control.",
+                    )
                 if rule["status"] != "draft":
                     raise problem(
                         409, "not_draft", "Only draft controls can be approved."
@@ -697,6 +715,9 @@ class Operations:
                 "rule_" + data.action,
                 {"id": rule_id, "version": rule["version"], "notes": data.notes},
             )
+            from policy_workflows import schedule_reviews
+
+            schedule_reviews(db, rule["policy_id"])
         return rule
 
     def backtest(self, rule_id):

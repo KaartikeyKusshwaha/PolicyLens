@@ -28,6 +28,14 @@ class Settings(BaseSettings):
     session_hours: int = Field(default=12, ge=1, le=48)
     agent_daily_runs: int = Field(default=30, ge=1, le=1000)
     agent_max_context_chars: int = Field(default=18000, ge=4000, le=24000)
+    smtp_host: str = ""
+    smtp_port: int = Field(default=587, ge=1, le=65535)
+    smtp_username: str = ""
+    smtp_password: SecretStr = SecretStr("")
+    smtp_from: str = ""
+    smtp_security: Literal["starttls", "ssl"] = "starttls"
+    public_url: str = ""
+    automatic_policy_analysis: bool = False
     model_config = SettingsConfigDict(env_file=ROOT / ".env", extra="ignore")
 
     @model_validator(mode="after")

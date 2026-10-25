@@ -3,6 +3,7 @@ import Inbox from "./pages/Inbox";
 import WorkspaceHome from "./pages/WorkspaceHome";
 import Evaluate from "./pages/Evaluate";
 import { Policies, PolicyEditor } from "./pages/Policies";
+import PolicyWorkflow from "./pages/PolicyWorkflow";
 import Assistant from "./pages/Assistant";
 import { Decisions, DecisionDetail } from "./pages/Decisions";
 import Sources from "./pages/Sources";
@@ -66,6 +67,7 @@ export default function WorkspaceRoutes() {
       <Route path="/policies/library" element={<Policies />} />
       <Route path="/policies/library/new" element={<PolicyEditor />} />
       <Route path="/policies/library/:id/edit" element={<PolicyEditor />} />
+      <Route path="/policies/library/:id/workflow" element={<PolicyWorkflow />} />
       <Route path="/policies/controls" element={<Controls />} />
       <Route path="/policies/controls/new" element={<ControlEditor />} />
       <Route path="/policies/controls/code" element={<Navigate replace to="/policies/controls" />} />

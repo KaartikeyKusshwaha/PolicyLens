@@ -1,9 +1,9 @@
+import BrandLogo from "./BrandLogo";
 import { createContext, useContext, useEffect, useState } from "react";
 import {
   ArrowRight,
   Globe2,
   LockKeyhole,
-  ScanLine,
   ShieldCheck,
 } from "lucide-react";
 import { api, setSessionToken } from "./services/api";
@@ -130,7 +130,7 @@ function SignIn() {
     <div className="auth-shell">
       <aside className="auth-story">
         <div className="auth-brand">
-          <ScanLine size={28} />
+          <BrandLogo />
           PolicyLens<span>OPERATIONS</span>
         </div>
         <div>
