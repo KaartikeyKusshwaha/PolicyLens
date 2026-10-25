@@ -3,7 +3,26 @@ export function setSessionToken(value) {
   csrfToken = value || "";
 }
 
-export async function api(path, { method = "GET", body, signal, responseType = "json" } = {}) {
+export async function api(path, options = {}) {
+  if (options.method && options.method !== "GET") return request(path, options);
+  const controller = new AbortController();
+  const cancel = () => controller.abort(options.signal?.reason);
+  if (options.signal?.aborted) cancel();
+  else options.signal?.addEventListener("abort", cancel, { once: true });
+  let timedOut = false;
+  const timeout = setTimeout(() => { timedOut = true; controller.abort(); }, options.responseType === "blob" ? 90000 : 20000);
+  try {
+    return await request(path, { ...options, signal: controller.signal });
+  } catch (error) {
+    if (timedOut) throw new Error("PolicyLens is taking too long to respond. Check your connection and retry.");
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+    options.signal?.removeEventListener("abort", cancel);
+  }
+}
+
+async function request(path, { method = "GET", body, signal, responseType = "json" } = {}) {
   let response;
   try {
     response = await fetch(`/api${path}`, {
