@@ -282,6 +282,7 @@ def restore(policy_id: str, request: Request):
         db.execute(
             "DELETE FROM records WHERE kind='policy_archive' AND id=?", (policy_id,)
         )
+        schedule_reviews(db, policy_id)
         audit(
             db,
             request.state.user["id"],
