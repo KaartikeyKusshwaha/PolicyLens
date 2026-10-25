@@ -21,6 +21,7 @@ import { SessionProvider, AuthGate, useSession } from "./session";
 import { api } from "./services/api";
 import { AREAS, areaFor } from "./navigation";
 import WorkspaceRoutes from "./workspaceRoutes";
+import { useScrollReveal } from "./motion";
 
 const WorkspaceContext = createContext(null);
 export const useWorkspace = () => useContext(WorkspaceContext);
@@ -40,7 +41,9 @@ function Workspace() {
   );
   const menu = useRef(null);
   const sidebar = useRef(null);
+  const page = useRef(null);
   const location = useLocation();
+  useScrollReveal(page, location.pathname);
   const active = areaFor(location.pathname);
   const advanced =
     location.pathname === "/advanced" ||
@@ -184,9 +187,7 @@ function Workspace() {
             <div className="topbar-actions">
               <Link className="connection-chip" to="/settings/sources">
                 <Activity size={14} />
-                {health.data?.ai?.status === "configured"
-                  ? "AI configured"
-                  : "Setup required"}
+                Connections
               </Link>
               {health.data?.api_docs_enabled !== false && (
                 <a
@@ -225,7 +226,7 @@ function Workspace() {
               </button>
             </div>
           </div>
-          {active && (
+          {active && location.pathname !== "/workspace" && (
             <nav
               className="area-navigation"
               aria-label={
@@ -247,7 +248,7 @@ function Workspace() {
                 ))}
             </nav>
           )}
-          <main key={location.pathname} id="main-content" tabIndex={-1}>
+          <main key={location.pathname} ref={page} id="main-content" className="page-enter" tabIndex={-1}>
             <WorkspaceRoutes />
             <footer className="page-footer">
               <span>

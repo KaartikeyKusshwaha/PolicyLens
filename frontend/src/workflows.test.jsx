@@ -576,7 +576,7 @@ test("four primary areas remain active through populated review and evidence rou
   expect(fetch.mock.calls.some(([url]) => url === "/api/analytics")).toBe(false);
   fireEvent.click(within(primary).getByRole("link", { name: "Settings" }));
   await screen.findByText("Workspace members");
-  fireEvent.click(screen.getByRole("link", { name: "Connections" }));
+  fireEvent.click(within(screen.getByRole("navigation", { name: "Settings navigation" })).getByRole("link", { name: "Connections", exact: true }));
   await screen.findByRole("heading", { name: "Connections and freshness" });
   expect(within(primary).getByRole("link", { name: "Settings" }).getAttribute("aria-current")).toBe("page");
   expect(fetch.mock.calls.some(([url]) => url.startsWith("/api/inbox") || url.startsWith("/api/evidence/assessments"))).toBe(false);
