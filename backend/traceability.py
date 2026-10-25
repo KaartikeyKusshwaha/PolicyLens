@@ -25,7 +25,10 @@ def rows(db, query, parameters=()):
 
 
 def matrix(db):
-    policies = rows(db, "SELECT id,title,version FROM policies ORDER BY id")
+    policies = rows(
+        db,
+        "SELECT id,title,version,EXISTS(SELECT 1 FROM records WHERE kind='policy_archive' AND records.id=policies.id) AS archived FROM policies ORDER BY id",
+    )
     records = {}
     for kind in ("rule", "backtest", "traceability_link", "case_evidence"):
         records[kind] = [
@@ -106,7 +109,11 @@ def matrix(db):
                     }
                 )
             policy = policy_by_id.get(policy_id)
-            current = policy is not None and policy["version"] == version
+            current = (
+                policy is not None
+                and policy["version"] == version
+                and not policy["archived"]
+            )
             active = [
                 r
                 for r in linked
@@ -115,6 +122,8 @@ def matrix(db):
                 and r["control"]["policy_version"] == version
             ]
             gaps = []
+            if policy and policy["archived"]:
+                gaps.append("archived_policy")
             if not current:
                 gaps.append("historical_policy_version")
             if result.get("coverage", {}).get("complete") is False:
@@ -153,7 +162,8 @@ def matrix(db):
     missing = [
         p
         for p in policies
-        if not any(
+        if not p["archived"]
+        and not any(
             o["policy_id"] == p["id"] and o["current_policy_version"]
             for o in obligations
         )

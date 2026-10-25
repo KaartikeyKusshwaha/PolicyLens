@@ -264,6 +264,54 @@ class Operations:
         )
         return case
 
+    def record_control_hit(
+        self, db, rule, transaction, customer, facts, actor, **metadata
+    ):
+        """Use the same alert/case lineage for ingestion and historical review."""
+        dedupe = rule["id"] + ":" + str(rule["version"]) + ":" + transaction["id"]
+        prior = db.execute(
+            "SELECT payload FROM alerts WHERE dedupe=?", (dedupe,)
+        ).fetchone()
+        if prior:
+            return json.loads(prior[0]), False
+        case = self._open_case(
+            db,
+            customer,
+            f"Review activity for {customer['name']}",
+            rule["priority"],
+            "A configured internal control triggered. Review the evidence before deciding.",
+            actor,
+        )
+        alert = {
+            "id": uid(),
+            "case_id": case["id"],
+            "transaction_id": transaction["id"],
+            "rule_id": rule["id"],
+            "rule_title": rule["title"],
+            "rule_version": rule["version"],
+            "rule_snapshot": rule,
+            "facts": facts,
+            "created_at": now(),
+            "priority": rule["priority"],
+            **metadata,
+        }
+        db.execute(
+            "INSERT INTO alerts VALUES (?,?,?,?,?)",
+            (alert["id"], dedupe, case["id"], alert["created_at"], canonical(alert)),
+        )
+        audit(
+            db,
+            actor,
+            "control_triggered",
+            {
+                "alert_id": alert["id"],
+                "case_id": case["id"],
+                "rule_id": rule["id"],
+                "transaction_id": transaction["id"],
+            },
+        )
+        return alert, True
+
     def ingest(
         self, txn, actor, *, integration_id=None, event_id=None, payload_hash=None
     ):
@@ -349,59 +397,18 @@ class Operations:
                     candidates = [json.loads(row[0]) for row in rows]
                 for candidate in candidates:
                     hit, facts = self._matches(db, rule, candidate, customer)
-                    dedupe = (
-                        rule["id"] + ":" + str(rule["version"]) + ":" + candidate["id"]
-                    )
-                    if (
-                        not hit
-                        or db.execute(
-                            "SELECT 1 FROM alerts WHERE dedupe=?", (dedupe,)
-                        ).fetchone()
-                    ):
-                        continue
-                    case = self._open_case(
-                        db,
-                        customer,
-                        f"Review activity for {customer['name']}",
-                        rule["priority"],
-                        "A configured internal control triggered. Review the evidence before deciding.",
-                        actor,
-                    )
-                    alert = {
-                        "id": uid(),
-                        "case_id": case["id"],
-                        "transaction_id": candidate["id"],
-                        "rule_id": rule["id"],
-                        "rule_title": rule["title"],
-                        "rule_version": rule["version"],
-                        "rule_snapshot": rule,
-                        "facts": facts,
-                        "created_at": now(),
-                        "priority": rule["priority"],
-                        "rechecked_after_late_event": candidate["id"] != record["id"],
-                    }
-                    db.execute(
-                        "INSERT INTO alerts VALUES (?,?,?,?,?)",
-                        (
-                            alert["id"],
-                            dedupe,
-                            case["id"],
-                            alert["created_at"],
-                            canonical(alert),
-                        ),
-                    )
-                    hits.append(alert)
-                    audit(
-                        db,
-                        actor,
-                        "control_triggered",
-                        {
-                            "alert_id": alert["id"],
-                            "case_id": case["id"],
-                            "rule_id": rule["id"],
-                            "transaction_id": candidate["id"],
-                        },
-                    )
+                    if hit:
+                        alert, created = self.record_control_hit(
+                            db,
+                            rule,
+                            candidate,
+                            customer,
+                            facts,
+                            actor,
+                            rechecked_after_late_event=candidate["id"] != record["id"],
+                        )
+                        if created:
+                            hits.append(alert)
             audit(
                 db,
                 actor,

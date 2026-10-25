@@ -248,8 +248,8 @@ class Hub:
                     401, "invalid_credentials", "Email or password is incorrect."
                 )
             membership = db.execute(
-                "SELECT org_id FROM memberships WHERE user_id=? ORDER BY org_id LIMIT 1",
-                (user["id"],),
+                "SELECT org_id FROM memberships WHERE user_id=? ORDER BY CASE WHEN org_id=(SELECT value FROM metadata WHERE key=?) THEN 0 ELSE 1 END,org_id LIMIT 1",
+                (user["id"], "last-workspace:" + user["id"]),
             ).fetchone()
             if not membership:
                 raise problem(
@@ -303,6 +303,10 @@ class Hub:
             db.execute(
                 "INSERT INTO sessions VALUES (?,?,?,?,?)",
                 (digest(token), user_id, org_id, csrf, expiry),
+            )
+            db.execute(
+                "INSERT OR REPLACE INTO metadata VALUES (?,?)",
+                ("last-workspace:" + user_id, org_id),
             )
         return token, self.authenticate(token)
 
@@ -450,4 +454,8 @@ class Hub:
                 )
             db.execute(
                 "UPDATE sessions SET org_id=? WHERE id=?", (org_id, digest(token))
+            )
+            db.execute(
+                "INSERT OR REPLACE INTO metadata VALUES (?,?)",
+                ("last-workspace:" + user_id, org_id),
             )

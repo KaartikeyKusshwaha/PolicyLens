@@ -70,12 +70,21 @@ def review_policy(store, ops, policy_id, actor):
     if not policy:
         raise problem(404, "not_found", "Policy not found.")
     with store.connect() as db:
-        db.execute("BEGIN")
+        db.execute("BEGIN IMMEDIATE")
         if db.execute(
             "SELECT 1 FROM records WHERE kind='policy_archive' AND id=?", (policy_id,)
         ).fetchone():
             raise problem(
                 409, "policy_archived", "Restore this policy before reviewing activity."
+            )
+        current = db.execute(
+            "SELECT version FROM policies WHERE id=?", (policy_id,)
+        ).fetchone()
+        if not current or current[0] != policy["version"]:
+            raise problem(
+                409,
+                "policy_changed",
+                "The policy changed before this review started. Retry the current version.",
             )
         controls = [
             json.loads(r[0])
@@ -102,16 +111,33 @@ def review_policy(store, ops, policy_id, actor):
             transaction = json.loads(row[0])
             customer = customers.get(transaction["customer_id"])
             hits = []
+            applicable = [
+                c
+                for c in controls
+                if c["kind"] not in ("amount", "aggregate")
+                or c["currency"] == transaction["currency"]
+            ]
             if customer:
-                for control in controls:
+                for control in applicable:
                     matched, facts = ops._matches(db, control, transaction, customer)
                     if matched:
+                        alert, _ = ops.record_control_hit(
+                            db,
+                            control,
+                            transaction,
+                            customer,
+                            facts,
+                            actor,
+                            historical_policy_review=True,
+                        )
                         hits.append(
                             {
                                 "control_id": control["id"],
                                 "control_title": control["title"],
                                 "control_version": control["version"],
                                 "facts": facts,
+                                "alert_id": alert["id"],
+                                "case_id": alert["case_id"],
                             }
                         )
             results.append(
@@ -120,7 +146,7 @@ def review_policy(store, ops, policy_id, actor):
                     "external_id": transaction["external_id"],
                     "customer_id": transaction["customer_id"],
                     "status": "not_covered"
-                    if not controls or not customer
+                    if not applicable or not customer
                     else "flagged"
                     if hits
                     else "no_control_hit",
@@ -241,6 +267,22 @@ def archive(policy_id: str, request: Request):
             ("policy_archive", policy_id, now(), now(), canonical(value)),
         )
         disabled = 0
+        cancelled = []
+        for job in db.execute(
+            "SELECT id FROM jobs WHERE kind='policy_analyst' AND target_id=? AND state IN ('queued','running','paused')",
+            (policy_id,),
+        ).fetchall():
+            db.execute(
+                "UPDATE jobs SET state='cancelled',updated_at=? WHERE id=?",
+                (now(), job[0]),
+            )
+            cancelled.append(job[0])
+            audit(
+                db,
+                request.state.user["id"],
+                "agent_cancel",
+                {"id": job[0], "reason": "policy_archived"},
+            )
         for row in db.execute(
             "SELECT id,payload FROM records WHERE kind='rule' AND json_extract(payload,'$.policy_id')=?",
             (policy_id,),
@@ -258,7 +300,11 @@ def archive(policy_id: str, request: Request):
             db,
             request.state.user["id"],
             "policy_archived",
-            {**value, "disabled_controls": disabled},
+            {
+                **value,
+                "disabled_controls": disabled,
+                "cancelled_preparations": cancelled,
+            },
         )
     return {
         "archived": True,
