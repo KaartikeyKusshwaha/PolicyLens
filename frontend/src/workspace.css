@@ -273,7 +273,7 @@ td small { font-size: 12px; line-height: 1.65; }
   .collection-toolbar { padding: 0 22px 17px; } .collection-toolbar > span { display: none; }
   .collection-records > a { padding: 18px 22px; gap: 12px; }
   .collection-records strong { font-size: 13px; } .collection-records small { font-size: 11px; }
-  .record-trailing { display: none; } .record-monogram { width: 33px; height: 33px; border-radius: 10px; }
+  .record-trailing { font-size: 11px; } .record-monogram { width: 33px; height: 33px; border-radius: 10px; }
   .collection-footer { padding: 17px 22px; font-size: 11px; }
   .workspace-connection-note { flex-wrap: wrap; gap: 13px; } .workspace-connection-note > div { flex-basis: 70%; }
   .workspace-connection-note > a { margin-left: 55px; }
