@@ -336,6 +336,7 @@ test("evaluation surfaces provider failure and never shows a made-up verdict", a
 });
 
 test("sidebar navigation, theme, and policy input mode are interactive", async () => {
+  localStorage.setItem("policylens-theme", "light");
   render(<App />);
   await screen.findByText("Work waiting for human review.");
   fireEvent.click(screen.getByRole("button", { name: "Use dark theme" }));

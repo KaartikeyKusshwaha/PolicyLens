@@ -4,6 +4,9 @@ import App from "./App";
 import "./index.css";
 import "./product.css";
 import "./workspace.css";
+import { initializeTheme } from "./theme";
+
+initializeTheme();
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
