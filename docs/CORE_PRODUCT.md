@@ -107,3 +107,9 @@ Typography refinement uses a self-hosted 32.6 kB Latin subset derived from Inter
 Sans; system fonts handle characters outside the subset. Font display swaps in
 without blocking text. Icon strokes use a consistent 1.65 weight, and workspace
 headings use quieter weights with fewer competing micro-labels and decorations.
+
+The owner-selected midnight-purple palette replaces the blue default: near-black
+main background (#171722), muted plum navigation (#281d2e), dark raised surfaces
+and lavender actions. It applies before sign-in renders and migrates an existing
+theme preference once; subsequent explicit theme choices persist. A coordinated
+light-purple option remains available.

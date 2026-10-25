@@ -38,7 +38,7 @@ function Workspace() {
   const health = useResource("/health");
   const [open, setOpen] = useState(false);
   const [dark, setDark] = useState(
-    () => localStorage.getItem("policylens-theme") === "dark",
+    () => localStorage.getItem("policylens-theme") !== "light",
   );
   const menu = useRef(null);
   const sidebar = useRef(null);
