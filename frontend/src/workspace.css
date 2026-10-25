@@ -335,3 +335,7 @@ td small { font-size: 12px; line-height: 1.65; }
 .brand-logo { display: block; width: 38px; height: 38px; flex-shrink: 0; color: var(--accent); }
 .auth-brand .brand-logo { width: 45px; height: 45px; }
 .brand, .auth-brand { letter-spacing: -.055em; }
+
+.auth-evidence-note { margin-top: 36px; }
+.auth-evidence-note > span { display: inline-flex; align-items: center; gap: 10px; color: var(--muted); font-size: 12px; letter-spacing: .01em; }
+.auth-evidence-note svg { color: var(--accent); stroke-width: 1.5; }
