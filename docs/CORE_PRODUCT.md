@@ -88,3 +88,16 @@ The palette uses pale blue backgrounds, cyan surfaces and turquoise action accen
 with a corresponding dark palette. Native typography, focus states and responsive
 layouts from the previous release remain. Browser visual acceptance must be
 reported separately from automated component/API verification.
+
+## React presentation rebuild — 25 October 2026
+
+The workspace now uses a focused overview with live inventory metrics, a priority
+review queue and recent transaction feed. A searchable collection switches between
+policies, people, transactions and customers without leaving the workspace. Failed
+inventories show errors and unknown counts rather than empty success states.
+
+The presentation system uses a consistent native font scale, neutral blue surfaces,
+cyan/turquoise accents, quieter navigation, larger controls and responsive layouts.
+Short page entrances, one-time scroll reveals and hover feedback respect reduced
+motion. Scroll reveals never keep content hidden while waiting for JavaScript or
+an observer. Existing approvals, account access and evidence workflows are unchanged.
