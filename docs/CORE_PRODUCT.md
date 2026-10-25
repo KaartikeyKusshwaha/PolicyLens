@@ -101,3 +101,9 @@ cyan/turquoise accents, quieter navigation, larger controls and responsive layou
 Short page entrances, one-time scroll reveals and hover feedback respect reduced
 motion. Scroll reveals never keep content hidden while waiting for JavaScript or
 an observer. Existing approvals, account access and evidence workflows are unchanged.
+
+Typography refinement uses a self-hosted 32.6 kB Latin subset derived from Inter
+(SIL Open Font License, retained beside the font). Its renamed family is PolicyLens
+Sans; system fonts handle characters outside the subset. Font display swaps in
+without blocking text. Icon strokes use a consistent 1.65 weight, and workspace
+headings use quieter weights with fewer competing micro-labels and decorations.

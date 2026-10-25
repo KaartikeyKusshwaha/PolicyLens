@@ -119,7 +119,7 @@ function Workspace() {
             </span>
             <span>
               Policy<span className="brand-light">Lens</span>
-              <small>GOVERNANCE & EVIDENCE</small>
+              <small>Policy intelligence</small>
             </span>
           </Link>
           <Link className="workspace-picker" to="/workspace" onClick={closeMenu} aria-label={`Open ${session.user.workspace} workspace`}>
