@@ -31,3 +31,14 @@ test("read-only reviewers can inspect preparation without completing tasks", () 
   expect(screen.getByText("Request invoice")).toBeTruthy();
   expect(screen.queryByRole("button", { name: "Complete" })).toBeNull();
 });
+
+test("count and KYC signals do not inherit irrelevant currency or amount thresholds", () => {
+  render(<MemoryRouter><CaseReview review={{...review, signals:[
+    {id:"count",title:"Three payments",facts:{kind:"velocity",observed:"3",threshold:"3",currency:"USD",window_hours:1}},
+    {id:"kyc",title:"Due diligence",facts:{kind:"kyc",observed:"pending",threshold:"100",currency:"USD"}},
+    {id:"amount",title:"Payment size",facts:{kind:"amount",observed:"150.10",threshold:"100",currency:"USD"}},
+  ]}} canEdit={false}/></MemoryRouter>);
+  expect(screen.getByText(/Recorded observation: 3 transactions/).textContent).toContain("Window: 1 hour");
+  expect(screen.getByText("Recorded observation: pending").textContent).not.toContain("USD");
+  expect(screen.getByText(/Recorded observation: 150.10 USD/)).toBeTruthy();
+});

@@ -2,6 +2,13 @@ import { ArrowRight, CheckCircle2, FileCheck2 } from "lucide-react";
 import { Link } from "../navigation";
 import { formatDate } from "../components";
 
+function SignalFacts({ facts }) {
+  if (facts.observed == null) return null;
+  const amount = ["amount", "aggregate"].includes(facts.kind);
+  const count = facts.kind === "velocity";
+  return <p>Recorded observation: {String(facts.observed)}{amount && facts.currency ? ` ${facts.currency}` : count ? ` transaction${Number(facts.observed) === 1 ? "" : "s"}` : ""}{(amount || count) && facts.threshold != null ? ` · Configured threshold: ${facts.threshold}${count ? ` transaction${Number(facts.threshold) === 1 ? "" : "s"}` : facts.currency ? ` ${facts.currency}` : ""}` : ""}{["velocity", "aggregate"].includes(facts.kind) && facts.window_hours ? ` · Window: ${facts.window_hours} hour${Number(facts.window_hours) === 1 ? "" : "s"}` : ""}</p>;
+}
+
 export default function CaseReview({ review, completeTask, canEdit, showEvidence, onRequestEvidence, onDecide }) {
   if (!review) return <section className="panel section-padding"><h2>Review summary unavailable</h2><p>Open Evidence to inspect the original records.</p><button className="button secondary" onClick={showEvidence}>View evidence</button></section>;
   return <div className="review-stack">
@@ -30,7 +37,7 @@ export default function CaseReview({ review, completeTask, canEdit, showEvidence
     <section className="panel section-padding">
       <h2>Why this case needs review</h2>
       <p>Control hits are recorded signals. They need a human assessment.</p>
-      {review.signals.length ? review.signals.map(signal => <article className="review-signal" key={signal.id}><strong>{signal.title}</strong><small>{signal.origin === "internal_control" ? `Policy version ${signal.policy_version || "unavailable"}` : "Imported source evidence"}</small>{signal.facts.observed != null && <p>Recorded observation: {String(signal.facts.observed)}{signal.facts.currency ? ` ${signal.facts.currency}` : ""}{signal.facts.threshold != null ? ` · Configured threshold: ${signal.facts.threshold}` : ""}</p>}</article>) : <p>No control hits are attached. Review the case context and any screening evidence.</p>}
+      {review.signals.length ? review.signals.map(signal => <article className="review-signal" key={signal.id}><strong>{signal.title}</strong><small>{signal.origin === "internal_control" ? `Policy version ${signal.policy_version || "unavailable"}` : "Imported source evidence"}</small><SignalFacts facts={signal.facts}/></article>) : <p>No control hits are attached. Review the case context and any screening evidence.</p>}
       <button className="text-link" onClick={showEvidence}>Inspect original evidence <ArrowRight size={14} /></button>
     </section>
     {review.policies.length > 0 && <section className="panel section-padding"><h2>Linked policy context</h2>{review.policies.map(policy => <details className="review-policy" key={`${policy.id}-${policy.version}`}><summary>{policy.title} · v{policy.version || "unavailable"}</summary><p className="preserve-lines">{policy.excerpt || "The archived version is unavailable."}</p><small>Opening excerpt from the archived version; not an identified breach.</small><Link className="text-link" to={`/policies/${policy.id}`}>Open policy</Link></details>)}</section>}
