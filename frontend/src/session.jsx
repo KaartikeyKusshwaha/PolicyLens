@@ -2,7 +2,6 @@ import BrandLogo from "./BrandLogo";
 import { createContext, useContext, useEffect, useState } from "react";
 import {
   ArrowRight,
-  Globe2,
   LockKeyhole,
   ShieldCheck,
 } from "lucide-react";
@@ -144,8 +143,7 @@ function SignIn() {
             Connect your policies, customer activity, and investigations in a
             workspace built around evidence.
           </p>
-          <div className="auth-orbit">
-            <Globe2 size={120} strokeWidth={0.6} />
+          <div className="auth-evidence-note">
             <span>
               <ShieldCheck size={17} /> Evidence-led investigations
             </span>
