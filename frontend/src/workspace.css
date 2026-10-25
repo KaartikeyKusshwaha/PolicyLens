@@ -75,6 +75,10 @@ input:not([type="checkbox"]):not([type="radio"]), select { min-height: 46px; }
 .panel-heading p { font-size: 13px; color: var(--muted); margin-top: 6px; }
 .section-padding { padding: 28px; }
 .section-copy { font-size: 14px; line-height: 1.75; }
+.section-padding > p, .case-layout .section-copy, .review-stack p { font-size: 14px; line-height: 1.8; }
+.section-padding > p.privacy-note, .review-stack p.privacy-note { font-size: 12px; }
+.metadata dt { font-size: 12px; }
+.metadata dd { font-size: 13px; }
 .page-tabs { display: flex; gap: 4px; padding: 5px; background: var(--navigation); border: 1px solid var(--line); border-radius: 13px; margin-bottom: 24px; }
 .page-tabs > button { min-height: 40px; flex: 1; padding: 9px 14px; font-size: 13px; border: 0; border-radius: 9px; }
 .page-tabs > button.active { color: var(--text); background: var(--surface); box-shadow: 0 1px 5px #24475f0a; }
@@ -183,6 +187,7 @@ td small { font-size: 12px; line-height: 1.65; }
 /* Investigation and reading surfaces */
 .case-layout { gap: 26px; grid-template-columns: minmax(0,1fr) 330px; }
 .entity-summary { gap: 12px; flex-wrap: wrap; margin-bottom: 24px; font-size: 12px; }
+.entity-summary > span:not(.product-status) { font-size: 12px; }
 .review-intro { background: var(--surface); }
 .review-intro h2 { font-size: 29px; margin: 9px 0 14px; }
 .review-intro > p { margin-bottom: 13px; }

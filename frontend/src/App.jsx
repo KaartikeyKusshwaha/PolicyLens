@@ -242,7 +242,7 @@ function Workspace() {
                     ),
                 )
                 .map(([path, title], index) => (
-                  <NavLink key={path} to={path} end={index === 0}>
+                  <NavLink key={path} to={path} end={index === 0 || path === "/inbox"}>
                     {title}
                   </NavLink>
                 ))}
