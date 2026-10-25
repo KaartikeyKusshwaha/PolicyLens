@@ -25,7 +25,9 @@ export default function PreparationResult() {
       Review the cited evidence and interpretation before making a decision. Preparation does not approve or resolve work.
     </PageHeading>
     <ErrorNotice message={error || job.payload.error?.message} />
-    {user.role !== "auditor" && ["failed", "interrupted", "cancelled"].includes(job.state) && job.kind !== "maintenance" && <div className="detail-section"><p>A retry starts a new preparation with current evidence and uses one run from your daily budget. This run stays in the history.</p><button className="button primary" disabled={retrying} onClick={async()=>{
+    {job.payload.retry_job_id && <div className="notice" role="status"><p>An automatic retry was started as a separate preparation. <Link to={`/preparation/${job.payload.retry_job_id}`}>View retry progress</Link></p></div>}
+    {job.payload.retry_of && <p className="privacy-note">This is the single automatic retry. <Link to={`/preparation/${job.payload.retry_of}`}>View the original run</Link>.</p>}
+    {user.role !== "auditor" && !job.payload.retry_job_id && ["failed", "interrupted", "cancelled"].includes(job.state) && job.kind !== "maintenance" && <div className="detail-section"><p>A retry starts a new preparation with current evidence and uses one run from your daily budget. This run stays in the history.</p><button className="button primary" disabled={retrying} onClick={async()=>{
       setRetrying(true);setError("");
       try {const next=await api("/agents/jobs",{method:"POST",body:{kind:job.kind,target_id:job.target_id}});navigate(`/preparation/${next.id}`);}
       catch(failure){setError(failure.message);}finally{setRetrying(false);}

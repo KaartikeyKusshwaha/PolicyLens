@@ -377,7 +377,7 @@ class Providers:
                     raise problem(
                         502,
                         "invalid_ai_response",
-                        "The provider could not generate a schema-valid draft. No decision was recorded and this run will not retry.",
+                        "The provider could not generate a schema-valid draft. No decision was recorded.",
                     )
                 rejected = problem(
                     503,
